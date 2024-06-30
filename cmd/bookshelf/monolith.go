@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 
@@ -11,6 +12,7 @@ type application struct {
 	logger  *slog.Logger
 	mux     *http.ServeMux
 	modules []system.Module
+	db      *sql.DB
 }
 
 func (app *application) Logger() *slog.Logger {
