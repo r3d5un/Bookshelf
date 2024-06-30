@@ -29,7 +29,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 }
 
 func (m *Module) Shutdown() {
-	return
+	m.logger.Info("shutting down module", slog.String("module", moduleName))
 }
 
 func (m *Module) initModuleLogger(monoLogger *slog.Logger) {

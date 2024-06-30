@@ -5,6 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+
+	"github.com/r3d5un/Bookshelf/cmd/bookshelf/books"
+	"github.com/r3d5un/Bookshelf/internal/system"
 )
 
 func main() {
@@ -26,12 +29,15 @@ func run() (err error) {
 	app := &application{
 		logger: logger,
 		mux:    http.NewServeMux(),
+		modules: []system.Module{
+			&books.Module{},
+		},
 	}
 
 	app.logger.Info("running module startup")
 	app.setupModules(context.Background())
 
-	err := app.serve()
+	err = app.serve()
 	if err != nil {
 		app.logger.Error("unable to start server", "error", err)
 		return err
@@ -57,9 +63,7 @@ func (app *application) setupModules(ctx context.Context) error {
 
 func (app *application) shutdownModules() error {
 	for _, v := range app.modules {
-		if err := v.Shutdown(); err != nil {
-			return err
-		}
+		v.Shutdown()
 	}
 
 	return nil
