@@ -1,0 +1,6 @@
+db:
+  dsn: "postgresql://postgres:postgres@localhost5432"
+  maxOpenConns: 25
+  maxIdleConns: 25
+  maxIdleTime: "15m"
+  timeout: 5
