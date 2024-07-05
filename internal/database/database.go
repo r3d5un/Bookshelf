@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"database/sql"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -36,4 +38,8 @@ func OpenPool(
 	}
 
 	return db, nil
+}
+
+func MinifySQL(query string) string {
+	return strings.TrimSpace(regexp.MustCompile(`\s+`).ReplaceAllString(query, " "))
 }
