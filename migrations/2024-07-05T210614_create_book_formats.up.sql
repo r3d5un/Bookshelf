@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS books.books
+CREATE TABLE IF NOT EXISTS books.book_formats
 (
     id        UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     book_id   UUID         NOT NULL REFERENCES books.books (id),
