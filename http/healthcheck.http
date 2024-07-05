@@ -1,0 +1,2 @@
+GET {{hostAddress}}/books/healthcheck
+accept: application/json
