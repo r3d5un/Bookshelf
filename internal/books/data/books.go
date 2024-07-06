@@ -72,6 +72,7 @@ WHERE id = $1;
 		}
 	}
 
+	logger.Info("returning book")
 	return b, nil
 }
 
@@ -157,8 +158,7 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 	}
 	numberOfRecords := len(books)
 
-	logger.Info("query successful", slog.Int("records", numberOfRecords))
-
+	logger.Info("returning records", slog.Int("records", numberOfRecords))
 	return books, &numberOfRecords, nil
 }
 
