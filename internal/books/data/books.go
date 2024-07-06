@@ -83,26 +83,24 @@ func (m *BookModel) GetAll(
 
 	query := `
 SELECT id,
-	title,
-	author_id,
-	description,
-	published,
-	created_at,
-	updated_at
+       title,
+       author_id,
+       description,
+       published,
+       created_at,
+       updated_at
 FROM books.books
-WHERE
-	($1 IS NULL OR id = $1)
-	AND ($1 IS NULL OR author_id = $2)
-	AND ($3 IS NULL OR description LIKE '%' || $3 || '%')
-	AND ($4 IS NULL OR published >= $4)
-	AND ($5 IS NULL OR published < $5)
-	AND ($6 IS NULL OR created_at >= $6)
-	AND ($7 IS NULL OR created_at < $7)
-	AND ($8 IS NULL OR updated_at >= $8)
-	AND ($9 IS NULL OR updated_at < $9)
+WHERE ($1 IS NULL OR id = $1)
+  AND ($1 IS NULL OR author_id = $2)
+  AND ($3 IS NULL OR description LIKE '%' || $3 || '%')
+  AND ($4 IS NULL OR published >= $4)
+  AND ($5 IS NULL OR published < $5)
+  AND ($6 IS NULL OR created_at >= $6)
+  AND ($7 IS NULL OR created_at < $7)
+  AND ($8 IS NULL OR updated_at >= $8)
+  AND ($9 IS NULL OR updated_at < $9)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-	OFFSET $10
-	FETCH NEXT $11 ROWS ONLY;
+OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
