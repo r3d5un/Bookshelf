@@ -161,3 +161,70 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 
 	return books, &numberOfRecords, nil
 }
+
+func (m *BookModel) Insert(ctx context.Context, newBook Book) (b *Book, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+INSERT INTO books.books (id,
+                         title,
+                         author_id,
+                         description,
+                         published,
+                         created_at,
+                         updated_at)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7)
+RETURNING
+    id,
+    title,
+    author_id,
+    description,
+    published,
+    created_at,
+    updated_at;
+`
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newBook", newBook,
+		),
+	)
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newBook.ID,
+		newBook.Title,
+		newBook.AuthorID,
+		newBook.Description,
+		newBook.Published,
+		newBook.CreatedAt,
+		newBook.UpdatedAt,
+	).Scan(
+		&b.ID,
+		&b.Title,
+		&b.AuthorID,
+		&b.Description,
+		&b.Published,
+		&b.CreatedAt,
+		&b.UpdatedAt,
+	)
+	if err != nil {
+		logger.Error("unable to insert record", "error", err)
+		return nil, err
+	}
+
+	logger.Info("returning inserted book", "insertedBook", b)
+	return b, nil
+}
