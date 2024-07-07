@@ -203,8 +203,8 @@ RETURNING
 		&author.ID,
 		&author.Name,
 		&author.Description,
-		newAuthor.Website,
-		newAuthor.CreatedAt,
+		&author.Website,
+		&author.CreatedAt,
 		&author.UpdatedAt,
 	)
 	if err != nil {
