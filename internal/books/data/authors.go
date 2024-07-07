@@ -390,3 +390,71 @@ RETURNING
 	logger.Info("returning deleted author")
 	return author, nil
 }
+
+func (m *AuthorModel) GetByBookID(
+	ctx context.Context,
+	id uuid.UUID,
+) (authors []*Author, totalResults *int, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+SELECT a.id,
+       a.name,
+       a.description,
+       a.website,
+       a.created_at,
+       a.updated_at
+FROM books.authors a
+         INNER JOIN
+     books.book_authors ba ON a.id = ba.author_id
+         INNER JOIN
+     books.books b ON b.id = ba.book_id
+WHERE b.id = $1
+ORDER BY b.id;
+`
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		"query",
+		slog.String("statement", database.MinifySQL(query)),
+		"id", id.String(),
+	)
+
+	logger.Info("performing query")
+	rows, err := m.DB.QueryContext(
+		qCtx,
+		query,
+		id,
+	)
+	if err != nil {
+		logger.Error("error performing query", "error", err)
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var author Author
+
+		err := rows.Scan(
+			&author.ID,
+			&author.Name,
+			&author.Description,
+			&author.Website,
+			&author.CreatedAt,
+			&author.UpdatedAt,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		authors = append(authors, &author)
+	}
+	if err = rows.Err(); err != nil {
+		logger.Error("an error occurred while parsing query results", "error", err)
+		return nil, nil, err
+	}
+	numberOfRecords := len(authors)
+
+	logger.Info("returning records", slog.Int("records", numberOfRecords))
+	return authors, &numberOfRecords, nil
+}
