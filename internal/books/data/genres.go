@@ -264,3 +264,61 @@ RETURNING
 	logger.Info("returning updated genre", "updatedGenre", genre)
 	return genre, nil
 }
+
+func (m *GenreModel) Upsert(ctx context.Context, newGenre Genre) (genre *Genre, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+INSERT INTO books.genres (id,
+                          name,
+                          description,
+                          created_at,
+                          updated_at)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5)
+ON CONFLICT (id)
+    DO UPDATE SET id          = excluded.id,
+                  name        = excluded.name,
+                  description = excluded.description,
+                  created_at  = excluded.created_at,
+                  updated_at  = excluded.updated_at;
+`
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newGenre", newGenre,
+		),
+	)
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newGenre.ID,
+		newGenre.Name,
+		newGenre.Description,
+		newGenre.CreatedAt,
+		newGenre.UpdatedAt,
+	).Scan(
+		&genre.ID,
+		&genre.Name,
+		&genre.Description,
+		&genre.CreatedAt,
+		&genre.UpdatedAt,
+	)
+	if err != nil {
+		logger.Info("an error occurred while executing query", "error", err)
+		return nil, err
+	}
+
+	logger.Info("returning upserted genre")
+	return genre, nil
+}
