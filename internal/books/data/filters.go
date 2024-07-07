@@ -22,6 +22,7 @@ type Filters struct {
 	Title           *string    `json:"title,omitempty"`
 	Description     *string    `json:"description,omitempty"`
 	Name            *string    `json:"name,omitempty"`
+	Website         *string    `json:"website,omitempty"`
 	PublishedFrom   *time.Time `json:"publishedFrom,omitempty"`
 	PublishedTo     *time.Time `json:"publishedTo,omitempty"`
 	CreatedAtFrom   *time.Time `json:"createdAtFrom,omitempty"`

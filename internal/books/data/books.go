@@ -15,7 +15,6 @@ import (
 type Book struct {
 	ID          uuid.UUID  `json:"id"`
 	Title       string     `json:"title"`
-	AuthorID    *uuid.UUID `json:"authorId"`
 	Description *string    `json:"description"`
 	Published   *time.Time `json:"published"`
 	CreatedAt   *time.Time `json:"createdAt"`
@@ -33,7 +32,6 @@ func (m *BookModel) Get(ctx context.Context, id uuid.UUID) (b *Book, err error) 
 	query := `
 SELECT id,
        title,
-       author_id,
        description,
        published,
        created_at,
@@ -55,7 +53,6 @@ WHERE id = $1;
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&b.ID,
 		&b.Title,
-		&b.AuthorID,
 		&b.Description,
 		&b.Published,
 		&b.CreatedAt,
@@ -85,23 +82,21 @@ func (m *BookModel) GetAll(
 	query := `
 SELECT id,
        title,
-       author_id,
        description,
        published,
        created_at,
        updated_at
 FROM books.books
 WHERE ($1 IS NULL OR id = $1)
-  AND ($2 IS NULL OR author_id = $2)
-  AND ($3 IS NULL OR description LIKE '%' || $3 || '%')
-  AND ($4 IS NULL OR published >= $4)
-  AND ($5 IS NULL OR published < $5)
-  AND ($6 IS NULL OR created_at >= $6)
-  AND ($7 IS NULL OR created_at < $7)
-  AND ($8 IS NULL OR updated_at >= $8)
-  AND ($9 IS NULL OR updated_at < $9)
+  AND ($2 IS NULL OR description LIKE '%' || $2 || '%')
+  AND ($3 IS NULL OR published >= $3)
+  AND ($4 IS NULL OR published < $4)
+  AND ($5 IS NULL OR created_at >= $5)
+  AND ($6 IS NULL OR created_at < $6)
+  AND ($7 IS NULL OR updated_at >= $7)
+  AND ($8 IS NULL OR updated_at < $8)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-OFFSET $10 FETCH NEXT $11 ROWS ONLY;
+OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -118,7 +113,6 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 		qCtx,
 		query,
 		filters.ID,
-		filters.AuthorID,
 		filters.Description,
 		filters.PublishedFrom,
 		filters.PublishedTo,
@@ -141,7 +135,6 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 		err := rows.Scan(
 			&book.ID,
 			&book.Title,
-			&book.AuthorID,
 			&book.Description,
 			&book.Published,
 			&book.CreatedAt,
@@ -168,7 +161,6 @@ func (m *BookModel) Insert(ctx context.Context, newBook Book) (b *Book, err erro
 	query := `
 INSERT INTO books.books (id,
                          title,
-                         author_id,
                          description,
                          published,
                          created_at,
@@ -178,12 +170,10 @@ VALUES ($1,
         $3,
         $4,
         $5,
-        $6,
-        $7)
+        $6)
 RETURNING
     id,
     title,
-    author_id,
     description,
     published,
     created_at,
@@ -206,7 +196,6 @@ RETURNING
 		query,
 		newBook.ID,
 		newBook.Title,
-		newBook.AuthorID,
 		newBook.Description,
 		newBook.Published,
 		newBook.CreatedAt,
@@ -214,7 +203,6 @@ RETURNING
 	).Scan(
 		&b.ID,
 		&b.Title,
-		&b.AuthorID,
 		&b.Description,
 		&b.Published,
 		&b.CreatedAt,
@@ -236,16 +224,14 @@ func (m *BookModel) Update(ctx context.Context, newBook Book) (b *Book, err erro
 UPDATE books.books
 SET id          = COALESCE($1, id),
     title       = COALESCE($2, title),
-    author_id   = COALESCE($3, author_id),
-    description = COALESCE($4, description),
-    published   = COALESCE($5, published),
-    created_at  = COALESCE($6, created_at),
-    updated_at  = COALESCE($7, updated_at)
+    description = COALESCE($3, description),
+    published   = COALESCE($4, published),
+    created_at  = COALESCE($5, created_at),
+    updated_at  = COALESCE($6, updated_at)
 WHERE id = $1
 RETURNING
     id,
     title,
-    author_id,
     description,
     published,
     created_at,
@@ -269,7 +255,6 @@ RETURNING
 		query,
 		newBook.ID,
 		newBook.Title,
-		newBook.AuthorID,
 		newBook.Description,
 		newBook.Published,
 		newBook.CreatedAt,
@@ -277,7 +262,6 @@ RETURNING
 	).Scan(
 		&b.ID,
 		&b.Title,
-		&b.AuthorID,
 		&b.Description,
 		&b.Published,
 		&b.CreatedAt,
@@ -304,7 +288,6 @@ func (m *BookModel) Upsert(ctx context.Context, newBook Book) (b *Book, err erro
 	query := `
 INSERT INTO books.books (id,
                          title,
-                         author_id,
                          description,
                          published,
                          created_at,
@@ -315,12 +298,10 @@ VALUES ($1,
         $4,
         $5,
         $6,
-        $7,
-        $8)
+        $7)
 ON CONFLICT (id)
     DO UPDATE SET id          = excluded.id,
                   title       = excluded.title,
-                  author_id   = excluded.author_id,
                   description = excluded.description,
                   published   = excluded.published,
                   created_at  = excluded.created_at,
@@ -344,7 +325,6 @@ ON CONFLICT (id)
 		query,
 		newBook.ID,
 		newBook.Title,
-		newBook.AuthorID,
 		newBook.Description,
 		newBook.Published,
 		newBook.CreatedAt,
@@ -352,7 +332,6 @@ ON CONFLICT (id)
 	).Scan(
 		&b.ID,
 		&b.Title,
-		&b.AuthorID,
 		&b.Description,
 		&b.Published,
 		&b.CreatedAt,
@@ -375,7 +354,6 @@ WHERE id = $1
 RETURNING
 	id,
 	title,
-	author_id,
 	description,
 	published,
 	created_at,
@@ -394,7 +372,6 @@ RETURNING
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&b.ID,
 		&b.Title,
-		&b.AuthorID,
 		&b.Description,
 		&b.Published,
 		&b.CreatedAt,
