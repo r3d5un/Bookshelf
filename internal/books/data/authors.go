@@ -280,5 +280,66 @@ RETURNING
 	logger.Info("returning updated author", "updatedAuthor", author)
 	return author, nil
 }
+
+func (m *AuthorModel) Upsert(ctx context.Context, newAuthor Author) (author *Author, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+INSERT INTO books.authors (id,
+                          name,
+                          description,
+                          website,
+                          created_at,
+                          updated_at)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6)
+ON CONFLICT (id)
+    DO UPDATE SET id          = excluded.id,
+                  name        = excluded.name,
+                  description = excluded.description,
+                  website     = excluded.website,
+                  created_at  = excluded.created_at,
+                  updated_at  = excluded.updated_at;
+`
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newAuthor", newAuthor,
+		),
+	)
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newAuthor.ID,
+		newAuthor.Name,
+		newAuthor.Description,
+		newAuthor.Website,
+		newAuthor.CreatedAt,
+		newAuthor.UpdatedAt,
+	).Scan(
+		&author.ID,
+		&author.Name,
+		&author.Description,
+		&author.Website,
+		&author.CreatedAt,
+		&author.UpdatedAt,
+	)
+	if err != nil {
+		logger.Info("an error occurred while executing query", "error", err)
+		return nil, err
+	}
+
+	logger.Info("returning upserted author")
 	return author, nil
 }
