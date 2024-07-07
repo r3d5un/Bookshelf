@@ -322,3 +322,48 @@ ON CONFLICT (id)
 	logger.Info("returning upserted genre")
 	return genre, nil
 }
+
+func (m *GenreModel) Delete(ctx context.Context, id uuid.UUID) (genre *Genre, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+DELETE FROM books.genres
+WHERE id = $1
+RETURNING
+	id,
+	name,
+	description,
+	created_at,
+	updated_at;
+`
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		"query",
+		slog.String("statement", database.MinifySQL(query)),
+		slog.String("id", id.String()),
+	)
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
+		&genre.ID,
+		&genre.Name,
+		&genre.Description,
+		&genre.CreatedAt,
+		&genre.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			logger.Info("no rows found", "group_id", id.String())
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning deleted genre")
+	return genre, nil
+}
