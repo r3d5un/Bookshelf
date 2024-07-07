@@ -203,3 +203,64 @@ RETURNING
 	logger.Info("returning inserted genre", "insertedGenre", genre)
 	return genre, nil
 }
+
+func (m *GenreModel) Update(ctx context.Context, newGenre Genre) (genre *Genre, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+UPDATE books.authors
+SET id          = COALESCE($1, id),
+    name        = COALESCE($2, name),
+    description = COALESCE($3, description),
+    created_at  = COALESCE($4, created_at),
+    updated_at  = COALESCE($5, updated_at)
+WHERE id = $1
+RETURNING
+    id,
+    name,
+    description,
+    created_at,
+    updated_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newGenre", newGenre,
+		),
+	)
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newGenre.ID,
+		newGenre.Name,
+		newGenre.Description,
+		newGenre.CreatedAt,
+		newGenre.UpdatedAt,
+	).Scan(
+		&genre.ID,
+		&genre.Name,
+		&genre.Description,
+		&genre.CreatedAt,
+		&genre.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			logger.Info("no record found", "error", err)
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("unable to perform query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning updated genre", "updatedGenre", genre)
+	return genre, nil
+}
