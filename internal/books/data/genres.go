@@ -66,7 +66,7 @@ WHERE id = $1;
 		}
 	}
 
-	logger.Info("returning author")
+	logger.Info("returning genre")
 	return genre, nil
 }
 
