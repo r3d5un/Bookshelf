@@ -208,7 +208,7 @@ func (m *GenreModel) Update(ctx context.Context, newGenre Genre) (genre *Genre, 
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-UPDATE books.authors
+UPDATE books.genres
 SET id          = COALESCE($1, id),
     name        = COALESCE($2, name),
     description = COALESCE($3, description),
