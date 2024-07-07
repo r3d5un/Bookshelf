@@ -277,6 +277,8 @@ RETURNING
 		}
 	}
 
-	logger.Info("returning updated book", "updatedAuthor", author)
+	logger.Info("returning updated author", "updatedAuthor", author)
+	return author, nil
+}
 	return author, nil
 }
