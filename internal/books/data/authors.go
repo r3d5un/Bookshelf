@@ -215,3 +215,68 @@ RETURNING
 	logger.Info("returning inserted author", "insertedAuthor", author)
 	return author, nil
 }
+
+func (m *AuthorModel) Update(ctx context.Context, newAuthor Author) (author *Author, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+UPDATE books.authors
+SET id          = COALESCE($1, id),
+    name        = COALESCE($2, name),
+    description = COALESCE($3, description),
+    website     = COALESCE($4, website),
+    created_at  = COALESCE($5, created_at),
+    updated_at  = COALESCE($6, updated_at)
+WHERE id = $1
+RETURNING
+    id,
+    name,
+    description,
+    website,
+    created_at,
+    updated_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newAuthor", newAuthor,
+		),
+	)
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newAuthor.ID,
+		newAuthor.Name,
+		newAuthor.Description,
+		newAuthor.Website,
+		newAuthor.CreatedAt,
+		newAuthor.UpdatedAt,
+	).Scan(
+		&author.ID,
+		&author.Name,
+		&author.Description,
+		&author.Website,
+		&author.CreatedAt,
+		&author.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			logger.Info("no record found", "error", err)
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("unable to perform query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning updated book", "updatedAuthor", author)
+	return author, nil
+}
