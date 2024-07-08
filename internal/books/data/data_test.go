@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/r3d5un/Bookshelf/internal/books/data"
 	"github.com/r3d5un/Bookshelf/internal/database"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -18,6 +19,7 @@ import (
 )
 
 var db *sql.DB
+var models *data.Models
 
 func TestMain(m *testing.M) {
 	handler := slog.NewJSONHandler(os.Stdout, nil)
@@ -83,6 +85,13 @@ func TestMain(m *testing.M) {
 		slog.Error("unable to open the database connection pool", "error", err)
 		os.Exit(1)
 	}
+
+	newModels := data.NewModels(db, &duration)
+	models = &newModels
+
+	// Run tests
+	exitCode := m.Run()
+	defer os.Exit(exitCode)
 }
 
 func listUpMigrationScrips(dirPath string) (migrations []string, err error) {

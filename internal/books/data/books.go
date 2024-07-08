@@ -89,14 +89,14 @@ SELECT id,
        created_at,
        updated_at
 FROM books.books
-WHERE ($1 IS NULL OR id = $1)
-  AND ($2 IS NULL OR description LIKE '%' || $2 || '%')
-  AND ($3 IS NULL OR published >= $3)
-  AND ($4 IS NULL OR published < $4)
-  AND ($5 IS NULL OR created_at >= $5)
-  AND ($6 IS NULL OR created_at < $6)
-  AND ($7 IS NULL OR updated_at >= $7)
-  AND ($8 IS NULL OR updated_at < $8)
+WHERE ($1::uuid IS NULL OR id = $1::uuid)
+  AND ($2::text IS NULL OR description LIKE '%' || $2::text || '%')
+  AND ($3::timestamp IS NULL OR published >= $3::timestamp)
+  AND ($4::timestamp IS NULL OR published < $4::timestamp)
+  AND ($5::timestamp IS NULL OR created_at >= $5::timestamp)
+  AND ($6::timestamp IS NULL OR created_at < $6::timestamp)
+  AND ($7::timestamp IS NULL OR updated_at >= $7::timestamp)
+  AND ($8::timestamp IS NULL OR updated_at < $8::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
 OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 `
@@ -116,7 +116,7 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 	rows, err := m.DB.QueryContext(
 		qCtx,
 		query,
-		filters.ID,
+		filters.ID.String(),
 		filters.Description,
 		filters.PublishedFrom,
 		filters.PublishedTo,
@@ -173,8 +173,8 @@ VALUES ($1,
         $2,
         $3,
         $4,
-        $5,
-        $6)
+        NOW(),
+        NOW())
 RETURNING
     id,
     title,
@@ -204,8 +204,6 @@ RETURNING
 		newBook.Title,
 		newBook.Description,
 		newBook.Published,
-		newBook.CreatedAt,
-		newBook.UpdatedAt,
 	).Scan(
 		&b.ID,
 		&b.Title,
@@ -233,7 +231,7 @@ SET id          = COALESCE($1, id),
     description = COALESCE($3, description),
     published   = COALESCE($4, published),
     created_at  = COALESCE($5, created_at),
-    updated_at  = COALESCE($6, updated_at)
+    updated_at  = NOW()
 WHERE id = $1
 RETURNING
     id,
@@ -266,7 +264,6 @@ RETURNING
 		newBook.Description,
 		newBook.Published,
 		newBook.CreatedAt,
-		newBook.UpdatedAt,
 	).Scan(
 		&b.ID,
 		&b.Title,
@@ -305,15 +302,20 @@ VALUES ($1,
         $3,
         $4,
         $5,
-        $6,
-        $7)
+        NOW())
 ON CONFLICT (id)
     DO UPDATE SET id          = excluded.id,
                   title       = excluded.title,
                   description = excluded.description,
                   published   = excluded.published,
                   created_at  = excluded.created_at,
-                  updated_at  = excluded.updated_at;
+                  updated_at  = excluded.updated_at
+RETURNING id,
+          title,
+          description,
+          published,
+          created_at,
+          updated_at;
 `
 
 	logger = logger.With(
@@ -338,7 +340,6 @@ ON CONFLICT (id)
 		newBook.Description,
 		newBook.Published,
 		newBook.CreatedAt,
-		newBook.UpdatedAt,
 	).Scan(
 		&b.ID,
 		&b.Title,
