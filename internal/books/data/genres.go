@@ -47,6 +47,8 @@ WHERE id = $1;
 		slog.String("id", id.String()),
 	)
 
+	genre = &Genre{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&genre.ID,
@@ -102,6 +104,8 @@ OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 		slog.String("statement", database.MinifySQL(query)),
 		"filters", filters,
 	)
+
+	genres = []*Genre{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
@@ -179,6 +183,8 @@ RETURNING
 		),
 	)
 
+	genre = &Genre{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -233,6 +239,8 @@ RETURNING
 			"newGenre", newGenre,
 		),
 	)
+
+	genre = &Genre{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
@@ -298,6 +306,8 @@ ON CONFLICT (id)
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
 	defer cancel()
 
+	genre = &Genre{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -345,6 +355,8 @@ RETURNING
 		slog.String("id", id.String()),
 	)
 
+	genre = &Genre{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&genre.ID,
@@ -371,7 +383,7 @@ RETURNING
 func (m *GenreModel) GetByBookID(
 	ctx context.Context,
 	id uuid.UUID,
-) (authors []*Author, totalResults *int, err error) {
+) (genres []*Genre, totalResults *int, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
@@ -397,6 +409,8 @@ ORDER BY b.id;
 		"id", id.String(),
 	)
 
+	genres = []*Genre{}
+
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
 		qCtx,
@@ -410,27 +424,26 @@ ORDER BY b.id;
 	defer rows.Close()
 
 	for rows.Next() {
-		var author Author
+		var genre Genre
 
 		err := rows.Scan(
-			&author.ID,
-			&author.Name,
-			&author.Description,
-			&author.Website,
-			&author.CreatedAt,
-			&author.UpdatedAt,
+			&genre.ID,
+			&genre.Name,
+			&genre.Description,
+			&genre.CreatedAt,
+			&genre.UpdatedAt,
 		)
 		if err != nil {
 			return nil, nil, err
 		}
-		authors = append(authors, &author)
+		genres = append(genres, &genre)
 	}
 	if err = rows.Err(); err != nil {
 		logger.Error("an error occurred while parsing query results", "error", err)
 		return nil, nil, err
 	}
-	numberOfRecords := len(authors)
+	numberOfRecords := len(genres)
 
 	logger.Info("returning records", slog.Int("records", numberOfRecords))
-	return authors, &numberOfRecords, nil
+	return genres, &numberOfRecords, nil
 }

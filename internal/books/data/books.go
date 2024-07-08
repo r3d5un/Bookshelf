@@ -49,6 +49,8 @@ WHERE id = $1;
 		slog.String("id", id.String()),
 	)
 
+	b = &Book{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&b.ID,
@@ -107,6 +109,8 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 		slog.String("statement", database.MinifySQL(query)),
 		"filters", filters,
 	)
+
+	books = []*Book{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
@@ -190,6 +194,8 @@ RETURNING
 		),
 	)
 
+	b = &Book{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -248,6 +254,8 @@ RETURNING
 			"newBook", newBook,
 		),
 	)
+
+	b = &Book{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
@@ -319,6 +327,8 @@ ON CONFLICT (id)
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
 	defer cancel()
 
+	b = &Book{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -367,6 +377,8 @@ RETURNING
 		slog.String("statement", database.MinifySQL(query)),
 		slog.String("id", id.String()),
 	)
+
+	b = &Book{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
@@ -421,6 +433,8 @@ ORDER BY a.id;
 		slog.String("statement", database.MinifySQL(query)),
 		"id", id.String(),
 	)
+
+	books = []*Book{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
@@ -489,6 +503,8 @@ ORDER BY bs.series_order;
 		slog.String("statement", database.MinifySQL(query)),
 		"id", id.String(),
 	)
+
+	books = []*Book{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(

@@ -49,6 +49,8 @@ WHERE id = $1;
 		slog.String("id", id.String()),
 	)
 
+	author = &Author{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
 		&author.ID,
@@ -107,6 +109,8 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 		slog.String("statement", database.MinifySQL(query)),
 		"filters", filters,
 	)
+
+	authors = []*Author{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
@@ -189,6 +193,8 @@ RETURNING
 		),
 	)
 
+	author = &Author{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -247,6 +253,8 @@ RETURNING
 			"newAuthor", newAuthor,
 		),
 	)
+
+	author = &Author{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
@@ -317,6 +325,8 @@ ON CONFLICT (id)
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
 	defer cancel()
 
+	author = &Author{}
+
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
 		qCtx,
@@ -366,6 +376,8 @@ RETURNING
 		slog.String("statement", database.MinifySQL(query)),
 		slog.String("id", id.String()),
 	)
+
+	author = &Author{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(qCtx, query, id.String()).Scan(
@@ -420,6 +432,8 @@ ORDER BY b.id;
 		slog.String("statement", database.MinifySQL(query)),
 		"id", id.String(),
 	)
+
+	authors = []*Author{}
 
 	logger.Info("performing query")
 	rows, err := m.DB.QueryContext(
