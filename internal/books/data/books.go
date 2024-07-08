@@ -392,7 +392,7 @@ RETURNING
 	return b, nil
 }
 
-func (m *AuthorModel) GetByAuthorID(
+func (m *BookModel) GetByAuthorID(
 	ctx context.Context,
 	id uuid.UUID,
 ) (books []*Book, totalResults *int, err error) {
