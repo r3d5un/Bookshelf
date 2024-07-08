@@ -1,5 +1,5 @@
 db:
-  dsn: "postgresql://postgres:postgres@localhost5432"
+  dsn: "postgresql://postgres:postgres@localhost:5432/bookshelf"
   maxOpenConns: 25
   maxIdleConns: 25
   maxIdleTime: "15m"
