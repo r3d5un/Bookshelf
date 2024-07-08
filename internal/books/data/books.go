@@ -459,3 +459,71 @@ ORDER BY a.id;
 	logger.Info("returning records", slog.Int("records", numberOfRecords))
 	return books, &numberOfRecords, nil
 }
+
+func (m *BookModel) GetBySeriesID(
+	ctx context.Context,
+	id uuid.UUID,
+) (books []*Book, totalResults *int, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+SELECT b.id,
+       b.title,
+       b.description,
+       b.published,
+       b.created_at,
+       b.updated_at
+FROM books.books b
+         INNER JOIN
+     books.book_series bs ON b.id = bs.book_id
+         INNER JOIN
+     books.series s ON s.id = bs.series_id
+WHERE s.id = $1
+ORDER BY bs.series_order;
+`
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		"query",
+		slog.String("statement", database.MinifySQL(query)),
+		"id", id.String(),
+	)
+
+	logger.Info("performing query")
+	rows, err := m.DB.QueryContext(
+		qCtx,
+		query,
+		id,
+	)
+	if err != nil {
+		logger.Error("error performing query", "error", err)
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var book Book
+
+		err := rows.Scan(
+			&book.ID,
+			&book.Title,
+			&book.Description,
+			&book.Published,
+			&book.CreatedAt,
+			&book.UpdatedAt,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		books = append(books, &book)
+	}
+	if err = rows.Err(); err != nil {
+		logger.Error("an error occurred while parsing query results", "error", err)
+		return nil, nil, err
+	}
+	numberOfRecords := len(books)
+
+	logger.Info("returning records", slog.Int("records", numberOfRecords))
+	return books, &numberOfRecords, nil
+}
