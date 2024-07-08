@@ -85,15 +85,15 @@ SELECT id,
        created_at,
        updated_at
 FROM books.series
-WHERE ($1 IS NULL OR id = $1)
-  AND ($2 IS NULL OR name LIKE '%' || $2 || '%')
-  AND ($3 IS NULL OR description LIKE '%' || $3 || '%')
-  AND ($4 IS NULL OR created_at >= $4)
-  AND ($5 IS NULL OR created_at < $5)
-  AND ($6 IS NULL OR updated_at >= $6)
-  AND ($7 IS NULL OR updated_at < $7)
+WHERE ($1::uuid IS NULL OR id = $1::uuid)
+  AND ($2::text IS NULL OR name LIKE '%' || $2::text || '%')
+  AND ($3::text IS NULL OR description LIKE '%' || $3::text || '%')
+  AND ($4::timestamp IS NULL OR created_at >= $4::timestamp)
+  AND ($5::timestamp IS NULL OR created_at < $5::timestamp)
+  AND ($6::timestamp IS NULL OR updated_at >= $6::timestamp)
+  AND ($7::timestamp IS NULL OR updated_at < $7::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-OFFSET $9 FETCH NEXT $10 ROWS ONLY;
+OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -114,11 +114,12 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 		filters.ID,
 		filters.Name,
 		filters.Description,
-		filters.Website,
 		filters.CreatedAtFrom,
 		filters.CreatedAtTo,
 		filters.UpdatedAtFrom,
 		filters.UpdatedAtTo,
+		filters.offset(),
+		filters.limit(),
 	)
 	if err != nil {
 		logger.Error("error performing query", "error", err)
@@ -163,8 +164,8 @@ INSERT INTO books.series (id,
 VALUES ($1,
         $2,
         $3,
-        $4,
-        $5)
+        NOW(),
+        NOW())
 RETURNING
     id,
     name,
@@ -193,8 +194,6 @@ RETURNING
 		newSeries.ID,
 		newSeries.Name,
 		newSeries.Description,
-		newSeries.CreatedAt,
-		newSeries.UpdatedAt,
 	).Scan(
 		&series.ID,
 		&series.Name,
@@ -220,7 +219,7 @@ SET id          = COALESCE($1, id),
     name        = COALESCE($2, name),
     description = COALESCE($3, description),
     created_at  = COALESCE($4, created_at),
-    updated_at  = COALESCE($5, updated_at)
+    updated_at  = NOW()
 WHERE id = $1
 RETURNING
     id,
@@ -251,7 +250,6 @@ RETURNING
 		newSeries.Name,
 		newSeries.Description,
 		newSeries.CreatedAt,
-		newSeries.UpdatedAt,
 	).Scan(
 		&series.ID,
 		&series.Name,
@@ -287,13 +285,18 @@ VALUES ($1,
         $2,
         $3,
         $4,
-        $5)
+        NOW())
 ON CONFLICT (id)
     DO UPDATE SET id          = excluded.id,
                   name        = excluded.name,
                   description = excluded.description,
                   created_at  = excluded.created_at,
-                  updated_at  = excluded.updated_at;
+                  updated_at  = excluded.updated_at
+RETURNING id,
+          name,
+          description,
+          created_at,
+          updated_at;
 `
 
 	logger = logger.With(
@@ -317,7 +320,6 @@ ON CONFLICT (id)
 		newSeries.Name,
 		newSeries.Description,
 		newSeries.CreatedAt,
-		newSeries.UpdatedAt,
 	).Scan(
 		&series.ID,
 		&series.Name,
