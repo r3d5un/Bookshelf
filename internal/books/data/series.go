@@ -204,3 +204,64 @@ RETURNING
 	logger.Info("returning inserted series", "insertedSeries", series)
 	return series, nil
 }
+
+func (m *SeriesModel) Update(ctx context.Context, newSeries Series) (series *Series, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+UPDATE books.series
+SET id          = COALESCE($1, id),
+    name        = COALESCE($2, name),
+    description = COALESCE($3, description),
+    created_at  = COALESCE($4, created_at),
+    updated_at  = COALESCE($5, updated_at)
+WHERE id = $1
+RETURNING
+    id,
+    name,
+    description,
+    created_at,
+    updated_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newSeries", newSeries,
+		),
+	)
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newSeries.ID,
+		newSeries.Name,
+		newSeries.Description,
+		newSeries.CreatedAt,
+		newSeries.UpdatedAt,
+	).Scan(
+		&series.ID,
+		&series.Name,
+		&series.Description,
+		&series.CreatedAt,
+		&series.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			logger.Info("no record found", "error", err)
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("unable to perform query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning updated series", "updatedSeries", series)
+	return series, nil
+}
