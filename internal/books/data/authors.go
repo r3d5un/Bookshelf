@@ -89,14 +89,14 @@ SELECT id,
        created_at,
        updated_at
 FROM books.authors
-WHERE ($1 IS NULL OR id = $1)
-  AND ($2 IS NULL OR name LIKE '%' || $2 || '%')
-  AND ($3 IS NULL OR description LIKE '%' || $3 || '%')
-  AND ($4 IS NULL OR website LIKE '%' || $4 || '%')
-  AND ($5 IS NULL OR created_at >= $5)
-  AND ($6 IS NULL OR created_at < $6)
-  AND ($7 IS NULL OR updated_at >= $7)
-  AND ($8 IS NULL OR updated_at < $8)
+WHERE ($1::uuid IS NULL OR id = $1::uuid)
+  AND ($2::text IS NULL OR name LIKE '%' || $2::text || '%')
+  AND ($3::text IS NULL OR description LIKE '%' || $3::text || '%')
+  AND ($4::text IS NULL OR website LIKE '%' || $4::text || '%')
+  AND ($5::timestamp IS NULL OR created_at >= $5::timestamp)
+  AND ($6::timestamp IS NULL OR created_at < $6::timestamp)
+  AND ($7::timestamp IS NULL OR updated_at >= $7::timestamp)
+  AND ($8::timestamp IS NULL OR updated_at < $8::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
 OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 `
@@ -124,6 +124,8 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 		filters.CreatedAtTo,
 		filters.UpdatedAtFrom,
 		filters.UpdatedAtTo,
+		filters.offset(),
+		filters.limit(),
 	)
 	if err != nil {
 		logger.Error("error performing query", "error", err)
@@ -232,7 +234,7 @@ SET id          = COALESCE($1, id),
     description = COALESCE($3, description),
     website     = COALESCE($4, website),
     created_at  = COALESCE($5, created_at),
-    updated_at  = COALESCE($6, updated_at)
+    updated_at  = NOW()
 WHERE id = $1
 RETURNING
     id,
@@ -265,7 +267,6 @@ RETURNING
 		newAuthor.Description,
 		newAuthor.Website,
 		newAuthor.CreatedAt,
-		newAuthor.UpdatedAt,
 	).Scan(
 		&author.ID,
 		&author.Name,
@@ -304,14 +305,20 @@ VALUES ($1,
         $3,
         $4,
         $5,
-        $6)
+        NOW())
 ON CONFLICT (id)
     DO UPDATE SET id          = excluded.id,
                   name        = excluded.name,
                   description = excluded.description,
                   website     = excluded.website,
                   created_at  = excluded.created_at,
-                  updated_at  = excluded.updated_at;
+                  updated_at  = excluded.updated_at
+RETURNING id,
+          name,
+          description,
+          website,
+          created_at,
+          updated_at;
 `
 
 	logger = logger.With(
@@ -336,7 +343,6 @@ ON CONFLICT (id)
 		newAuthor.Description,
 		newAuthor.Website,
 		newAuthor.CreatedAt,
-		newAuthor.UpdatedAt,
 	).Scan(
 		&author.ID,
 		&author.Name,
