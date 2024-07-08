@@ -265,3 +265,61 @@ RETURNING
 	logger.Info("returning updated series", "updatedSeries", series)
 	return series, nil
 }
+
+func (m *SeriesModel) Upsert(ctx context.Context, newSeries Series) (series *Series, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+INSERT INTO books.series  (id,
+                          name,
+                          description,
+                          created_at,
+                          updated_at)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5)
+ON CONFLICT (id)
+    DO UPDATE SET id          = excluded.id,
+                  name        = excluded.name,
+                  description = excluded.description,
+                  created_at  = excluded.created_at,
+                  updated_at  = excluded.updated_at;
+`
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"newSeries", newSeries,
+		),
+	)
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger.Info("performing query")
+	err = m.DB.QueryRowContext(
+		qCtx,
+		query,
+		newSeries.ID,
+		newSeries.Name,
+		newSeries.Description,
+		newSeries.CreatedAt,
+		newSeries.UpdatedAt,
+	).Scan(
+		&series.ID,
+		&series.Name,
+		&series.Description,
+		&series.CreatedAt,
+		&series.UpdatedAt,
+	)
+	if err != nil {
+		logger.Info("an error occurred while executing query", "error", err)
+		return nil, err
+	}
+
+	logger.Info("returning upserted author")
+	return series, nil
+}
