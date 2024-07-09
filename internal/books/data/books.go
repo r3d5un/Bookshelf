@@ -15,10 +15,10 @@ import (
 type Book struct {
 	ID          uuid.UUID  `json:"id"`
 	Title       string     `json:"title"`
-	Description *string    `json:"description"`
-	Published   *time.Time `json:"published"`
-	CreatedAt   *time.Time `json:"createdAt"`
-	UpdatedAt   *time.Time `json:"updatedAt"`
+	Description *string    `json:"description,omitempty"`
+	Published   *time.Time `json:"published,omitempty"`
+	CreatedAt   *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
 }
 
 type BookModel struct {
