@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/r3d5un/Bookshelf/internal/books/data"
 	"github.com/r3d5un/Bookshelf/internal/database"
+	tt "github.com/r3d5un/Bookshelf/internal/testing"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -30,9 +30,13 @@ func TestMain(m *testing.M) {
 	dbUser := "postgres"
 	dbPassword := "postgres"
 
-	migrations, err := listUpMigrationScrips(
-		"/home/r3d5un/Development/Projects/Bookshelf/migrations",
-	)
+	projectRoot, err := tt.FindProjectRoot()
+	if err != nil {
+		slog.Error("unable to get project root")
+		os.Exit(1)
+	}
+
+	migrations, err := tt.ListUpMigrationScrips(fmt.Sprintf("%s/migrations", projectRoot))
 	if err != nil {
 		slog.Error("unable to list up migrations", "error", err)
 		os.Exit(1)
@@ -92,19 +96,4 @@ func TestMain(m *testing.M) {
 	// Run tests
 	exitCode := m.Run()
 	defer os.Exit(exitCode)
-}
-
-func listUpMigrationScrips(dirPath string) (migrations []string, err error) {
-	files, err := os.ReadDir(dirPath)
-	if err != nil {
-		return []string{}, err
-	}
-
-	for _, file := range files {
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".up.sql") {
-			migrations = append(migrations, fmt.Sprintf("%s/%s", dirPath, file.Name()))
-		}
-	}
-
-	return migrations, nil
 }
