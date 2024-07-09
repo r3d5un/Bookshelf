@@ -22,3 +22,7 @@ func (app *application) Logger() *slog.Logger {
 func (app *application) Mux() *http.ServeMux {
 	return app.mux
 }
+
+func (app *application) DB() *sql.DB {
+	return app.db
+}

@@ -2,9 +2,13 @@ package books
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/r3d5un/Bookshelf/internal/books/data"
+	"github.com/r3d5un/Bookshelf/internal/config"
 	"github.com/r3d5un/Bookshelf/internal/system"
 )
 
@@ -13,6 +17,9 @@ const moduleName string = "books"
 type Module struct {
 	logger *slog.Logger
 	mux    *http.ServeMux
+	db     *sql.DB
+	models data.Models
+	cfg    *config.Config
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
@@ -21,6 +28,13 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 
 	m.logger.Info("injecting mux")
 	m.mux = mono.Mux()
+
+	m.logger.Info("injecting database connection")
+	m.db = mono.DB()
+
+	m.logger.Info("setting up data models")
+	timeout := time.Duration(m.cfg.DB.Timeout) * time.Second
+	m.models = data.NewModels(m.db, &timeout)
 
 	m.logger.Info("registering routes")
 	m.registerEndpoints(m.mux)

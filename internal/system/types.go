@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 )
@@ -9,6 +10,7 @@ import (
 type Monolith interface {
 	Logger() *slog.Logger
 	Mux() *http.ServeMux
+	DB() *sql.DB
 }
 
 type Module interface {
