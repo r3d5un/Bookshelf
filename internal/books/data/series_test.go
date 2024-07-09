@@ -36,8 +36,6 @@ func TestSeriesModel(t *testing.T) {
 			t.Errorf("unable to retrieve result: %v\n", err)
 			return
 		}
-
-		t.Log("Get successful!")
 	})
 
 	t.Run("GetAll", func(t *testing.T) {
