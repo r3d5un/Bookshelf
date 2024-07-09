@@ -2,7 +2,10 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func WriteJSON(
@@ -29,4 +32,18 @@ func WriteJSON(
 	w.Write(js)
 
 	return nil
+}
+
+func ReadUUIDParam(key string, r *http.Request) (*uuid.UUID, error) {
+	rawID := r.PathValue(key)
+	if rawID == "" {
+		return nil, fmt.Errorf("%s UUID parameter is emtpy", key)
+	}
+
+	id, err := uuid.Parse(rawID)
+	if err != nil {
+		return nil, fmt.Errorf("%s uuid parameter contains an invalid value: %s\n", key, rawID)
+	}
+
+	return &id, nil
 }
