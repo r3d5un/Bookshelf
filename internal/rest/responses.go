@@ -62,3 +62,12 @@ func Respond(
 		return
 	}
 }
+
+func NotFoundResponse(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	message := "the requested resource could not be found"
+	logger.InfoContext(ctx, "the requested resource could not be found")
+	ErrorResponse(w, r, http.StatusNotFound, message)
+}
