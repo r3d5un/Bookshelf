@@ -15,15 +15,17 @@ var (
 )
 
 type Models struct {
-	Books   BookModel
 	Authors AuthorModel
+	Books   BookModel
+	Genres  GenreModel
 	Series  SeriesModel
 }
 
 func NewModels(db *sql.DB, timeout *time.Duration) Models {
 	return Models{
-		Books:   BookModel{DB: db, Timeout: timeout},
 		Authors: AuthorModel{DB: db, Timeout: timeout},
+		Books:   BookModel{DB: db, Timeout: timeout},
+		Genres:  GenreModel{DB: db, Timeout: timeout},
 		Series:  SeriesModel{DB: db, Timeout: timeout},
 	}
 }
