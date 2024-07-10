@@ -67,6 +67,6 @@ RETURNING book_id,
 		return nil, err
 	}
 
-	logger.Info("returning inserted book", "insertedBook", ba)
+	logger.Info("returning inserted book author", "insertedBook", ba)
 	return ba, nil
 }
