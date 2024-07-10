@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/books/data"
@@ -9,9 +10,10 @@ import (
 
 type Book struct {
 	data.Book
-	Author []*data.Author `json:"author,omitempty"`
-	Genre  []*data.Genre  `json:"genre,omitempty"`
-	Series []*data.Series `json:"series,omitempty"`
+	Authors    []*data.Author     `json:"author,omitempty"`
+	Genres     []*data.Genre      `json:"genre,omitempty"`
+	Series     []*data.Series     `json:"series,omitempty"`
+	BookSeries []*data.BookSeries `json:"bookSeries,omitempty"`
 }
 
 func GetBook(
@@ -54,9 +56,9 @@ func GetBook(
 	}
 
 	book = &Book{
-		Book:   *bookData.book,
-		Author: authorData.authors,
-		Series: seriesData.series,
+		Book:    *bookData.book,
+		Authors: authorData.authors,
+		Series:  seriesData.series,
 	}
 
 	return book, nil
@@ -105,4 +107,58 @@ func getBookSeriesData(
 ) {
 	data, _, err := models.Series.GetByBookID(ctx, bookID)
 	seriesCh <- seriesDataResult{series: data, err: err}
+}
+
+func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
+	insertedBook, err := models.Books.Insert(ctx, newBook.Book)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	errChanLength := len(newBook.Genres) + len(newBook.Series) + len(newBook.Authors)
+	errCh := make(chan error, errChanLength)
+
+	for _, genre := range newBook.Genres {
+		wg.Add(1)
+		go func(genre *data.Genre) {
+			defer wg.Done()
+			if _, err := models.BookGenres.Insert(ctx, insertedBook.ID, genre.ID); err != nil {
+				errCh <- err
+			}
+		}(genre)
+	}
+
+	for _, series := range newBook.BookSeries {
+		wg.Add(1)
+		go func(series *data.BookSeries) {
+			defer wg.Done()
+			if _, err := models.BookSeries.Insert(ctx, series.BookID, series.SeriesID, series.SeriesOrder); err != nil {
+				errCh <- err
+			}
+		}(series)
+	}
+
+	for _, author := range newBook.Authors {
+		wg.Add(1)
+		go func(author *data.Author) {
+			defer wg.Done()
+			if _, err := models.BookAuthors.Insert(ctx, insertedBook.ID, author.ID); err != nil {
+				errCh <- err
+			}
+		}(author)
+	}
+
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+
+	for err := range errCh {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
