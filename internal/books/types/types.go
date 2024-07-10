@@ -16,49 +16,90 @@ type Book struct {
 	BookSeries []*data.BookSeries `json:"bookSeries,omitempty"`
 }
 
-func GetBook(
-	ctx context.Context,
-	models *data.Models,
-	bookID uuid.UUID,
-) (book *Book, err error) {
+func GetBook(ctx context.Context, models *data.Models, bookID uuid.UUID) (*Book, error) {
 	bookCh := make(chan bookDataResult, 1)
-	defer close(bookCh)
 	authorCh := make(chan authorDataResult, 1)
-	defer close(authorCh)
 	seriesCh := make(chan seriesDataResult, 1)
-	defer close(seriesCh)
+	genreCh := make(chan genreDataResult, 1)
+	errCh := make(chan error, 4)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		getBookData(ctx, models, bookID, bookCh)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		getBookAuthorData(ctx, models, bookID, authorCh)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		getBookSeriesData(ctx, models, bookID, seriesCh)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		getBookGenreData(ctx, models, bookID, genreCh)
+	}()
 
 	go func() {
-		go getBookData(ctx, models, bookID, bookCh)
+		wg.Wait()
 		close(bookCh)
-	}()
-	go func() {
-		go getBookAuthorData(ctx, models, bookID, authorCh)
 		close(authorCh)
-	}()
-	go func() {
-		go getBookSeriesData(ctx, models, bookID, seriesCh)
 		close(seriesCh)
+		close(genreCh)
+		close(errCh)
 	}()
 
-	bookData := <-bookCh
-	authorData := <-authorCh
-	seriesData := <-seriesCh
+	var bookData bookDataResult
+	var authorData authorDataResult
+	var seriesData seriesDataResult
+	var genreData genreDataResult
 
-	if bookData.err != nil {
-		return nil, bookData.err
-	}
-	if authorData.err != nil {
-		return nil, authorData.err
-	}
-	if seriesData.err != nil {
-		return nil, seriesData.err
+	// Collect results from channels
+	for i := 0; i < 4; i++ {
+		select {
+		case bd := <-bookCh:
+			bookData = bd
+			if bd.err != nil {
+				errCh <- bd.err
+			}
+		case ad := <-authorCh:
+			authorData = ad
+			if ad.err != nil {
+				errCh <- ad.err
+			}
+		case sd := <-seriesCh:
+			seriesData = sd
+			if sd.err != nil {
+				errCh <- sd.err
+			}
+		case gd := <-genreCh:
+			genreData = gd
+			if gd.err != nil {
+				errCh <- gd.err
+			}
+		}
 	}
 
-	book = &Book{
+	for err := range errCh {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	book := &Book{
 		Book:    *bookData.book,
 		Authors: authorData.authors,
 		Series:  seriesData.series,
+		Genres:  genreData.genres,
 	}
 
 	return book, nil
@@ -107,6 +148,21 @@ func getBookSeriesData(
 ) {
 	data, _, err := models.Series.GetByBookID(ctx, bookID)
 	seriesCh <- seriesDataResult{series: data, err: err}
+}
+
+type genreDataResult struct {
+	genres []*data.Genre
+	err    error
+}
+
+func getBookGenreData(
+	ctx context.Context,
+	models *data.Models,
+	bookID uuid.UUID,
+	genreCh chan<- genreDataResult,
+) {
+	data, _, err := models.Genres.GetByBookID(ctx, bookID)
+	genreCh <- genreDataResult{genres: data, err: err}
 }
 
 func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
