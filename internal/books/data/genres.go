@@ -390,14 +390,14 @@ func (m *GenreModel) GetByBookID(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-SELECT a.id,
-       a.name,
-       a.description,
-       a.created_at,
-       a.updated_at
+SELECT g.id,
+       g.name,
+       g.description,
+       g.created_at,
+       g.updated_at
 FROM books.genres g
          INNER JOIN
-     books.book_genres bg ON g.id = bg.genre_id
+     books.book_genres bg ON g.id = bg.genres_id
          INNER JOIN
      books.books b ON b.id = bg.book_id
 WHERE b.id = $1
