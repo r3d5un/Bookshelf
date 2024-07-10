@@ -27,7 +27,7 @@ func (m BookSeriesModel) Insert(
 	bookID uuid.UUID,
 	seriesID uuid.UUID,
 	order float32,
-) (ba *BookSeries, err error) {
+) (bs *BookSeries, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
@@ -54,7 +54,7 @@ RETURNING book_id,
 		),
 	)
 
-	ba = &BookSeries{}
+	bs = &BookSeries{}
 
 	logger.Info("performing query")
 	err = m.DB.QueryRowContext(
@@ -64,9 +64,9 @@ RETURNING book_id,
 		seriesID,
 		order,
 	).Scan(
-		&ba.BookID,
-		&ba.SeriesID,
-		&ba.SeriesOrder,
+		&bs.BookID,
+		&bs.SeriesID,
+		&bs.SeriesOrder,
 	)
 
 	if err != nil {
@@ -74,6 +74,6 @@ RETURNING book_id,
 		return nil, err
 	}
 
-	logger.Info("returning inserted book", "insertedBook", ba)
-	return ba, nil
+	logger.Info("returning inserted book series", "insertedBook", bs)
+	return bs, nil
 }
