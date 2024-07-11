@@ -54,7 +54,7 @@ func run() (err error) {
 	app := system.NewMonolith(
 		logger,
 		http.NewServeMux(),
-		[]system.Module{&books.Module{}},
+		map[string]system.Module{"books": &books.Module{}},
 		db,
 		cfg,
 	)

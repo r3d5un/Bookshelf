@@ -19,7 +19,7 @@ import (
 type MonolithApplication struct {
 	logger  *slog.Logger
 	mux     *http.ServeMux
-	modules []Module
+	modules map[string]Module
 	db      *sql.DB
 	cfg     *config.Config
 }
@@ -40,14 +40,14 @@ func (app *MonolithApplication) Config() *config.Config {
 	return app.cfg
 }
 
-func (app *MonolithApplication) Modules() []Module {
+func (app *MonolithApplication) Modules() map[string]Module {
 	return app.modules
 }
 
 func NewMonolith(
 	logger *slog.Logger,
 	mux *http.ServeMux,
-	modules []Module,
+	modules map[string]Module,
 	db *sql.DB,
 	cfg *config.Config,
 ) MonolithApplication {
@@ -112,8 +112,8 @@ func (app *MonolithApplication) routes() http.Handler {
 }
 
 func (app *MonolithApplication) SetupModules(ctx context.Context) error {
-	for _, v := range app.modules {
-		if err := v.Startup(ctx, app); err != nil {
+	for _, module := range app.modules {
+		if err := module.Startup(ctx, app); err != nil {
 			return err
 		}
 	}
@@ -122,8 +122,8 @@ func (app *MonolithApplication) SetupModules(ctx context.Context) error {
 }
 
 func (app *MonolithApplication) ShutdownModules() error {
-	for _, v := range app.modules {
-		v.Shutdown()
+	for _, module := range app.modules {
+		module.Shutdown()
 	}
 
 	return nil

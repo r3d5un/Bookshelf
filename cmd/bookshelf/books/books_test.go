@@ -110,7 +110,7 @@ func TestMain(m *testing.M) {
 	app := system.NewMonolith(
 		slog.Default(),
 		http.NewServeMux(),
-		[]system.Module{},
+		map[string]system.Module{},
 		db,
 		&cfg,
 	)

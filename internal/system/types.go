@@ -14,7 +14,7 @@ type Monolith interface {
 	Mux() *http.ServeMux
 	DB() *sql.DB
 	Config() *config.Config
-	Modules() []Module
+	Modules() map[string]Module
 }
 
 type Module interface {
