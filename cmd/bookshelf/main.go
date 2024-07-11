@@ -61,7 +61,10 @@ func run() (err error) {
 	}
 
 	app.logger.Info("running module startup")
-	app.setupModules(context.Background())
+	err = app.setupModules(context.Background())
+	if err != nil {
+		return err
+	}
 
 	err = app.serve()
 	if err != nil {
@@ -70,7 +73,10 @@ func run() (err error) {
 	}
 
 	app.logger.Info("shutting down modules")
-	app.shutdownModules()
+	err = app.shutdownModules()
+	if err != nil {
+		return err
+	}
 
 	app.logger.Info("exiting...")
 
