@@ -2,9 +2,11 @@ package books
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/r3d5un/Bookshelf/internal/books/data"
+	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/rest"
 )
@@ -20,16 +22,17 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 		rest.NotFoundResponse(w, r)
 		return
 	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
 
-	logger.InfoContext(ctx, "querying database for obtain clients by id")
-	book, err := m.models.Books.Get(ctx, *id)
+	logger.Info("querying database for obtain clients by id")
+	book, err := types.GetBook(ctx, &m.models, *id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			logger.InfoContext(ctx, "clients not found", "client", book)
+			logger.Info("book not found", "book", book)
 			rest.NotFoundResponse(w, r)
 		default:
-			logger.ErrorContext(ctx, "unable to get client", "id", id, "error", err)
+			logger.Error("unable to get book", "id", id, "error", err)
 			rest.ServerErrorResponse(w, r, err)
 		}
 		return
