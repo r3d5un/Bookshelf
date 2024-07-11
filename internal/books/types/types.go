@@ -3,17 +3,23 @@ package types
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/books/data"
 )
 
 type Book struct {
-	data.Book
-	Authors    []*data.Author     `json:"author,omitempty"`
-	Genres     []*data.Genre      `json:"genre,omitempty"`
-	Series     []*data.Series     `json:"series,omitempty"`
-	BookSeries []*data.BookSeries `json:"bookSeries,omitempty"`
+	ID          *uuid.UUID         `json:"id"`
+	Title       *string            `json:"title"`
+	Description *string            `json:"description,omitempty"`
+	Published   *time.Time         `json:"published,omitempty"`
+	CreatedAt   *time.Time         `json:"createdAt,omitempty"`
+	UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
+	Authors     []*data.Author     `json:"author,omitempty"`
+	Genres      []*data.Genre      `json:"genre,omitempty"`
+	Series      []*data.Series     `json:"series,omitempty"`
+	BookSeries  []*data.BookSeries `json:"bookSeries,omitempty"`
 }
 
 func GetBook(ctx context.Context, models *data.Models, bookID uuid.UUID) (*Book, error) {
@@ -96,10 +102,15 @@ func GetBook(ctx context.Context, models *data.Models, bookID uuid.UUID) (*Book,
 	}
 
 	book := &Book{
-		Book:    *bookData.book,
-		Authors: authorData.authors,
-		Series:  seriesData.series,
-		Genres:  genreData.genres,
+		ID:          &bookData.book.ID,
+		Title:       &bookData.book.Title,
+		Description: bookData.book.Description,
+		Published:   bookData.book.Published,
+		CreatedAt:   bookData.book.CreatedAt,
+		UpdatedAt:   bookData.book.UpdatedAt,
+		Authors:     authorData.authors,
+		Series:      seriesData.series,
+		Genres:      genreData.genres,
 	}
 
 	return book, nil
@@ -166,7 +177,14 @@ func getBookGenreData(
 }
 
 func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
-	insertedBook, err := models.Books.Insert(ctx, newBook.Book)
+	insertedBook, err := models.Books.Insert(ctx, data.Book{
+		ID:          *newBook.ID,
+		Title:       *newBook.Title,
+		Description: newBook.Description,
+		Published:   newBook.Published,
+		CreatedAt:   newBook.CreatedAt,
+		UpdatedAt:   newBook.UpdatedAt,
+	})
 	if err != nil {
 		return err
 	}

@@ -156,9 +156,14 @@ func TestGetBook(t *testing.T) {
 	}
 
 	book := types.Book{
-		Book:    bookRecord,
-		Authors: []*data.Author{&authorRecord},
-		Genres:  []*data.Genre{&genreRecord},
+		ID:          &bookRecord.ID,
+		Title:       &bookRecord.Title,
+		Description: bookRecord.Description,
+		Published:   bookRecord.Published,
+		CreatedAt:   bookRecord.CreatedAt,
+		UpdatedAt:   bookRecord.UpdatedAt,
+		Authors:     []*data.Author{&authorRecord},
+		Genres:      []*data.Genre{&genreRecord},
 		BookSeries: []*data.BookSeries{
 			{
 				BookID:      bookRecord.ID,
@@ -177,7 +182,8 @@ func TestGetBook(t *testing.T) {
 	})
 
 	t.Run("TestGetBook", func(t *testing.T) {
-		if _, err := types.GetBook(context.Background(), models, book.ID); err != nil {
+		id := bookRecord.ID
+		if _, err := types.GetBook(context.Background(), models, id); err != nil {
 			t.Errorf("error occurred while retrieving book: %s\n", err)
 			return
 		}

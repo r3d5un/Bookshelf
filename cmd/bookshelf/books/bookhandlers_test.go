@@ -2,6 +2,7 @@ package books_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -68,9 +69,14 @@ func TestBookHandlers(t *testing.T) {
 	}
 
 	book := types.Book{
-		Book:    bookRecord,
-		Authors: []*data.Author{&authorRecord},
-		Genres:  []*data.Genre{&genreRecord},
+		ID:          &bookRecord.ID,
+		Title:       &bookRecord.Title,
+		Description: bookRecord.Description,
+		Published:   bookRecord.Published,
+		CreatedAt:   bookRecord.CreatedAt,
+		UpdatedAt:   bookRecord.UpdatedAt,
+		Authors:     []*data.Author{&authorRecord},
+		Genres:      []*data.Genre{&genreRecord},
 		BookSeries: []*data.BookSeries{
 			{
 				BookID:      bookRecord.ID,
@@ -85,6 +91,26 @@ func TestBookHandlers(t *testing.T) {
 		t.Errorf("error occurred when registering new book: %s\n", err)
 		return
 	}
+
+	t.Run("TestPostBookHandler", func(t *testing.T) {
+		newBook, err := json.Marshal(book)
+		if err != nil {
+			t.Errorf("unable to marshal book: %s\n", newBook)
+			return
+		}
+
+		postReq := httptest.NewRequest(
+			http.MethodPost,
+			"/api/v1/bookshelf/books",
+			nil,
+		)
+		postReq.Header.Set("Content-Type", "application/json")
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.PostBookHandler)
+		handler.ServeHTTP(rr, postReq)
+	})
 
 	t.Run("TestGetBook", func(t *testing.T) {
 		getReq := httptest.NewRequest(
@@ -108,6 +134,5 @@ func TestBookHandlers(t *testing.T) {
 			)
 			return
 		}
-
 	})
 }
