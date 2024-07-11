@@ -2,6 +2,7 @@ package books
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -40,4 +41,28 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, book, nil)
+}
+
+func (m *Module) PostBookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing request body")
+	var newBook types.Book
+	err := rest.ReadJSON(r, newBook)
+	if err != nil {
+		logger.Info("unable to read request body", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
+		return
+	}
+
+	err = types.NewBook(ctx, &m.models, newBook)
+	if err != nil {
+		logger.Error("unable to create new book records", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusCreated, nil, nil)
 }

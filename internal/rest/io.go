@@ -34,6 +34,18 @@ func WriteJSON(
 	return nil
 }
 
+func ReadJSON(r *http.Request, data interface{}) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	err := decoder.Decode(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ReadUUIDParam(key string, r *http.Request) (*uuid.UUID, error) {
 	rawID := r.PathValue(key)
 	if rawID == "" {

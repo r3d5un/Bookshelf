@@ -1,18 +1,18 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/r3d5un/Bookshelf/internal/logging"
 )
 
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	ctx := r.Context()
-	logger := logging.LoggerFromContext(ctx)
-
 	LogError(r, err)
-	message := "the server encountered a problem and could not process your request"
-	logger.InfoContext(ctx, "the server encountered a problem and could not process your request")
+	message := fmt.Sprintf(
+		"the server encountered a problem and could not process your request: %s\n",
+		err,
+	)
 	ErrorResponse(w, r, http.StatusInternalServerError, message)
 }
 
@@ -44,6 +44,10 @@ func ErrorResponse(
 		LogError(r, err)
 		w.WriteHeader(500)
 	}
+}
+
+func BadRequestResponse(w http.ResponseWriter, r *http.Request, message string) {
+	ErrorResponse(w, r, http.StatusBadRequest, message)
 }
 
 func Respond(
