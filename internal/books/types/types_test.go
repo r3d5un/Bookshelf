@@ -3,6 +3,7 @@ package types_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -201,5 +202,16 @@ func TestComplexBookTypes(t *testing.T) {
 		}
 	})
 
-	// TODO: Test getting non-existing books
+	t.Run("TestGetNonExistingBook", func(t *testing.T) {
+		if _, err := types.GetBook(context.Background(), models, uuid.New()); err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				// desired result. caller is tasked with handling the ErrRecordNotFound error
+				return
+			default:
+				t.Errorf("error occurred while retrieving book: %s\n", err)
+				return
+			}
+		}
+	})
 }
