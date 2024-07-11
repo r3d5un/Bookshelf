@@ -44,9 +44,11 @@ WHERE id = $1;
 	defer cancel()
 
 	logger = logger.With(
-		"query",
-		slog.String("statement", database.MinifySQL(query)),
-		slog.String("id", id.String()),
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
 	)
 
 	b = &Book{}
@@ -105,9 +107,11 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 	defer cancel()
 
 	logger = logger.With(
-		"query",
-		slog.String("statement", database.MinifySQL(query)),
-		"filters", filters,
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"filters", filters,
+		),
 	)
 
 	books = []*Book{}
@@ -374,9 +378,11 @@ RETURNING
 	defer cancel()
 
 	logger = logger.With(
-		"query",
-		slog.String("statement", database.MinifySQL(query)),
-		slog.String("id", id.String()),
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
 	)
 
 	b = &Book{}
@@ -430,9 +436,11 @@ ORDER BY a.id;
 	defer cancel()
 
 	logger = logger.With(
-		"query",
-		slog.String("statement", database.MinifySQL(query)),
-		"id", id.String(),
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"id", id.String(),
+		),
 	)
 
 	books = []*Book{}
@@ -500,9 +508,11 @@ ORDER BY bs.series_order;
 	defer cancel()
 
 	logger = logger.With(
-		"query",
-		slog.String("statement", database.MinifySQL(query)),
-		"id", id.String(),
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"id", id.String(),
+		),
 	)
 
 	books = []*Book{}
