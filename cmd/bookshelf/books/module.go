@@ -63,6 +63,7 @@ type RouteDefinitionList []RouteDefinition
 func (m *Module) registerEndpoints(mux *http.ServeMux) {
 	scimRouteDefinitions := RouteDefinitionList{
 		{"GET /api/v1/books/healthcheck", m.healthcheckHandler},
+		{"GET /api/v1/books/books/{id}", m.GetBookHandler},
 	}
 
 	m.logger.Info("adding protected endpoints")
