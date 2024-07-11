@@ -26,6 +26,9 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.initModuleLogger(mono.Logger())
 	m.logger.Info("starting module", slog.String("module", moduleName))
 
+	m.logger.Info("injecting configuration")
+	m.cfg = mono.Config()
+
 	m.logger.Info("injecting mux")
 	m.mux = mono.Mux()
 
