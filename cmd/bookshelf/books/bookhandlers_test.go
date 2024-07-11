@@ -86,7 +86,7 @@ func TestBookHandlers(t *testing.T) {
 		},
 	}
 
-	err = types.NewBook(context.Background(), models, book)
+	id, err := types.NewBook(context.Background(), models, book)
 	if err != nil {
 		t.Errorf("error occurred when registering new book: %s\n", err)
 		return
@@ -119,7 +119,7 @@ func TestBookHandlers(t *testing.T) {
 			nil,
 		)
 		getReq.Header.Set("Content-Type", "application/json")
-		getReq.SetPathValue("id", book.ID.String())
+		getReq.SetPathValue("id", id.String())
 
 		rr := httptest.NewRecorder()
 

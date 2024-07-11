@@ -100,7 +100,7 @@ func TestMain(m *testing.M) {
 	defer os.Exit(exitCode)
 }
 
-func TestGetBook(t *testing.T) {
+func TestComplexBookTypes(t *testing.T) {
 	description := "This is a test description."
 	timestamp := time.Now()
 
@@ -156,7 +156,7 @@ func TestGetBook(t *testing.T) {
 	}
 
 	book := types.Book{
-		ID:          &bookRecord.ID,
+		ID:          nil,
 		Title:       &bookRecord.Title,
 		Description: bookRecord.Description,
 		Published:   bookRecord.Published,
@@ -174,7 +174,7 @@ func TestGetBook(t *testing.T) {
 	}
 
 	t.Run("TestNewBook", func(t *testing.T) {
-		err := types.NewBook(context.Background(), models, book)
+		_, err := types.NewBook(context.Background(), models, book)
 		if err != nil {
 			t.Errorf("error occurred when registering new book: %s\n", err)
 			return
@@ -182,10 +182,24 @@ func TestGetBook(t *testing.T) {
 	})
 
 	t.Run("TestGetBook", func(t *testing.T) {
-		id := bookRecord.ID
-		if _, err := types.GetBook(context.Background(), models, id); err != nil {
+		bookRecord := data.Book{
+			ID:          uuid.New(),
+			Title:       "TestGetBookTitle",
+			Description: &description,
+			Published:   &timestamp,
+			CreatedAt:   &timestamp,
+			UpdatedAt:   &timestamp,
+		}
+		_, err := models.Books.Insert(context.Background(), bookRecord)
+		if err != nil {
+			t.Errorf("unable to insert book: %s\n", err)
+			return
+		}
+		if _, err := types.GetBook(context.Background(), models, bookRecord.ID); err != nil {
 			t.Errorf("error occurred while retrieving book: %s\n", err)
 			return
 		}
 	})
+
+	// TODO: Test getting non-existing books
 }

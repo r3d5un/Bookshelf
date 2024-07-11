@@ -56,7 +56,7 @@ func (m *Module) PostBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = types.NewBook(ctx, &m.models, newBook)
+	_, err = types.NewBook(ctx, &m.models, newBook)
 	if err != nil {
 		logger.Error("unable to create new book records", "error", err)
 		rest.ServerErrorResponse(w, r, err)

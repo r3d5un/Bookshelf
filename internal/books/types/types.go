@@ -176,9 +176,9 @@ func getBookGenreData(
 	genreCh <- genreDataResult{genres: data, err: err}
 }
 
-func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
+func NewBook(ctx context.Context, models *data.Models, newBook Book) (*uuid.UUID, error) {
 	insertedBook, err := models.Books.Insert(ctx, data.Book{
-		ID:          *newBook.ID,
+		ID:          uuid.New(),
 		Title:       *newBook.Title,
 		Description: newBook.Description,
 		Published:   newBook.Published,
@@ -186,7 +186,7 @@ func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
 		UpdatedAt:   newBook.UpdatedAt,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var wg sync.WaitGroup
@@ -207,7 +207,7 @@ func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
 		wg.Add(1)
 		go func(series *data.BookSeries) {
 			defer wg.Done()
-			if _, err := models.BookSeries.Insert(ctx, series.BookID, series.SeriesID, series.SeriesOrder); err != nil {
+			if _, err := models.BookSeries.Insert(ctx, insertedBook.ID, series.SeriesID, series.SeriesOrder); err != nil {
 				errCh <- err
 			}
 		}(series)
@@ -230,9 +230,9 @@ func NewBook(ctx context.Context, models *data.Models, newBook Book) error {
 
 	for err := range errCh {
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return &insertedBook.ID, nil
 }
