@@ -105,8 +105,7 @@ func (app *MonolithApplication) Serve() error {
 
 func (app *MonolithApplication) routes() http.Handler {
 	app.logger.Info("creating standard middleware chain")
-	// TODO: Create middleware: recoverPanic
-	standard := alice.New(app.logRequest)
+	standard := alice.New(app.recoverPanic, app.logRequest)
 
 	handler := standard.Then(app.Mux())
 	return handler
