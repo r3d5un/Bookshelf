@@ -51,52 +51,33 @@ func run() (err error) {
 		os.Exit(1)
 	}
 
-	app := &application{
-		logger: logger,
-		mux:    http.NewServeMux(),
-		modules: []system.Module{
-			&books.Module{},
-		},
-		db: db,
-	}
+	app := system.NewMonolith(
+		logger,
+		http.NewServeMux(),
+		[]system.Module{&books.Module{}},
+		db,
+		cfg,
+	)
 
-	app.logger.Info("running module startup")
-	err = app.setupModules(context.Background())
+	app.Logger().Info("running module startup")
+	err = app.SetupModules(context.Background())
 	if err != nil {
 		return err
 	}
 
-	err = app.serve()
+	err = app.Serve()
 	if err != nil {
-		app.logger.Error("unable to start server", "error", err)
+		app.Logger().Error("unable to start server", "error", err)
 		return err
 	}
 
-	app.logger.Info("shutting down modules")
-	err = app.shutdownModules()
+	app.Logger().Info("shutting down modules")
+	err = app.ShutdownModules()
 	if err != nil {
 		return err
 	}
 
-	app.logger.Info("exiting...")
-
-	return nil
-}
-
-func (app *application) setupModules(ctx context.Context) error {
-	for _, v := range app.modules {
-		if err := v.Startup(ctx, app); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (app *application) shutdownModules() error {
-	for _, v := range app.modules {
-		v.Shutdown()
-	}
+	app.Logger().Info("exiting...")
 
 	return nil
 }
