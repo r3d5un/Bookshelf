@@ -87,7 +87,7 @@ func TestBookHandlers(t *testing.T) {
 		},
 	}
 
-	id, err := types.NewBook(context.Background(), models, book)
+	id, err := types.CreateBook(context.Background(), models, book)
 	if err != nil {
 		t.Errorf("error occurred when registering new book: %s\n", err)
 		return

@@ -176,15 +176,15 @@ func TestComplexBookTypes(t *testing.T) {
 
 	var insertedBook *data.Book
 
-	t.Run("TestNewBook", func(t *testing.T) {
-		_, err := types.NewBook(context.Background(), models, book)
+	t.Run("TestCreateBook", func(t *testing.T) {
+		_, err := types.CreateBook(context.Background(), models, book)
 		if err != nil {
 			t.Errorf("error occurred when registering new book: %s\n", err)
 			return
 		}
 	})
 
-	t.Run("TestGetBook", func(t *testing.T) {
+	t.Run("TestReadBook", func(t *testing.T) {
 		bookRecord := data.Book{
 			ID:          uuid.New(),
 			Title:       "TestGetBookTitle",
@@ -198,14 +198,14 @@ func TestComplexBookTypes(t *testing.T) {
 			t.Errorf("unable to insert book: %s\n", err)
 			return
 		}
-		if _, err := types.GetBook(context.Background(), models, bookRecord.ID); err != nil {
+		if _, err := types.ReadBook(context.Background(), models, bookRecord.ID); err != nil {
 			t.Errorf("error occurred while retrieving book: %s\n", err)
 			return
 		}
 	})
 
 	t.Run("TestGetNonExistingBook", func(t *testing.T) {
-		if _, err := types.GetBook(context.Background(), models, uuid.New()); err != nil {
+		if _, err := types.ReadBook(context.Background(), models, uuid.New()); err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
 				// desired result. caller is tasked with handling the ErrRecordNotFound error

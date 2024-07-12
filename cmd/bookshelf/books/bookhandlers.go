@@ -26,7 +26,7 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("ID parsed", slog.String("id", id.String()))
 
 	logger.Info("querying database for obtain clients by id")
-	book, err := types.GetBook(ctx, &m.models, *id)
+	book, err := types.ReadBook(ctx, &m.models, *id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -56,7 +56,7 @@ func (m *Module) PostBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = types.NewBook(ctx, &m.models, newBook)
+	_, err = types.CreateBook(ctx, &m.models, newBook)
 	if err != nil {
 		logger.Error("unable to create new book records", "error", err)
 		rest.ServerErrorResponse(w, r, err)

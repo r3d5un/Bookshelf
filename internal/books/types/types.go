@@ -25,7 +25,7 @@ type Book struct {
 // Retrieves and builds a Book object containing the complete dataset for a single book.
 //
 // If the book does not exist, nil and an ErrRecordNotFound error will be returned.
-func GetBook(ctx context.Context, models *data.Models, bookID uuid.UUID) (*Book, error) {
+func ReadBook(ctx context.Context, models *data.Models, bookID uuid.UUID) (*Book, error) {
 	bookCh := make(chan bookDataResult, 1)
 	authorCh := make(chan authorDataResult, 1)
 	seriesCh := make(chan seriesDataResult, 1)
@@ -179,7 +179,7 @@ func getBookGenreData(
 	genreCh <- genreDataResult{genres: data, err: err}
 }
 
-func NewBook(ctx context.Context, models *data.Models, newBook Book) (*uuid.UUID, error) {
+func CreateBook(ctx context.Context, models *data.Models, newBook Book) (*uuid.UUID, error) {
 	insertedBook, err := models.Books.Insert(ctx, data.Book{
 		ID:          uuid.New(),
 		Title:       *newBook.Title,
@@ -255,7 +255,7 @@ func UpdateBook(ctx context.Context, models *data.Models, newBookData Book) (*Bo
 		return nil, err
 	}
 
-	updatedBookData, err := GetBook(ctx, models, updatedBook.ID)
+	updatedBookData, err := ReadBook(ctx, models, updatedBook.ID)
 	if err != nil {
 		return nil, err
 	}
