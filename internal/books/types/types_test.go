@@ -204,6 +204,22 @@ func TestComplexBookTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("TestReadAllBooks", func(t *testing.T) {
+		filters := data.Filters{
+			Page:     1,
+			PageSize: 10,
+		}
+		bookList, err := types.ReadAllBooks(context.Background(), models, filters)
+		if err != nil {
+			t.Errorf("unable to read books: %s\n", err)
+			return
+		}
+		if len(bookList) < 1 {
+			t.Error("no books returned")
+			return
+		}
+	})
+
 	t.Run("TestGetNonExistingBook", func(t *testing.T) {
 		if _, err := types.ReadBook(context.Background(), models, uuid.New()); err != nil {
 			switch {

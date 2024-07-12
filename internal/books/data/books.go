@@ -120,7 +120,7 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 	rows, err := m.DB.QueryContext(
 		qCtx,
 		query,
-		filters.ID.String(),
+		filters.ID,
 		filters.Description,
 		filters.PublishedFrom,
 		filters.PublishedTo,
