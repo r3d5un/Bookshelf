@@ -10,8 +10,8 @@ import (
 )
 
 type Book struct {
-	ID          *uuid.UUID         `json:"id"`
-	Title       *string            `json:"title"`
+	ID          *uuid.UUID         `json:"id,omitempty"`
+	Title       *string            `json:"title,omitempty"`
 	Description *string            `json:"description,omitempty"`
 	Published   *time.Time         `json:"published,omitempty"`
 	CreatedAt   *time.Time         `json:"createdAt,omitempty"`
