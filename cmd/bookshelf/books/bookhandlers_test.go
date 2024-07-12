@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -102,7 +103,7 @@ func TestBookHandlers(t *testing.T) {
 		postReq := httptest.NewRequest(
 			http.MethodPost,
 			"/api/v1/bookshelf/books",
-			nil,
+			strings.NewReader(string(newBook)),
 		)
 		postReq.Header.Set("Content-Type", "application/json")
 
@@ -110,6 +111,15 @@ func TestBookHandlers(t *testing.T) {
 
 		handler := http.HandlerFunc(mod.PostBookHandler)
 		handler.ServeHTTP(rr, postReq)
+
+		if status := rr.Code; status != http.StatusCreated {
+			t.Errorf(
+				"handler returned wrong error code: got %d, expected %d",
+				status,
+				http.StatusCreated,
+			)
+			return
+		}
 	})
 
 	t.Run("TestGetBook", func(t *testing.T) {
