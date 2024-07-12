@@ -65,6 +65,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /api/v1/books/healthcheck", m.healthcheckHandler},
 		{"GET /api/v1/books/books/{id}", m.GetBookHandler},
 		{"POST /api/v1/books/book", m.PostBookHandler},
+		{"PATCH /api/v1/books/book/{id}", m.PatchBookHandler},
 	}
 
 	m.logger.Info("adding protected endpoints")

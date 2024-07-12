@@ -239,3 +239,26 @@ func NewBook(ctx context.Context, models *data.Models, newBook Book) (*uuid.UUID
 
 	return &insertedBook.ID, nil
 }
+
+func UpdateBook(ctx context.Context, models *data.Models, newBookData Book) (*Book, error) {
+	bookRecord := data.Book{
+		ID:          *newBookData.ID,
+		Title:       *newBookData.Title,
+		Description: newBookData.Description,
+		Published:   newBookData.Published,
+		CreatedAt:   newBookData.CreatedAt,
+		UpdatedAt:   newBookData.UpdatedAt,
+	}
+
+	updatedBook, err := models.Books.Update(ctx, bookRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedBookData, err := GetBook(ctx, models, updatedBook.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedBookData, nil
+}
