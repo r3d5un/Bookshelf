@@ -262,3 +262,12 @@ func UpdateBook(ctx context.Context, models *data.Models, newBookData Book) (*Bo
 
 	return updatedBookData, nil
 }
+
+func DeleteBook(ctx context.Context, models *data.Models, id uuid.UUID) error {
+	_, err := models.Books.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

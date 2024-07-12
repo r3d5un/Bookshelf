@@ -174,6 +174,8 @@ func TestComplexBookTypes(t *testing.T) {
 		},
 	}
 
+	var insertedBook *data.Book
+
 	t.Run("TestNewBook", func(t *testing.T) {
 		_, err := types.NewBook(context.Background(), models, book)
 		if err != nil {
@@ -191,7 +193,7 @@ func TestComplexBookTypes(t *testing.T) {
 			CreatedAt:   &timestamp,
 			UpdatedAt:   &timestamp,
 		}
-		_, err := models.Books.Insert(context.Background(), bookRecord)
+		insertedBook, err = models.Books.Insert(context.Background(), bookRecord)
 		if err != nil {
 			t.Errorf("unable to insert book: %s\n", err)
 			return
@@ -214,4 +216,12 @@ func TestComplexBookTypes(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("TestDeleteBook", func(t *testing.T) {
+		if err := types.DeleteBook(context.Background(), models, insertedBook.ID); err != nil {
+			t.Errorf("unable to delete book: %s\n", err)
+			return
+		}
+	},
+	)
 }
