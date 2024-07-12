@@ -49,7 +49,7 @@ func (m *Module) PostBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("parsing request body")
 	var newBook types.Book
-	err := rest.ReadJSON(r, newBook)
+	err := rest.ReadJSON(r, &newBook)
 	if err != nil {
 		logger.Info("unable to read request body", "error", err)
 		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
@@ -81,8 +81,10 @@ func (m *Module) PatchBookHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("ID parsed", slog.String("id", id.String()))
 
 	logger.Info("parsing request body")
-	var updateData types.Book
-	err = rest.ReadJSON(r, updateData)
+	updateData := types.Book{
+		ID: id,
+	}
+	err = rest.ReadJSON(r, &updateData)
 	if err != nil {
 		logger.Info("unable to read request body", "error", err)
 		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
