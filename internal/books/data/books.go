@@ -230,8 +230,7 @@ func (m *BookModel) Update(ctx context.Context, newBook Book) (b *Book, err erro
 
 	query := `
 UPDATE books.books
-SET id          = COALESCE($1, id),
-    title       = COALESCE($2, title),
+SET title       = CASE WHEN $2 = '' THEN title ELSE COALESCE($2, title) END,
     description = COALESCE($3, description),
     published   = COALESCE($4, published),
     created_at  = COALESCE($5, created_at),
