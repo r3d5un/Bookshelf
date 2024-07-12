@@ -30,7 +30,7 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			logger.Info("book not found", "book", book)
+			logger.Info("book not found", "id", id)
 			rest.NotFoundResponse(w, r)
 		default:
 			logger.Error("unable to get book", "id", id, "error", err)
