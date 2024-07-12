@@ -107,3 +107,34 @@ func (m *Module) PatchBookHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, updatedBook, nil)
 }
+
+func (m *Module) DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing ID")
+	id, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to read id", "id", id, "error", err)
+		rest.NotFoundResponse(w, r)
+		return
+	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
+
+	logger.Info("deleting book", "id", id)
+	if err := types.DeleteBook(ctx, &m.models, *id); err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info("book not found", "id", id)
+			rest.NotFoundResponse(w, r)
+		default:
+			logger.Error("unable to delete book", "id", id, "error", err)
+			rest.ServerErrorResponse(w, r, err)
+		}
+		return
+	}
+	logger.Info("book deleted")
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusNoContent, nil, nil)
+}
