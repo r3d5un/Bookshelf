@@ -75,3 +75,11 @@ func NotFoundResponse(w http.ResponseWriter, r *http.Request) {
 	logger.InfoContext(ctx, "the requested resource could not be found")
 	ErrorResponse(w, r, http.StatusNotFound, message)
 }
+
+func FailedValidationResponse(
+	w http.ResponseWriter,
+	r *http.Request,
+	errors map[string]string,
+) {
+	ErrorResponse(w, r, http.StatusUnprocessableEntity, errors)
+}

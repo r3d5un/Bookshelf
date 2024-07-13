@@ -4,8 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/validator"
 )
 
 func WriteJSON(
@@ -58,4 +64,117 @@ func ReadUUIDParam(key string, r *http.Request) (*uuid.UUID, error) {
 	}
 
 	return &id, nil
+}
+
+func ReadQueryString(
+	qs url.Values,
+	key string,
+	defaultValue string,
+) string {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	return s
+}
+
+func ReadQueryStrings(qs url.Values, key string, defaultValues string) string {
+	values, ok := qs[key]
+	if !ok || len(values) == 0 {
+		return defaultValues
+	}
+
+	return strings.Join(values, ",")
+}
+
+func ReadQueryCommaSeperatedString(
+	qs url.Values,
+	key string,
+	defaultValue string,
+) []string {
+	s := qs.Get(key)
+
+	if s == "" {
+		return []string{defaultValue}
+	}
+
+	splitValues := strings.Split(s, ",")
+
+	var seen []string
+	var values []string
+	for _, val := range splitValues {
+		trimmedVal := strings.TrimSpace(val)
+		normalizedVal := strings.TrimPrefix(trimmedVal, "-")
+		if trimmedVal != "" && !slices.Contains(seen, normalizedVal) {
+			seen = append(seen, normalizedVal)
+			values = append(values, trimmedVal)
+		}
+	}
+
+	return values
+}
+
+func ReadQueryInt(
+	qs url.Values,
+	key string,
+	defaultValue int,
+	v *validator.Validator,
+) int {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+
+	return i
+}
+
+func ReadQueryUUID(
+	qs url.Values,
+	key string,
+	v *validator.Validator,
+) *uuid.UUID {
+	s := qs.Get(key)
+	if s == "" {
+		return nil
+	}
+	id, err := uuid.Parse(s)
+	if err != nil {
+		v.AddError(key, "must be an uuid")
+		return nil
+	}
+	return &id
+}
+
+func ReadQueryDate(
+	qs url.Values,
+	key string,
+	v *validator.Validator,
+) *time.Time {
+	s := qs.Get(key)
+	if s == "" {
+		return nil
+	}
+
+	formats := []string{
+		"2006-01-02",
+		"2006-01-02T15:04:05",
+	}
+
+	for _, format := range formats {
+		if date, err := time.Parse(format, s); err == nil {
+			return &date
+		}
+	}
+
+	v.AddError(key, fmt.Sprintf("not a valid date format, accepting %s", formats))
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/validator"
 )
 
 type MetaData struct {
@@ -39,4 +40,13 @@ func (f Filters) limit() int {
 
 func (f Filters) offset() int {
 	return (f.Page - 1) * f.PageSize
+}
+
+func ValidateFilters(v *validator.Validator, f Filters) {
+	v.Check(f.Page > 0, "page", "must be greater than zero")
+	v.Check(f.PageSize > 0, "page_size", "must be greater than zero")
+	v.Check(f.PageSize <= 50_000, "page_size", "must be a maximum of 50,000")
+
+	orderByParam, isPermitted := validator.PermittedValues(f.OrderBy, f.OrderBySafeList)
+	v.Check(isPermitted, orderByParam, "invalid order_by parameter")
 }

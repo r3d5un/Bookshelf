@@ -10,6 +10,7 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/rest"
+	"github.com/r3d5un/Bookshelf/internal/validator"
 )
 
 func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +42,64 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, book, nil)
+}
+
+func (m *Module) ListBookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	var input struct {
+		data.Filters
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Filters.ID = rest.ReadQueryUUID(qs, "id", v)
+	input.Filters.Title = rest.ReadQueryString(qs, "title", "")
+	input.Filters.Description = rest.ReadQueryString(qs, "description", "")
+	input.Filters.PublishedFrom = rest.ReadQueryDate(qs, "publishedFrom", v)
+	input.Filters.PublishedTo = rest.ReadQueryDate(qs, "publishedTo", v)
+	input.Filters.CreatedAtFrom = rest.ReadQueryDate(qs, "createdAtFrom", v)
+	input.Filters.CreatedAtTo = rest.ReadQueryDate(qs, "createdAtTo", v)
+	input.Filters.UpdatedAtFrom = rest.ReadQueryDate(qs, "createdAtFrom", v)
+	input.Filters.UpdatedAtTo = rest.ReadQueryDate(qs, "createdAtTo", v)
+
+	input.Filters.Page = rest.ReadQueryInt(qs, "page", 1, v)
+	input.Filters.PageSize = rest.ReadQueryInt(qs, "page_size", 1_000, v)
+
+	input.Filters.OrderBy = rest.ReadQueryCommaSeperatedString(qs, "order_by", "published_at")
+	input.Filters.OrderBySafeList = []string{
+		"id",
+		"updated_at",
+		"created_at",
+		"published_at",
+		"title",
+		"-id",
+		"-updated_at",
+		"-created_at",
+		"-published_at",
+		"-title",
+	}
+	logger.InfoContext(ctx, "filters set", "filters", input)
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		logger.Info("filter validation failed", "validationErrors", v.Errors)
+		rest.FailedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	logger.Info("getting books", "filters", input.Filters)
+	books, err := types.ReadAllBooks(ctx, &m.models, input.Filters)
+	if err != nil {
+		logger.Error("unable to get books", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusOK, books, nil)
 }
 
 func (m *Module) PostBookHandler(w http.ResponseWriter, r *http.Request) {
