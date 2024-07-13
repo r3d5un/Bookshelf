@@ -19,10 +19,10 @@ type Filters struct {
 	Count           int        `json:"count,omitempty"`
 	ID              *uuid.UUID `json:"id,omitempty"`
 	AuthorID        *uuid.UUID `json:"authorId,omitempty"`
-	Title           *string    `json:"title,omitempty"`
-	Description     *string    `json:"description,omitempty"`
-	Name            *string    `json:"name,omitempty"`
-	Website         *string    `json:"website,omitempty"`
+	Title           string     `json:"title,omitempty"`
+	Description     string     `json:"description,omitempty"`
+	Name            string     `json:"name,omitempty"`
+	Website         string     `json:"website,omitempty"`
 	PublishedFrom   *time.Time `json:"publishedFrom,omitempty"`
 	PublishedTo     *time.Time `json:"publishedTo,omitempty"`
 	CreatedAtFrom   *time.Time `json:"createdAtFrom,omitempty"`

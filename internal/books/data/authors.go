@@ -92,9 +92,9 @@ SELECT id,
        updated_at
 FROM books.authors
 WHERE ($1::uuid IS NULL OR id = $1::uuid)
-  AND ($2::text IS NULL OR name LIKE '%' || $2::text || '%')
-  AND ($3::text IS NULL OR description LIKE '%' || $3::text || '%')
-  AND ($4::text IS NULL OR website LIKE '%' || $4::text || '%')
+  AND ($2::text = '' OR name LIKE '%' || $2::text || '%')
+  AND ($3::text = '' OR description LIKE '%' || $3::text || '%')
+  AND ($4::text = '' OR website LIKE '%' || $4::text || '%')
   AND ($5::timestamp IS NULL OR created_at >= $5::timestamp)
   AND ($6::timestamp IS NULL OR created_at < $6::timestamp)
   AND ($7::timestamp IS NULL OR updated_at >= $7::timestamp)

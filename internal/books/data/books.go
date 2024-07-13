@@ -92,15 +92,16 @@ SELECT id,
        updated_at
 FROM books.books
 WHERE ($1::uuid IS NULL OR id = $1::uuid)
-  AND ($2::text IS NULL OR description LIKE '%' || $2::text || '%')
-  AND ($3::timestamp IS NULL OR published >= $3::timestamp)
-  AND ($4::timestamp IS NULL OR published < $4::timestamp)
-  AND ($5::timestamp IS NULL OR created_at >= $5::timestamp)
-  AND ($6::timestamp IS NULL OR created_at < $6::timestamp)
-  AND ($7::timestamp IS NULL OR updated_at >= $7::timestamp)
-  AND ($8::timestamp IS NULL OR updated_at < $8::timestamp)
+  AND ($2::text = '' OR title LIKE '%' || $2::text || '%')
+  AND ($3::text = '' OR description LIKE '%' || $3::text || '%')
+  AND ($4::timestamp IS NULL OR published >= $4::timestamp)
+  AND ($5::timestamp IS NULL OR published < $5::timestamp)
+  AND ($6::timestamp IS NULL OR created_at >= $6::timestamp)
+  AND ($7::timestamp IS NULL OR created_at < $7::timestamp)
+  AND ($8::timestamp IS NULL OR updated_at >= $8::timestamp)
+  AND ($9::timestamp IS NULL OR updated_at < $9::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-OFFSET $9 FETCH NEXT $10 ROWS ONLY;
+OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -121,6 +122,7 @@ OFFSET $9 FETCH NEXT $10 ROWS ONLY;
 		qCtx,
 		query,
 		filters.ID,
+		filters.Title,
 		filters.Description,
 		filters.PublishedFrom,
 		filters.PublishedTo,
