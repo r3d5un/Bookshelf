@@ -106,7 +106,24 @@ func ListAuthor(ctx context.Context, models *data.Models, filters data.Filters) 
 }
 
 func UpdateAuthor(ctx context.Context, models *data.Models, newAuthorData Author) (*Author, error) {
+	authorRecord := data.Author{
+		ID:          newAuthorData.ID,
+		Name:        newAuthorData.Name,
+		Description: newAuthorData.Description,
+		Website:     newAuthorData.Website,
+	}
 
+	updatedAuthor, err := models.Authors.Update(ctx, authorRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedAuthorData, err := ReadAuthor(ctx, models, updatedAuthor.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedAuthorData, nil
 }
 
 func DeleteAuthor(ctx context.Context, models *data.Models, id uuid.UUID) error {
