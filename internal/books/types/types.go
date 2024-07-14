@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -274,13 +273,11 @@ func DeleteBook(ctx context.Context, models *data.Models, id uuid.UUID) error {
 }
 
 func ReadAllBooks(ctx context.Context, models *data.Models, filters data.Filters) ([]*Book, error) {
-	slog.Warn("query starting", "filters", filters)
 	bookListData, totalResults, err := models.Books.GetAll(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
 	if *totalResults < 1 {
-		slog.Warn("no results", "totalResults", totalResults)
 		return []*Book{}, nil
 	}
 
@@ -290,7 +287,6 @@ func ReadAllBooks(ctx context.Context, models *data.Models, filters data.Filters
 	var books []*Book
 	errorChan := make(chan error, *totalResults)
 
-	slog.Warn("looping through data", "data", "bookListData")
 	for _, bookData := range bookListData {
 		wg.Add(1)
 		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
@@ -298,12 +294,10 @@ func ReadAllBooks(ctx context.Context, models *data.Models, filters data.Filters
 
 			b, err := ReadBook(ctx, models, id)
 			if err != nil {
-				slog.Info("error occurred", "error", err)
 				errorChan <- err
 			}
 
 			booksMu.Lock()
-			slog.Info("appending", "book", b)
 			books = append(books, b)
 			booksMu.Unlock()
 		}(ctx, models, bookData.ID)
@@ -312,7 +306,6 @@ func ReadAllBooks(ctx context.Context, models *data.Models, filters data.Filters
 	wg.Wait()
 	close(errorChan)
 
-	slog.Warn("looping over errors")
 	for err := range errorChan {
 		if err != nil {
 			return nil, err
