@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,6 +45,69 @@ func CreateAuthor(
 	return &insertedAuthor.ID, nil
 }
 
+func ReadAuthor(ctx context.Context, models *data.Models, authorID uuid.UUID) (*Author, error) {
+	authorRecord, err := models.Authors.Get(ctx, authorID)
+	if err != nil {
+		return nil, err
+	}
+
+	authorData := Author{
+		ID:          authorRecord.ID,
+		Name:        authorRecord.Name,
+		Description: authorRecord.Description,
+		Website:     authorRecord.Website,
+		CreatedAt:   authorRecord.CreatedAt,
+		UpdatedAt:   authorRecord.UpdatedAt,
+	}
+
+	bookRecords, totalBookRecords, err := models.Books.GetByAuthorID(ctx, authorID)
+	if err != nil {
+		return nil, err
+	}
+	if *totalBookRecords < 1 {
+		return &authorData, nil
+	}
+
+	var wg sync.WaitGroup
+	var authorDataMu sync.Mutex
+
+	errorChan := make(chan error, *totalBookRecords)
+
+	for _, bookRecord := range bookRecords {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			bookData, err := ReadBook(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			authorDataMu.Lock()
+			authorData.Books = append(authorData.Books, bookData)
+			authorDataMu.Unlock()
+		}(ctx, models, bookRecord.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &authorData, nil
+}
+
+func ListAuthor(ctx context.Context, models *data.Models, filters data.Filters) ([]*Author, error) {
+
+}
+
+func UpdateAuthor(ctx context.Context, models *data.Models, newAuthorData Author) (*Author, error) {
+
+}
 
 func DeleteAuthor(ctx context.Context, models *data.Models, id uuid.UUID) error {
 	_, err := models.Books.Delete(ctx, id)
