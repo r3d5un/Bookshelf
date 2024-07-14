@@ -69,17 +69,17 @@ func (m *Module) ListBookHandler(w http.ResponseWriter, r *http.Request) {
 	input.Filters.Page = rest.ReadQueryInt(qs, "page", 1, v)
 	input.Filters.PageSize = rest.ReadQueryInt(qs, "page_size", 1_000, v)
 
-	input.Filters.OrderBy = rest.ReadQueryCommaSeperatedString(qs, "order_by", "published_at")
+	input.Filters.OrderBy = rest.ReadQueryCommaSeperatedString(qs, "order_by", "published")
 	input.Filters.OrderBySafeList = []string{
 		"id",
 		"updated_at",
 		"created_at",
-		"published_at",
+		"published",
 		"title",
 		"-id",
 		"-updated_at",
 		"-created_at",
-		"-published_at",
+		"-published",
 		"-title",
 	}
 	logger.InfoContext(ctx, "filters set", "filters", input)
