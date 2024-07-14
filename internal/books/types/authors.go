@@ -44,3 +44,12 @@ func CreateAuthor(
 	return &insertedAuthor.ID, nil
 }
 
+
+func DeleteAuthor(ctx context.Context, models *data.Models, id uuid.UUID) error {
+	_, err := models.Books.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
