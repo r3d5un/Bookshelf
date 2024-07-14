@@ -102,7 +102,46 @@ func ReadAuthor(ctx context.Context, models *data.Models, authorID uuid.UUID) (*
 }
 
 func ListAuthor(ctx context.Context, models *data.Models, filters data.Filters) ([]*Author, error) {
+	authorListData, totalResults, err := models.Authors.GetAll(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+	if *totalResults < 1 {
+		return []*Author{}, nil
+	}
 
+	var wg sync.WaitGroup
+	var authorMu sync.Mutex
+
+	var authors []*Author
+	errorChan := make(chan error, *totalResults)
+
+	for _, author := range authorListData {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			a, err := ReadAuthor(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			authorMu.Lock()
+			authors = append(authors, a)
+			authorMu.Unlock()
+		}(ctx, models, author.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return authors, nil
 }
 
 func UpdateAuthor(ctx context.Context, models *data.Models, newAuthorData Author) (*Author, error) {
