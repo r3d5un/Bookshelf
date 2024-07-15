@@ -419,12 +419,12 @@ func (m *BookModel) GetByAuthorID(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-SELECT a.id,
-       a.title,
-       a.description,
-       a.published,
-       a.created_at,
-       a.updated_at
+SELECT b.id,
+       b.title,
+       b.description,
+       b.published,
+       b.created_at,
+       b.updated_at
 FROM books.books b
          INNER JOIN
      books.book_authors ba ON b.id = ba.author_id
