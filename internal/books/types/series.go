@@ -65,7 +65,7 @@ func ReadSeries(ctx context.Context, models *data.Models, seriesID uuid.UUID) (*
 	}
 
 	var wg sync.WaitGroup
-	var authorDataMu sync.Mutex
+	var seriesDataMu sync.Mutex
 
 	errorChan := make(chan error, *totalBookRecords)
 
@@ -79,9 +79,9 @@ func ReadSeries(ctx context.Context, models *data.Models, seriesID uuid.UUID) (*
 				errorChan <- err
 			}
 
-			authorDataMu.Lock()
+			seriesDataMu.Lock()
 			seriesData.Books = append(seriesData.Books, bookData)
-			authorDataMu.Unlock()
+			seriesDataMu.Unlock()
 		}(ctx, models, bookRecord.ID)
 	}
 
@@ -95,4 +95,51 @@ func ReadSeries(ctx context.Context, models *data.Models, seriesID uuid.UUID) (*
 	}
 
 	return &seriesData, nil
+}
+
+func ReadAllSeries(
+	ctx context.Context,
+	models *data.Models,
+	filters data.Filters,
+) ([]*Series, error) {
+	seriesListData, totalResults, err := models.Series.GetAll(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+	if *totalResults < 1 {
+		return []*Series{}, nil
+	}
+
+	var wg sync.WaitGroup
+	var seriesMu sync.Mutex
+
+	var series []*Series
+	errorChan := make(chan error, *totalResults)
+
+	for _, seriesData := range seriesListData {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			s, err := ReadSeries(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			seriesMu.Lock()
+			series = append(series, s)
+			seriesMu.Unlock()
+		}(ctx, models, seriesData.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return series, nil
 }
