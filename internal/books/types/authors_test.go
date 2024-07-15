@@ -14,12 +14,6 @@ func TestComplexAuthorTypes(t *testing.T) {
 	authorName := "Brandon Sanderson"
 	description := "such books. many words. wow."
 	website := "www.brandonsanderson.com"
-	// newAuthorData := types.Author{
-	// 	ID:          uuid.New(),
-	// 	Name:        &authorName,
-	// 	Description: &description,
-	// 	Website:     &website,
-	// }
 
 	var id *uuid.UUID
 
@@ -64,6 +58,17 @@ func TestComplexAuthorTypes(t *testing.T) {
 	})
 
 	t.Run("TestUpdateAuthor", func(t *testing.T) {
+		newDescription := "this text has been updated"
+		newAuthorData := types.Author{
+			ID:          *id,
+			Description: &newDescription,
+		}
+
+		_, err := types.UpdateAuthor(context.Background(), models, newAuthorData)
+		if err != nil {
+			t.Errorf("unable to update author: %s\n", err)
+			return
+		}
 	})
 
 	t.Run("TestDeleteAuthor", func(t *testing.T) {
