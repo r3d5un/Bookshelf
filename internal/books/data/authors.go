@@ -231,8 +231,7 @@ func (m *AuthorModel) Update(ctx context.Context, newAuthor Author) (author *Aut
 
 	query := `
 UPDATE books.authors
-SET id          = COALESCE($1, id),
-    name        = COALESCE($2, name),
+SET name        = COALESCE($2, name),
     description = COALESCE($3, description),
     website     = COALESCE($4, website),
     created_at  = COALESCE($5, created_at),
