@@ -53,4 +53,18 @@ func TestComplexSeriesTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestUpdateSeries", func(t *testing.T) {
+		newDescription := "this text has been updated"
+		newSeriesData := types.Series{
+			ID:          *id,
+			Description: &newDescription,
+		}
+
+		_, err := types.UpdateSeries(context.Background(), models, newSeriesData)
+		if err != nil {
+			t.Errorf("unable to update series: %s\n", err)
+			return
+		}
+	})
 }

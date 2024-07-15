@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -30,7 +31,7 @@ func CreateSeries(
 ) (*uuid.UUID, error) {
 	seriesRecord := data.Series{
 		ID:          uuid.New(),
-		Name:        newSeriesData.Name,
+		Name:        &newSeriesData.Name,
 		Description: newSeriesData.Description,
 	}
 
@@ -50,7 +51,7 @@ func ReadSeries(ctx context.Context, models *data.Models, seriesID uuid.UUID) (*
 
 	seriesData := Series{
 		ID:          seriesRecord.ID,
-		Name:        &seriesRecord.Name,
+		Name:        seriesRecord.Name,
 		Description: seriesRecord.Description,
 		CreatedAt:   seriesRecord.CreatedAt,
 		UpdatedAt:   seriesRecord.UpdatedAt,
@@ -142,4 +143,32 @@ func ReadAllSeries(
 	}
 
 	return series, nil
+}
+
+func UpdateSeries(ctx context.Context, models *data.Models, newSeriesData Series) (*Series, error) {
+	slog.Warn("creating db record")
+	seriesRecord := data.Series{
+		ID:          newSeriesData.ID,
+		Name:        newSeriesData.Name,
+		Description: newSeriesData.Description,
+		CreatedAt:   newSeriesData.CreatedAt,
+		UpdatedAt:   newSeriesData.UpdatedAt,
+	}
+	slog.Warn("record created", "record", seriesRecord)
+
+	slog.Warn("calling update method")
+	updatedSeries, err := models.Series.Update(ctx, seriesRecord)
+	if err != nil {
+		return nil, err
+	}
+	slog.Warn("update complete", "series", updatedSeries)
+
+	slog.Warn("retrieving updated series data")
+	updatedSeriesData, err := ReadSeries(ctx, models, updatedSeries.ID)
+	if err != nil {
+		return nil, err
+	}
+	slog.Warn("series data retrieved", "series", updatedSeriesData)
+
+	return updatedSeriesData, nil
 }
