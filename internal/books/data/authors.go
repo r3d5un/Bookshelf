@@ -400,7 +400,7 @@ RETURNING
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			logger.Info("no rows found", "group_id", id.String())
+			logger.Info("no rows found", "id", id.String())
 			return nil, ErrRecordNotFound
 		default:
 			logger.Info("an error occurred while performing query", "error", err)
