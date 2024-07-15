@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -84,6 +85,36 @@ func TestAuthorHandlers(t *testing.T) {
 	})
 
 	t.Run("TestListAuthorHandler", func(t *testing.T) {
+		baseURL := "/api/v1/bookshelf/books/authors"
+		url, err := url.Parse(baseURL)
+		if err != nil {
+			t.Fatalf("unable to parse URL: %v", err)
+			return
+		}
+		q := url.Query()
+		q.Add("page", "1")
+		q.Add("pageSize", "10")
+		url.RawQuery = q.Encode()
+
+		listReq := httptest.NewRequest(
+			http.MethodGet,
+			url.String(),
+			nil,
+		)
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.ListAuthorHandler)
+		handler.ServeHTTP(rr, listReq)
+
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf(
+				"handler returned wrong error code: got %d, expected %d",
+				status,
+				http.StatusOK,
+			)
+			return
+		}
 	})
 
 	t.Run("TestPatchAuthorHandler", func(t *testing.T) {
