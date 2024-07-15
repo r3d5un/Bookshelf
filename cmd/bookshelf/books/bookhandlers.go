@@ -26,7 +26,7 @@ func (m *Module) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Info("ID parsed", slog.String("id", id.String()))
 
-	logger.Info("querying database for obtain clients by id")
+	logger.Info("querying database for obtain book by id")
 	book, err := types.ReadBook(ctx, &m.models, *id)
 	if err != nil {
 		switch {
