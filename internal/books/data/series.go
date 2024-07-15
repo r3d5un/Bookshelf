@@ -14,7 +14,7 @@ import (
 
 type Series struct {
 	ID          uuid.UUID  `json:"id"`
-	Name        string     `json:"name"`
+	Name        *string    `json:"name"`
 	Description *string    `json:"description"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
@@ -219,8 +219,7 @@ func (m *SeriesModel) Update(ctx context.Context, newSeries Series) (series *Ser
 
 	query := `
 UPDATE books.series
-SET id          = COALESCE($1, id),
-    name        = COALESCE($2, name),
+SET name        = COALESCE($2, name),
     description = COALESCE($3, description),
     created_at  = COALESCE($4, created_at),
     updated_at  = NOW()

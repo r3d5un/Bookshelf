@@ -16,7 +16,7 @@ func TestSeriesModel(t *testing.T) {
 	timestamp := time.Now()
 	newSeries := data.Series{
 		ID:          id,
-		Name:        name,
+		Name:        &name,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,
@@ -57,7 +57,8 @@ func TestSeriesModel(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		newSeries.Name = "NewNameOfSeries!"
+		newSeriesName := "NewNameOfSeries!"
+		newSeries.Name = &newSeriesName
 
 		res, err := models.Series.Update(context.Background(), newSeries)
 		if err != nil {
@@ -65,8 +66,8 @@ func TestSeriesModel(t *testing.T) {
 			return
 		}
 
-		if res.Name != newSeries.Name {
-			t.Errorf("expected %s, got %s", newSeries.Name, res.Name)
+		if *res.Name != newSeriesName {
+			t.Errorf("expected %s, got %s", newSeriesName, *res.Name)
 			return
 		}
 	})

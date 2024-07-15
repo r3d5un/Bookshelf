@@ -41,9 +41,10 @@ func TestBookHandlers(t *testing.T) {
 		return
 	}
 
+	seriesName := "TestSeriesName"
 	seriesRecord := data.Series{
 		ID:          uuid.New(),
-		Name:        "TestSeriesName",
+		Name:        &seriesName,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,

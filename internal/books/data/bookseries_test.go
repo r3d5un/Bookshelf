@@ -36,7 +36,7 @@ func TestBookSeriesModel(t *testing.T) {
 	timestamp = time.Now()
 	newSeries := data.Series{
 		ID:          id,
-		Name:        name,
+		Name:        &name,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,
