@@ -170,7 +170,7 @@ func UpdateAuthor(ctx context.Context, models *data.Models, newAuthorData Author
 }
 
 func DeleteAuthor(ctx context.Context, models *data.Models, id uuid.UUID) error {
-	_, err := models.Books.Delete(ctx, id)
+	_, err := models.Authors.Delete(ctx, id)
 	if err != nil {
 		return err
 	}
