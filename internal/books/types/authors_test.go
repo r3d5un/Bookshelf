@@ -47,6 +47,20 @@ func TestComplexAuthorTypes(t *testing.T) {
 	})
 
 	t.Run("TestReadAllAuthor", func(t *testing.T) {
+		filters := data.Filters{
+			Page:     1,
+			PageSize: 10,
+		}
+
+		authorList, err := types.ReadAllAuthors(context.Background(), models, filters)
+		if err != nil {
+			t.Errorf("unable to read authors: %s\n", err)
+			return
+		}
+		if len(authorList) < 1 {
+			t.Errorf("no books returned")
+			return
+		}
 	})
 
 	t.Run("TestUpdateAuthor", func(t *testing.T) {
