@@ -177,8 +177,8 @@ VALUES ($1,
         $2,
         $3,
         $4,
-        $5,
-        $6)
+        NOW(),
+        NOW())
 RETURNING
     id,
     name,
@@ -209,8 +209,6 @@ RETURNING
 		newAuthor.Name,
 		newAuthor.Description,
 		newAuthor.Website,
-		newAuthor.CreatedAt,
-		newAuthor.UpdatedAt,
 	).Scan(
 		&author.ID,
 		&author.Name,
