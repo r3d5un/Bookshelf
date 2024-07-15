@@ -72,5 +72,9 @@ func TestComplexAuthorTypes(t *testing.T) {
 	})
 
 	t.Run("TestDeleteAuthor", func(t *testing.T) {
+		if err := types.DeleteAuthor(context.Background(), models, *id); err != nil {
+			t.Errorf("unable to delete author: %s\n", err)
+			return
+		}
 	})
 }
