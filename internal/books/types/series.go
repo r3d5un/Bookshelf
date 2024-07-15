@@ -172,3 +172,12 @@ func UpdateSeries(ctx context.Context, models *data.Models, newSeriesData Series
 
 	return updatedSeriesData, nil
 }
+
+func DeleteSeries(ctx context.Context, models *data.Models, id uuid.UUID) error {
+	_, err := models.Series.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

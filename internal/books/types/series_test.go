@@ -67,4 +67,11 @@ func TestComplexSeriesTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestDeleteSeries", func(t *testing.T) {
+		if err := types.DeleteSeries(context.Background(), models, *id); err != nil {
+			t.Errorf("unable to delete series: %s\n", err)
+			return
+		}
+	})
 }
