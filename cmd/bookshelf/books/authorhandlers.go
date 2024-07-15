@@ -123,3 +123,44 @@ func (m *Module) ListAuthorHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, authors, nil)
 }
+
+func (m *Module) PatchAuthorHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing ID")
+	id, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to read id", "id", id, "error", err)
+		rest.NotFoundResponse(w, r)
+		return
+	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
+
+	logger.Info("parsing request body")
+	updateData := types.Author{
+		ID: *id,
+	}
+	err = rest.ReadJSON(r, &updateData)
+	if err != nil {
+		logger.Info("unable to read request body", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
+		return
+	}
+
+	updatedAuthor, err := types.UpdateAuthor(ctx, &m.models, updateData)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info("author not found", "id", id)
+			rest.NotFoundResponse(w, r)
+		default:
+			logger.Error("unable to get author", "id", id, "error", err)
+			rest.ServerErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusOK, updatedAuthor, nil)
+}
