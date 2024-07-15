@@ -138,15 +138,14 @@ func (m *Module) PatchAuthorHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("ID parsed", slog.String("id", id.String()))
 
 	logger.Info("parsing request body")
-	updateData := types.Author{
-		ID: *id,
-	}
+	var updateData types.Author
 	err = rest.ReadJSON(r, &updateData)
 	if err != nil {
 		logger.Info("unable to read request body", "error", err)
 		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
 		return
 	}
+	updateData.ID = *id
 
 	updatedAuthor, err := types.UpdateAuthor(ctx, &m.models, updateData)
 	if err != nil {

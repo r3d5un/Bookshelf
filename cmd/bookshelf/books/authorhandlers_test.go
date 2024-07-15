@@ -118,6 +118,37 @@ func TestAuthorHandlers(t *testing.T) {
 	})
 
 	t.Run("TestPatchAuthorHandler", func(t *testing.T) {
+		newDescription := "ThisDescriptionHasBeenUpdated"
+		updateData := types.Author{
+			Description: &newDescription,
+		}
+		reqBody, err := json.Marshal(updateData)
+		if err != nil {
+			t.Errorf("unable to marshal data: %v\n", updateData)
+			return
+		}
+
+		patchReq := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/bookshelf/books/authors",
+			strings.NewReader(string(reqBody)),
+		)
+		patchReq.Header.Set("Content-Type", "application/json")
+		patchReq.SetPathValue("id", id.String())
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.PatchAuthorHandler)
+		handler.ServeHTTP(rr, patchReq)
+
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf(
+				"handler returned wrong error code: got %d, expected %d",
+				status,
+				http.StatusOK,
+			)
+			return
+		}
 	})
 
 	t.Run("TestDeleteAuthorHandler", func(t *testing.T) {
