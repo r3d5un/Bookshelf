@@ -101,7 +101,11 @@ func ReadAuthor(ctx context.Context, models *data.Models, authorID uuid.UUID) (*
 	return &authorData, nil
 }
 
-func ListAuthor(ctx context.Context, models *data.Models, filters data.Filters) ([]*Author, error) {
+func ReadAllAuthors(
+	ctx context.Context,
+	models *data.Models,
+	filters data.Filters,
+) ([]*Author, error) {
 	authorListData, totalResults, err := models.Authors.GetAll(ctx, filters)
 	if err != nil {
 		return nil, err
