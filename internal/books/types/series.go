@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -146,7 +145,6 @@ func ReadAllSeries(
 }
 
 func UpdateSeries(ctx context.Context, models *data.Models, newSeriesData Series) (*Series, error) {
-	slog.Warn("creating db record")
 	seriesRecord := data.Series{
 		ID:          newSeriesData.ID,
 		Name:        newSeriesData.Name,
@@ -154,21 +152,16 @@ func UpdateSeries(ctx context.Context, models *data.Models, newSeriesData Series
 		CreatedAt:   newSeriesData.CreatedAt,
 		UpdatedAt:   newSeriesData.UpdatedAt,
 	}
-	slog.Warn("record created", "record", seriesRecord)
 
-	slog.Warn("calling update method")
 	updatedSeries, err := models.Series.Update(ctx, seriesRecord)
 	if err != nil {
 		return nil, err
 	}
-	slog.Warn("update complete", "series", updatedSeries)
 
-	slog.Warn("retrieving updated series data")
 	updatedSeriesData, err := ReadSeries(ctx, models, updatedSeries.ID)
 	if err != nil {
 		return nil, err
 	}
-	slog.Warn("series data retrieved", "series", updatedSeriesData)
 
 	return updatedSeriesData, nil
 }
