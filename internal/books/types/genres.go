@@ -96,3 +96,50 @@ func ReadGenre(ctx context.Context, models *data.Models, genreID uuid.UUID) (*Ge
 
 	return &genreData, nil
 }
+
+func ReadAllGenre(
+	ctx context.Context,
+	models *data.Models,
+	filters data.Filters,
+) ([]*Genre, error) {
+	genreListData, totalResults, err := models.Genres.GetAll(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+	if *totalResults < 1 {
+		return []*Genre{}, nil
+	}
+
+	var wg sync.WaitGroup
+	var genresMu sync.Mutex
+
+	var genres []*Genre
+	errorChan := make(chan error, *totalResults)
+
+	for _, genreData := range genreListData {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			s, err := ReadGenre(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			genresMu.Lock()
+			genres = append(genres, s)
+			genresMu.Unlock()
+		}(ctx, models, genreData.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return genres, nil
+}

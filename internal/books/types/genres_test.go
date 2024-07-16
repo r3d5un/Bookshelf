@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/books/data"
 	"github.com/r3d5un/Bookshelf/internal/books/types"
 )
 
@@ -32,6 +33,23 @@ func TestComplexGenreTypes(t *testing.T) {
 	t.Run("TestReadGenre", func(t *testing.T) {
 		if _, err := types.ReadGenre(context.Background(), models, *id); err != nil {
 			t.Errorf("error occurred while retrieving genre: %s\n", err)
+			return
+		}
+	})
+
+	t.Run("TestReadAllGenre", func(t *testing.T) {
+		filters := data.Filters{
+			Page:     1,
+			PageSize: 10,
+		}
+
+		genreList, err := types.ReadAllGenre(context.Background(), models, filters)
+		if err != nil {
+			t.Errorf("unable to read genre: %s\n", err)
+			return
+		}
+		if len(genreList) < 1 {
+			t.Errorf("no books returned")
 			return
 		}
 	})
