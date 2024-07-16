@@ -81,6 +81,12 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"POST /api/v1/books/series", m.PostSeriesHandler},
 		{"PATCH /api/v1/books/series/{id}", m.PatchSeriesHandler},
 		{"DELETE /api/v1/books/series/{id}", m.DeleteSeriesHandler},
+		// Genre
+		{"GET /api/v1/books/genre", m.ListGenreHandler},
+		{"GET /api/v1/books/genre/{id}", m.GetGenreHandler},
+		{"POST /api/v1/books/genre", m.PostGenreHandler},
+		{"PATCH /api/v1/books/genre/{id}", m.PatchGenreHandler},
+		{"DELETE /api/v1/books/genre/{id}", m.DeleteGenreHandler},
 	}
 
 	m.logger.Info("adding protected endpoints")
