@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/r3d5un/Bookshelf/cmd/bookshelf/books"
+	"github.com/r3d5un/Bookshelf/cmd/bookshelf/ui"
 	"github.com/r3d5un/Bookshelf/internal/config"
 	"github.com/r3d5un/Bookshelf/internal/database"
 	"github.com/r3d5un/Bookshelf/internal/system"
@@ -54,7 +55,10 @@ func run() (err error) {
 	app := system.NewMonolith(
 		logger,
 		http.NewServeMux(),
-		map[string]system.Module{"books": &books.Module{}},
+		map[string]system.Module{
+			"books": &books.Module{},
+			"ui":    &ui.Module{},
+		},
 		db,
 		cfg,
 	)
