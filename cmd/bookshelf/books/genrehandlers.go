@@ -123,3 +123,43 @@ func (m *Module) ListGenreHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, genres, nil)
 }
+
+func (m *Module) PatchGenreHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing ID")
+	id, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to read id", "id", id, "error", err)
+		rest.NotFoundResponse(w, r)
+		return
+	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
+
+	logger.Info("parsing request body")
+	var updateData types.Genre
+	err = rest.ReadJSON(r, &updateData)
+	if err != nil {
+		logger.Info("unable to read request body", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
+		return
+	}
+	updateData.ID = *id
+
+	updatedGenre, err := types.UpdateGenre(ctx, &m.models, updateData)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info("genre not found", "id", id)
+			rest.NotFoundResponse(w, r)
+		default:
+			logger.Error("unable to get genre", "id", id, "error", err)
+			rest.ServerErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusOK, updatedGenre, nil)
+}
