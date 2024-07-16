@@ -36,7 +36,7 @@ func TestBookGenreModel(t *testing.T) {
 	timestamp = time.Now()
 	newGenre := data.Genre{
 		ID:          id,
-		Name:        name,
+		Name:        &name,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,

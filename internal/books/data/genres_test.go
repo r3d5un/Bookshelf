@@ -16,7 +16,7 @@ func TestGenresModel(t *testing.T) {
 	timestamp := time.Now()
 	newGenre := data.Genre{
 		ID:          id,
-		Name:        name,
+		Name:        &name,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,
@@ -57,7 +57,8 @@ func TestGenresModel(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		newGenre.Name = "NewNameOfGenres!"
+		newGenreName := "NewNameOfGenres!"
+		newGenre.Name = &newGenreName
 
 		res, err := models.Genres.Update(context.Background(), newGenre)
 		if err != nil {
@@ -65,8 +66,8 @@ func TestGenresModel(t *testing.T) {
 			return
 		}
 
-		if res.Name != newGenre.Name {
-			t.Errorf("expected %s, got %s", newGenre.Name, res.Name)
+		if *res.Name != newGenreName {
+			t.Errorf("expected %s, got %s", newGenreName, *res.Name)
 			return
 		}
 	})

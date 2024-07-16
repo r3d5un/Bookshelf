@@ -25,9 +25,10 @@ func TestComplexBookTypes(t *testing.T) {
 		UpdatedAt:   &timestamp,
 	}
 
+	genreName := "TestGenreName"
 	genreRecord := data.Genre{
 		ID:          uuid.New(),
-		Name:        "TestGenreName",
+		Name:        &genreName,
 		Description: &description,
 		CreatedAt:   &timestamp,
 		UpdatedAt:   &timestamp,
