@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,7 +30,7 @@ func CreateGenre(
 ) (*uuid.UUID, error) {
 	genreRecord := data.Genre{
 		ID:          uuid.New(),
-		Name:        newGenreData.Name,
+		Name:        &newGenreData.Name,
 		Description: newGenreData.Description,
 	}
 
@@ -39,4 +40,59 @@ func CreateGenre(
 	}
 
 	return &insertedGenre.ID, nil
+}
+
+func ReadGenre(ctx context.Context, models *data.Models, genreID uuid.UUID) (*Genre, error) {
+	genreRecord, err := models.Genres.Get(ctx, genreID)
+	if err != nil {
+		return nil, err
+	}
+
+	genreData := Genre{
+		ID:          genreRecord.ID,
+		Name:        genreRecord.Name,
+		Description: genreRecord.Description,
+		CreatedAt:   genreRecord.CreatedAt,
+		UpdatedAt:   genreRecord.UpdatedAt,
+	}
+
+	bookRecords, totalBookRecords, err := models.Books.GetBySeriesID(ctx, genreID)
+	if err != nil {
+		return nil, err
+	}
+	if *totalBookRecords < 1 {
+		return &genreData, nil
+	}
+
+	var wg sync.WaitGroup
+	var genreDataMu sync.Mutex
+
+	errorChan := make(chan error, *totalBookRecords)
+
+	for _, bookRecord := range bookRecords {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			bookData, err := ReadBook(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			genreDataMu.Lock()
+			genreData.Books = append(genreData.Books, bookData)
+			genreDataMu.Unlock()
+		}(ctx, models, bookRecord.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &genreData, nil
 }
