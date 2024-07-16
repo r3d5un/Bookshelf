@@ -24,7 +24,7 @@ type Module struct {
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
 	m.initModuleLogger(mono.Logger())
-	m.logger.Info("starting module", slog.String("module", moduleName))
+	m.logger.Info("starting module")
 
 	m.logger.Info("injecting configuration")
 	m.cfg = mono.Config()
