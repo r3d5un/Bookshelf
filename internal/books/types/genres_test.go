@@ -67,4 +67,11 @@ func TestComplexGenreTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestDeleteGenre", func(t *testing.T) {
+		if err := types.DeleteGenre(context.Background(), models, *id); err != nil {
+			t.Errorf("unable to delete genre: %s\n", err)
+			return
+		}
+	})
 }

@@ -165,3 +165,12 @@ func UpdateGenre(ctx context.Context, models *data.Models, newGenreData Genre) (
 
 	return updatedGenreData, nil
 }
+
+func DeleteGenre(ctx context.Context, models *data.Models, id uuid.UUID) error {
+	_, err := models.Genres.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
