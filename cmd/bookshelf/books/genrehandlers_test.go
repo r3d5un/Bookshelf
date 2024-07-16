@@ -18,7 +18,7 @@ func TestGenreHandlers(t *testing.T) {
 	newGenre := types.NewGenreData{
 		Name: "Steven Erikson",
 	}
-	_, err := types.CreateGenre(context.Background(), models, newGenre)
+	id, err := types.CreateGenre(context.Background(), models, newGenre)
 	if err != nil {
 		t.Errorf("uanble to insert test data: %s\n", err)
 	}
@@ -52,6 +52,30 @@ func TestGenreHandlers(t *testing.T) {
 				"handler returned wrong error code: got %d, expected %d",
 				status,
 				http.StatusCreated,
+			)
+			return
+		}
+	})
+
+	t.Run("TestGetGenreHandler", func(t *testing.T) {
+		getReq := httptest.NewRequest(
+			http.MethodGet,
+			"/api/v1/bookshelf/books/genre",
+			nil,
+		)
+		getReq.Header.Set("Content-Type", "application/json")
+		getReq.SetPathValue("id", id.String())
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.GetGenreHandler)
+		handler.ServeHTTP(rr, getReq)
+
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf(
+				"handler returned the wrong error code: got %d, expected %d\n",
+				status,
+				http.StatusOK,
 			)
 			return
 		}
