@@ -148,4 +148,28 @@ func TestSeriesHandlers(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestDeleteSeriesHandler", func(t *testing.T) {
+		deleteReq := httptest.NewRequest(
+			http.MethodDelete,
+			"/api/v1/bookshelf/books/series",
+			nil,
+		)
+		deleteReq.Header.Set("Content-Type", "application/json")
+		deleteReq.SetPathValue("id", id.String())
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.DeleteSeriesHandler)
+		handler.ServeHTTP(rr, deleteReq)
+
+		if status := rr.Code; status != http.StatusNoContent {
+			t.Errorf(
+				"handler returned wrong error code: got %d, expected %d",
+				status,
+				http.StatusNoContent,
+			)
+			return
+		}
+	})
 }
