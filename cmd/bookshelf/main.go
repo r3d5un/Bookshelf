@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/r3d5un/Bookshelf/cmd/bookshelf/books"
 	"github.com/r3d5un/Bookshelf/cmd/bookshelf/ui"
@@ -25,8 +26,12 @@ func main() {
 
 func run() (err error) {
 	handler := slog.NewJSONHandler(os.Stdout, nil)
-	logger := slog.New(handler)
-	// TODO: Add log group with version and instance ID
+	logger := slog.New(handler).With(
+		slog.Group(
+			"instance",
+			slog.String("id", uuid.NewString()),
+		),
+	)
 	slog.SetDefault(logger)
 
 	logger.Info("starting...")
