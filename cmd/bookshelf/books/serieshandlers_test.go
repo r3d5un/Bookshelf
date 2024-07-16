@@ -114,4 +114,38 @@ func TestSeriesHandlers(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestPatchSeriesHandler", func(t *testing.T) {
+		newDescription := "ThisDescriptionHasBeenUpdated"
+		updateData := types.Series{
+			Description: &newDescription,
+		}
+		reqBody, err := json.Marshal(updateData)
+		if err != nil {
+			t.Errorf("unable to marshal data: %v\n", updateData)
+			return
+		}
+
+		patchReq := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/bookshelf/books/series",
+			strings.NewReader(string(reqBody)),
+		)
+		patchReq.Header.Set("Content-Type", "application/json")
+		patchReq.SetPathValue("id", id.String())
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(mod.PatchSeriesHandler)
+		handler.ServeHTTP(rr, patchReq)
+
+		if status := rr.Code; status != http.StatusOK {
+			t.Errorf(
+				"handler returned wrong error code: got %d, expected %d",
+				status,
+				http.StatusOK,
+			)
+			return
+		}
+	})
 }

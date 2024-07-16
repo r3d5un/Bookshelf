@@ -123,3 +123,43 @@ func (m *Module) ListSeriesHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, series, nil)
 }
+
+func (m *Module) PatchSeriesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing ID")
+	id, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to read id", "id", id, "error", err)
+		rest.NotFoundResponse(w, r)
+		return
+	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
+
+	logger.Info("parsing request body")
+	var updateData types.Series
+	err = rest.ReadJSON(r, &updateData)
+	if err != nil {
+		logger.Info("unable to read request body", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to read request body: %s\n", err))
+		return
+	}
+	updateData.ID = *id
+
+	updatedSeries, err := types.UpdateSeries(ctx, &m.models, updateData)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info("series not found", "id", id)
+			rest.NotFoundResponse(w, r)
+		default:
+			logger.Error("unable to get series", "id", id, "error", err)
+			rest.ServerErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusOK, updatedSeries, nil)
+}
