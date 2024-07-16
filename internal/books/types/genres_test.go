@@ -53,4 +53,18 @@ func TestComplexGenreTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("TestUpdateGenre", func(t *testing.T) {
+		newDescription := "this text has been updated"
+		newGenreData := types.Genre{
+			ID:          *id,
+			Description: &newDescription,
+		}
+
+		_, err := types.UpdateGenre(context.Background(), models, newGenreData)
+		if err != nil {
+			t.Errorf("unable to update genre: %s\n", err)
+			return
+		}
+	})
 }

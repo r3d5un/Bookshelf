@@ -143,3 +143,25 @@ func ReadAllGenre(
 
 	return genres, nil
 }
+
+func UpdateGenre(ctx context.Context, models *data.Models, newGenreData Genre) (*Genre, error) {
+	genreRecord := data.Genre{
+		ID:          newGenreData.ID,
+		Name:        newGenreData.Name,
+		Description: newGenreData.Description,
+		CreatedAt:   newGenreData.CreatedAt,
+		UpdatedAt:   newGenreData.UpdatedAt,
+	}
+
+	updatedGenre, err := models.Genres.Update(ctx, genreRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedGenreData, err := ReadGenre(ctx, models, updatedGenre.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedGenreData, nil
+}
