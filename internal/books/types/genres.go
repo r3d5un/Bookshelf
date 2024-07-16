@@ -56,7 +56,7 @@ func ReadGenre(ctx context.Context, models *data.Models, genreID uuid.UUID) (*Ge
 		UpdatedAt:   genreRecord.UpdatedAt,
 	}
 
-	bookRecords, totalBookRecords, err := models.Books.GetBySeriesID(ctx, genreID)
+	bookRecords, totalBookRecords, err := models.Books.GetByGenreID(ctx, genreID)
 	if err != nil {
 		return nil, err
 	}
