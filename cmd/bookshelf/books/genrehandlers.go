@@ -163,3 +163,34 @@ func (m *Module) PatchGenreHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Info("writing response")
 	rest.Respond(w, r, http.StatusOK, updatedGenre, nil)
 }
+
+func (m *Module) DeleteGenreHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing ID")
+	id, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to read id", "id", id, "error", err)
+		rest.NotFoundResponse(w, r)
+		return
+	}
+	logger.Info("ID parsed", slog.String("id", id.String()))
+
+	logger.Info("deleting genre", "id", id)
+	if err := types.DeleteGenre(ctx, &m.models, *id); err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info("genre not found", "id", id)
+			rest.NotFoundResponse(w, r)
+		default:
+			logger.Error("unable to delete genre", "id", id, "error", err)
+			rest.ServerErrorResponse(w, r, err)
+		}
+		return
+	}
+	logger.Info("genre deleted")
+
+	logger.Info("writing response")
+	rest.Respond(w, r, http.StatusNoContent, nil, nil)
+}
