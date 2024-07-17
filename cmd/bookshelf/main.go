@@ -61,8 +61,8 @@ func run() (err error) {
 		logger,
 		http.NewServeMux(),
 		map[string]system.Module{
-			"books": &books.Module{},
-			"ui":    &ui.Module{},
+			books.ModuleName: &books.Module{},
+			ui.ModuleName:    &ui.Module{},
 		},
 		db,
 		cfg,

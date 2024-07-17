@@ -12,7 +12,7 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/system"
 )
 
-const moduleName string = "books"
+const ModuleName string = "books"
 
 type Module struct {
 	logger *slog.Logger
@@ -46,11 +46,11 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 }
 
 func (m *Module) Shutdown() {
-	m.logger.Info("shutting down module", slog.String("module", moduleName))
+	m.logger.Info("shutting down module", slog.String("module", ModuleName))
 }
 
 func (m *Module) initModuleLogger(monoLogger *slog.Logger) {
-	m.logger = monoLogger.With(slog.Group("module", slog.String("name", moduleName)))
+	m.logger = monoLogger.With(slog.Group("module", slog.String("name", ModuleName)))
 }
 
 type RouteDefinition struct {
