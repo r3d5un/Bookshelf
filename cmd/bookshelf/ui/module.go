@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"html/template"
 	"log/slog"
 	"net/http"
 
@@ -12,9 +13,10 @@ import (
 const ModuleName string = "ui"
 
 type Module struct {
-	logger *slog.Logger
-	mux    *http.ServeMux
-	cfg    *config.Config
+	logger        *slog.Logger
+	mux           *http.ServeMux
+	cfg           *config.Config
+	templateCache map[string]*template.Template
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
@@ -23,6 +25,13 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 
 	m.logger.Info("injecting configuration")
 	m.cfg = mono.Config()
+
+	m.logger.Info("loading templates")
+	m.templateCache, err = m.newTemplateCache()
+	if err != nil {
+		m.logger.Error("unable to load tempaltes", "error", err)
+		return err
+	}
 
 	m.logger.Info("injecting mux")
 	m.mux = mono.Mux()
