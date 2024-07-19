@@ -60,6 +60,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 	scimRouteDefinitions := RouteDefinitionList{
 		{"GET /api/v1/ui/healthcheck", m.healthcheckHandler},
 		{"GET /", m.Home},
+		{"GET /library", m.MyLibrary},
 	}
 
 	m.logger.Info("adding protected endpoints")
