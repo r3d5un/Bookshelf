@@ -1,5 +1,5 @@
 {{define "nav"}}
-<nav class="navbar navbar-expand-lg bg-dark">
+<nav class="navbar navbar-expand-lg bg-dark" hx-boost="true">
     <div class="container-fluid col-lg-6">
         <a class="navbar-brand" href="/">Bookshelf</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -7,7 +7,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
-                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/home">Home</a>
                 <a class="nav-link" href="/library">My Library</a>
                 <a class="nav-link" href="/discover">Discover</a>
             </div>
