@@ -29,3 +29,12 @@ func (m *Module) Discover(w http.ResponseWriter, r *http.Request) {
 	logger.Info("rendering page")
 	m.render(w, http.StatusOK, "discover.tmpl", &templateData{})
 }
+
+func (m *Module) TestHTMX(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("button press registered", "request", r)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte{})
+}
