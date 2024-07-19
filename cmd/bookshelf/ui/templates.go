@@ -91,6 +91,45 @@ func (m *Module) render(
 	buffer.WriteTo(w)
 }
 
+func (m *Module) renderPartial(
+	w http.ResponseWriter,
+	status int,
+	templateName string,
+	data *templateData,
+) {
+	templates, ok := m.templateCache[templateName]
+	if !ok {
+		m.logger.Info(
+			"error occurred when loading template from cache",
+			"error", ErrTemplateNotFound,
+		)
+		m.serverError(w, ErrTemplateNotFound)
+		return
+	}
+
+	buffer := new(bytes.Buffer)
+
+	err := templates.Execute(buffer, data)
+	if err != nil {
+		m.logger.Error(
+			"error occurred while executing template",
+			"error", err,
+		)
+		m.serverError(w, err)
+		return
+	}
+
+	w.WriteHeader(status)
+	buffer.WriteTo(w)
+}
+
+// Writes a response to a request with a status and the body as a string. Intended for use in smaller
+// responses where a dedicated template is overkill.
+func (m *Module) rawResponse(w http.ResponseWriter, status int, responseBody string) {
+	w.WriteHeader(status)
+	w.Write([]byte(responseBody))
+}
+
 func (m *Module) serverError(w http.ResponseWriter, err error) {
 	m.logger.Error("a server error occurred", "error", err, "trace", debug.Stack())
 
