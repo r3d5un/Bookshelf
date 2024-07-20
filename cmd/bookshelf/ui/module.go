@@ -63,6 +63,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /library", m.MyLibrary},
 		{"GET /discover", m.Discover},
 		{"GET /ui/test", m.TestHTMX},
+		{"GET /ui/currentlyreading", m.CurrentlyReading},
 	}
 
 	m.logger.Info("adding protected endpoints")

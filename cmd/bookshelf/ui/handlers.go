@@ -37,4 +37,11 @@ func (m *Module) TestHTMX(w http.ResponseWriter, r *http.Request) {
 	logger.Info("button press registered", "request", r)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte{})
+
+func (m *Module) CurrentlyReading(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "currentlyreading.tmpl", &templateData{})
 }
