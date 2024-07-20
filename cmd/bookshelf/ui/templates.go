@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
-	"runtime/debug"
 )
 
 //go:embed "html" "static" "static"
@@ -19,7 +18,7 @@ func (m *Module) newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
 	m.logger.Info("listing HTML directory")
-	tmplFiles, err := fs.Glob(Files, "html/pages/*.tmpl")
+	tmplFiles, err := fs.Glob(Files, "html/*/*.tmpl")
 	if err != nil {
 		m.logger.Error("an error occurred while walking template directory", "error", err)
 		return nil, err
@@ -131,7 +130,7 @@ func (m *Module) rawResponse(w http.ResponseWriter, status int, responseBody str
 }
 
 func (m *Module) serverError(w http.ResponseWriter, err error) {
-	m.logger.Error("a server error occurred", "error", err, "trace", debug.Stack())
+	m.logger.Error("a server error occurred", "error", err)
 
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
