@@ -1,4 +1,102 @@
 {{ block "content" . }}
-<h1 class="display-5 fw-bold">Home</h1>
-<p>Welcome to the home page!</p>
+<div class="row py-3">
+	<div id="sideBar" class="col-4 pr-3">
+		<div id="currentlyReading" class="row py-1">
+			<h5>Currently Reading</h5>
+			<div class="card mb-2 mt-2">
+				<div class="card-body">
+					<h5 class="card-title">The Origins of Totalitarianism</h5>
+					<h6 class="card-subtitle mb-2 text-muted">Hannah Arendt</h6>
+					<div class="progress" style="height: 3px;">
+						<div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+					</div>
+					<a href="#" class="card-link">Placeholder Link</a>
+				</div>
+			</div>
+			<div class="card mb-2">
+				<div class="card-body">
+					<h5 class="card-title">100 Go Mistakes and How to Avoid Them</h5>
+					<h6 class="card-subtitle mb-2 text-muted">Talva Harsanyi</h6>
+					<div class="progress" style="height: 3px;">
+						<div class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+					</div>
+					<a href="#" class="card-link">Placeholder Link</a>
+				</div>
+			</div>
+			<div class="card mb-2">
+				<div class="card-body">
+					<h5 class="card-title">Deadhouse Gates</h5>
+					<h6 class="card-subtitle mb-2 text-muted">Steven Erikson</h6>
+					<div class="progress" style="height: 3px;">
+						<div class="progress-bar" role="progressbar" style="width: 66%;" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+					</div>
+					<a href="#" class="card-link">Placeholder Link</a>
+				</div>
+			</div>
+		</div>
+		<div id="finished" class="row py-2">
+			<h5>Finished</h5>
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th scope="col">#</th>
+						<th scope="col">Title</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th scope="row">99</th>
+						<td>Assassin's Apprentice</td>
+					</tr>
+					<tr>
+						<th scope="row">98</th>
+						<td>Abyssal Archive: The Mythology of Dark Souls</td>
+					</tr>
+					<tr>
+						<th scope="row">97</th>
+						<td>The Pragmatic Programmer: From Journeyman to Master</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div id="newsFeed" class="col px-3">
+		<h1>News</h1>
+		<div class="card mb-3">
+			<div class="card-body">
+				<h5 class="card-title">New Cosmere Novel Published</h5>
+				<p class="card-text">Brandon Sanderson is a writing machine without equal.</p>
+				<a href="#" class="btn btn-primary">Go somewhere</a>
+			</div>
+		</div>
+		<div class="card mb-3">
+			<div class="card-body">
+				<h5 class="card-title">Warhammer 40K is Being Adopted as a Series</h5>
+				<p class="card-text">Let's hope they don't butcher the series this time. Henry Cavill is on-board, so there may be some hope.</p>
+				<a href="#" class="btn btn-primary">Go somewhere</a>
+			</div>
+		</div>
+		<div class="card mb-3">
+			<div class="card-body">
+				<h5 class="card-title">A new version of Bookshelf is Lauched</h5>
+				<p class="card-text">You can read the patch notes here.</p>
+				<a href="#" class="btn btn-primary">Go somewhere</a>
+			</div>
+		</div>
+		<div class="card mb-3">
+			<div class="card-body">
+				<h5 class="card-title">The standard Lorem Ipsum passage, used since the 1500s</h5>
+				<p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+				<a href="#" class="btn btn-primary">Go somewhere</a>
+			</div>
+		</div>
+		<div class="card mb-3">
+			<div class="card-body">
+				<h5 class="card-title">De Finibus Bonorum et Malorum</h5>
+				<p class="card-text">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				<a href="#" class="btn btn-primary">Go somewhere</a>
+			</div>
+		</div>
+	</div>
+</div>
 {{ end }}
