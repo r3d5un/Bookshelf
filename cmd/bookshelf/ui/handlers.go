@@ -45,3 +45,11 @@ func (m *Module) CurrentlyReading(w http.ResponseWriter, r *http.Request) {
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "currentlyreading.tmpl", &templateData{})
 }
+
+func (m *Module) FinishedReading(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "finishedreading.tmpl", &templateData{})
+}

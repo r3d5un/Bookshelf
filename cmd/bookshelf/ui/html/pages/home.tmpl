@@ -11,32 +11,16 @@
 		</div>
 		<div id="finished" class="row py-2">
 			<h5>Finished</h5>
-			<table class="table table-sm">
-				<thead>
-					<tr>
-						<th scope="col">#</th>
-						<th scope="col">Title</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th scope="row">99</th>
-						<td>Assassin's Apprentice</td>
-					</tr>
-					<tr>
-						<th scope="row">98</th>
-						<td>Abyssal Archive: The Mythology of Dark Souls</td>
-					</tr>
-					<tr>
-						<th scope="row">97</th>
-						<td>The Pragmatic Programmer: From Journeyman to Master</td>
-					</tr>
-				</tbody>
-			</table>
+			<div hx-get="/ui/finishedreading" hx-trigger="load" hx-swap="outerHTML" class="d-flex justify-content-center">
+				<div class="spinner-border m-5" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div id="newsFeed" class="col px-3">
 		<h1>News</h1>
+		{{/* TODO: Create infinite scroll component for news */}}
 		<div class="card mb-3">
 			<div class="card-body">
 				<h5 class="card-title">New Cosmere Novel Published</h5>
