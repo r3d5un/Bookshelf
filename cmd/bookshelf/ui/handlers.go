@@ -31,6 +31,14 @@ func (m *Module) Discover(w http.ResponseWriter, r *http.Request) {
 	m.render(w, http.StatusOK, "discover.tmpl", &templateData{})
 }
 
+func (m *Module) Authors(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering page")
+	m.render(w, http.StatusOK, "authors.tmpl", &templateData{})
+}
+
 func (m *Module) CurrentlyReading(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
