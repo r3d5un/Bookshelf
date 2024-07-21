@@ -1,34 +1,107 @@
 {{ block "content" . }}
 <h1>My Library</h1>
 
-<div class="card mb-3">
-	<div class="card-body">
-		<div class="row">
-			<div class="col">
-				<h5 class="card-title">Gardens of the Moon</h5>
+
+<form>
+	<div class="row">
+		<div class="col-md-4">
+			<div class="mb-3">
+				<label for="authorDatalist" class="form-label">Author</label>
+				<input class="form-control" list="authorDatalistOptions" id="authorDatalist" placeholder="Type to search...">
+				<datalist id="authorDatalistOptions">
+					<option value="Brandon Sanderson">
+					<option value="Steven Erikson">
+					<option value="Tolkien">
+					<option value="George Martin">
+					<option value="Ursula">
+				</datalist>
 			</div>
-			<div class="col">
-				<div class="row justify-content-end">
-					<div class="col-4">
-						<select class="form-select form-select-sm" aria-label="Small select example">
-						  <option selected="1">Want to Read</option>
-						  <option value="2">Read</option>
-						  <option value="3">Reading</option>
-						</select>
+		</div>
+		<div class="col-md-4">
+			<div class="mb-3">
+				<label for="seriesDatalist" class="form-label">Series</label>
+				<input class="form-control" list="seriesDatalistOptions" id="seriesDatalist" placeholder="Type to search...">
+				<datalist id="seriesDatalistOptions">
+					<option value="Stormlight Archives">
+					<option value="Mistborn">
+					<option value="Malazan: Book of the Fallen">
+					<option value="Lord of the Rings">
+					<option value="Warhammer 40K">
+				</datalist>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="mb-3">
+				<label for="genreDatalist" class="form-label">Genre</label>
+				<input class="form-control" list="genreDatalistOptions" id="genreDatalist" placeholder="Type to search...">
+				<datalist id="genreDatalistOptions">
+					<option value="Science Fiction">
+					<option value="Fantasy">
+					<option value="Grim Dark">
+					<option value="Romance">
+					<option value="Politics">
+				</datalist>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<div class="mb-3">
+				<label for="statusSelect" class="form-label">Status</label>
+				<select class="form-select" id="statusSelect" aria-label="Status select example">
+					<option value="all" selected>All</option>
+					<option value="wantToRead">Want to Read</option>
+					<option value="read">Read</option>
+					<option value="reading">Reading</option>
+				</select>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="mb-3">
+				<label for="ratingsSelect" class="form-label">Ratings</label>
+				<select class="form-select" id="ratingsSelect" aria-label="Ratings select example">
+					<option value="all" selected>All</option>
+					<option value="overwhelminglyPositive">Overwhelmingly Positive</option>
+					<option value="mostlyPositive">Mostly Positive</option>
+					<option value="mixed">Mixed</option>
+					<option value="mostlyNegative">Mostly Negative</option>
+					<option value="overwhelminglyNegative">Overwhelmingly Negative</option>
+				</select>
+			</div>
+		</div>
+	</div>
+</form>
+
+<div class="row py-4">
+	<div class="card mb-3">
+		<div class="card-body">
+			<div class="row">
+				<div class="col">
+					<h5 class="card-title">Gardens of the Moon</h5>
+				</div>
+				<div class="col">
+					<div class="row justify-content-end">
+						<div class="col-4">
+							<select class="form-select form-select-sm" aria-label="Small select example">
+							  <option selected="1">Want to Read</option>
+							  <option value="2">Read</option>
+							  <option value="3">Reading</option>
+							</select>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col">
-				<h6 class="card-title">Malazan: Book of the Fallen</h6>
-			</div>
-			<div class="col">
-				<h6 class="card-title">Steven Erikson</h6>
-			</div>
-			<div class="col">
-				<p class="card-text">Published: 2024-12-31</p>
-				<p class="card-text">Added: 2024-12-31</p>
+			<div class="row">
+				<div class="col">
+					<h6 class="card-title">Malazan: Book of the Fallen</h6>
+				</div>
+				<div class="col">
+					<h6 class="card-title">Steven Erikson</h6>
+				</div>
+				<div class="col">
+					<p class="card-text">Published: 2024-12-31</p>
+					<p class="card-text">Added: 2024-12-31</p>
+				</div>
 			</div>
 		</div>
 	</div>
