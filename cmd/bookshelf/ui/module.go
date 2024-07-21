@@ -63,7 +63,6 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /library", m.MyLibrary},
 		{"GET /discover", m.Discover},
 		// UI Components
-		{"GET /ui/test", m.TestHTMX},
 		{"GET /ui/currentlyreading", m.CurrentlyReading},
 		{"GET /ui/finishedreading", m.FinishedReading},
 		{"POST /ui/librarybooklist", m.MyLibraryBookList},

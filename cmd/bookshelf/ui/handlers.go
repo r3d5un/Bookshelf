@@ -31,20 +31,6 @@ func (m *Module) Discover(w http.ResponseWriter, r *http.Request) {
 	m.render(w, http.StatusOK, "discover.tmpl", &templateData{})
 }
 
-func (m *Module) TestHTMX(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	logger := logging.LoggerFromContext(ctx)
-
-	responseBody := `
-<div class="alert alert-primary" role="alert">
-  Test successfull!
-</div>
-`
-
-	logger.Info("button press registered")
-	m.rawResponse(w, http.StatusOK, responseBody)
-}
-
 func (m *Module) CurrentlyReading(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
