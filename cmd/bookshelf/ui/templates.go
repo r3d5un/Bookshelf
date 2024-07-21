@@ -50,7 +50,9 @@ func (m *Module) newTemplateCache() (map[string]*template.Template, error) {
 }
 
 // Contains functions that the templates can call internally
-var functions = template.FuncMap{}
+var functions = template.FuncMap{
+	"humanDate": humanDate,
+}
 
 type templateData struct {
 	MyLibraryBooks []myLibraryBook `json:"myLibraryBooks,omitempty"`
@@ -144,4 +146,11 @@ func (m *Module) serverError(w http.ResponseWriter, err error) {
 	m.logger.Error("a server error occurred", "error", err)
 
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+func humanDate(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.UTC().Format("2006-01-02")
 }
