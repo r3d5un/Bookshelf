@@ -11,11 +11,17 @@
 					<div class="col">
 						<div class="row justify-content-end">
 							<div class="col-4">
-								<select class="form-select form-select-sm" aria-label="Small select example">
-								  <option selected="1">Want to Read</option>
-								  <option value="2">Read</option>
-								  <option value="3">Reading</option>
-								</select>
+								{{ if  eq .Status "Want to Read" }}
+								<span class="badge text-bg-info">{{ .Status }}</span>
+								{{ else if eq .Status "Reading" }}
+								<span class="badge text-bg-primary">{{ .Status }}</span>
+								{{ else if eq .Status "Dropped" }}
+								<span class="badge text-bg-secondary">{{ .Status }}</span>
+								{{ else if eq .Status "Read" }}
+								<span class="badge text-bg-success">{{ .Status }}</span>
+								{{ else }}
+								<span class="badge text-bg-warning">Unkonwn</span>
+								{{ end }}
 							</div>
 						</div>
 					</div>

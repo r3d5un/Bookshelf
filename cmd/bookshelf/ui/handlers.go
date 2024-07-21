@@ -97,7 +97,7 @@ func (m *Module) MyLibraryBookList(w http.ResponseWriter, r *http.Request) {
 				Authors:   []*string{&sanderson},
 				Published: &date,
 				Added:     &date,
-				Status:    "Read",
+				Status:    "Dropped",
 			},
 			{
 				Title:     "Words of Radiance",
@@ -105,7 +105,7 @@ func (m *Module) MyLibraryBookList(w http.ResponseWriter, r *http.Request) {
 				Authors:   []*string{&sanderson},
 				Published: &date,
 				Added:     &date,
-				Status:    "Read",
+				Status:    "Reading",
 			},
 		},
 	}
