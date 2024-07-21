@@ -2,6 +2,7 @@ package ui
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/logging"
 )
@@ -34,9 +35,15 @@ func (m *Module) TestHTMX(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
-	logger.Info("button press registered", "request", r)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte{})
+	responseBody := `
+<div class="alert alert-primary" role="alert">
+  Test successfull!
+</div>
+`
+
+	logger.Info("button press registered")
+	m.rawResponse(w, http.StatusOK, responseBody)
+}
 
 func (m *Module) CurrentlyReading(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -58,6 +65,51 @@ func (m *Module) MyLibraryBookList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	date := time.Now()
+	erikson := "Steven Erikson"
+	malazan := "Malazan: Book of the Fallen"
+
+	sanderson := "Brandon Sanderson"
+	stormlight := "Stormlight Archives"
+	cosmere := "Cosmere"
+
+	data := templateData{
+		MyLibraryBooks: []myLibraryBook{
+			{
+				Title:     "Gardens of the Moon",
+				Series:    []*string{&malazan},
+				Authors:   []*string{&erikson},
+				Published: &date,
+				Added:     &date,
+				Status:    "Read",
+			},
+			{
+				Title:     "Deadhouse Gates",
+				Series:    []*string{&malazan},
+				Authors:   []*string{&erikson},
+				Published: &date,
+				Added:     &date,
+				Status:    "Want to Read",
+			},
+			{
+				Title:     "The Way of Kings",
+				Series:    []*string{&stormlight, &cosmere},
+				Authors:   []*string{&sanderson},
+				Published: &date,
+				Added:     &date,
+				Status:    "Read",
+			},
+			{
+				Title:     "Words of Radiance",
+				Series:    []*string{&stormlight, &cosmere},
+				Authors:   []*string{&sanderson},
+				Published: &date,
+				Added:     &date,
+				Status:    "Read",
+			},
+		},
+	}
+
 	logger.Info("rendering UI component")
-	m.renderPartial(w, http.StatusOK, "librarybooklisting.tmpl", &templateData{})
+	m.renderPartial(w, http.StatusOK, "librarybooklisting.tmpl", &data)
 }

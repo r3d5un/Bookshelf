@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"time"
 )
 
 //go:embed "html" "static" "static"
@@ -52,6 +53,16 @@ func (m *Module) newTemplateCache() (map[string]*template.Template, error) {
 var functions = template.FuncMap{}
 
 type templateData struct {
+	MyLibraryBooks []myLibraryBook `json:"myLibraryBooks,omitempty"`
+}
+
+type myLibraryBook struct {
+	Title     string     `json:"title"`
+	Series    []*string  `json:"series,omitempty"`
+	Authors   []*string  `json:"authors,omitempty"`
+	Published *time.Time `json:"published,omitempty"`
+	Added     *time.Time `json:"added,omitempty"`
+	Status    string     `json:"string,omitempty"`
 }
 
 var (
