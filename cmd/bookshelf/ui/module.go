@@ -63,6 +63,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /library", m.MyLibrary},
 		{"GET /discover", m.Discover},
 		{"GET /authors", m.Authors},
+		{"GET /authors/{id}", m.AuthorViewHandler},
 		// UI Components
 		{"GET /ui/currentlyreading", m.CurrentlyReading},
 		{"GET /ui/finishedreading", m.FinishedReading},
