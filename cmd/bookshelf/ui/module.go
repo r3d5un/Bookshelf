@@ -61,6 +61,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /api/v1/ui/healthcheck", m.healthcheckHandler},
 		{"GET /", m.Home},
 		{"GET /library", m.MyLibrary},
+		{"GET /books/{id}", m.BookViewHandler},
 		{"GET /discover", m.Discover},
 		{"GET /authors", m.Authors},
 		{"GET /authors/{id}", m.AuthorViewHandler},

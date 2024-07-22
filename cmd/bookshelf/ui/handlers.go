@@ -115,3 +115,11 @@ func (m *Module) MyLibraryBookList(w http.ResponseWriter, r *http.Request) {
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "librarybooklisting.tmpl", &data)
 }
+
+func (m *Module) BookViewHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering page")
+	m.render(w, http.StatusOK, "book.tmpl", &templateData{})
+}
