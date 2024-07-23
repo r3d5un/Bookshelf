@@ -66,6 +66,15 @@ func ReadUUIDParam(key string, r *http.Request) (*uuid.UUID, error) {
 	return &id, nil
 }
 
+func ReadStringParam(key string, r *http.Request) (*string, error) {
+	s := r.PathValue(key)
+	if s == "" {
+		return nil, fmt.Errorf("empty string parameter")
+	}
+
+	return &s, nil
+}
+
 func ReadQueryString(
 	qs url.Values,
 	key string,

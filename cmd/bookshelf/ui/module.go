@@ -69,6 +69,7 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /ui/currentlyreading", m.CurrentlyReading},
 		{"GET /ui/finishedreading", m.FinishedReading},
 		{"POST /ui/librarybooklist", m.MyLibraryBookList},
+		{"GET /ui/discovermenu/{category}", m.DiscoverContentHandler},
 	}
 
 	m.logger.Info("adding protected endpoints")

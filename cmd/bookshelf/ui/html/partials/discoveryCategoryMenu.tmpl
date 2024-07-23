@@ -1,0 +1,94 @@
+{{ block "discovermenu" .}}
+<div id="discoveryContent" class="row py-3">
+	<div id="sideBar" class="col-4 pr-3">
+		<div class="list-group" id="categoryMenu">
+			{{ if eq .SelectedCategory "books" }}
+			<button
+				hx-get="/ui/discovermenu/books"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action active"
+				aria-current="true">
+				Books
+			</button>
+			<button
+				hx-get="/ui/discovermenu/authors"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Authors
+			</button>
+			<button
+				hx-get="/ui/discovermenu/genres"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Genres
+			</button>
+			{{ else if eq .SelectedCategory "authors" }}
+			<button
+				hx-get="/ui/discovermenu/books"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Books
+			</button>
+			<button
+				hx-get="/ui/discovermenu/authors"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action active"
+				aria-current="true">
+				Authors
+			</button>
+			<button
+				hx-get="/ui/discovermenu/genres"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Genres
+			</button>
+			{{ else }}
+			<button
+				hx-get="/ui/discovermenu/books"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Books
+			</button>
+			<button
+				hx-get="/ui/discovermenu/authors"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action">
+				Authors
+			</button>
+			<button
+				hx-get="/ui/discovermenu/genres"
+				hx-target="#discoveryContent"
+				hx-swap="outerHTML"
+				type="button"
+				class="list-group-item list-group-item-action active"
+				aria-current="true">
+				Genres
+			</button>
+			{{ end }}
+		</div>
+	</div>
+	<div id="discoveryContent" class="col px-3">
+		<div  class="d-flex justify-content-center">
+			<div class="spinner-border m-5" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
+	</div>
+</div>
+{{ end }}

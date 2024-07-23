@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/logging"
+	"github.com/r3d5un/Bookshelf/internal/rest"
 )
 
 func (m *Module) Home(w http.ResponseWriter, r *http.Request) {
@@ -122,4 +123,35 @@ func (m *Module) BookViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("rendering page")
 	m.render(w, http.StatusOK, "book.tmpl", &templateData{})
+}
+
+func (m *Module) DiscoverContentHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("reading requested category")
+	category, err := rest.ReadStringParam("category", r)
+	if err != nil {
+		logger.Info("unable to read category parameter", "error", err)
+		rest.BadRequestResponse(w, r, "unable to read category parameter")
+		return
+	}
+	logger.Info("category parsed", "category", category)
+
+	data := templateData{
+		SelectedCategory: *category,
+	}
+
+	switch *category {
+	case "books":
+		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+	case "authors":
+		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+	case "genres":
+		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+	default:
+		logger.Info("requested category not implemented", "category", *category)
+		rest.BadRequestResponse(w, r, "requested category not implemented")
+		return
+	}
 }
