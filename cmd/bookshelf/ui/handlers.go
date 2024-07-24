@@ -49,6 +49,14 @@ func (m *Module) Series(w http.ResponseWriter, r *http.Request) {
 	m.render(w, http.StatusOK, "series.tmpl", &templateData{})
 }
 
+func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering page")
+	m.render(w, http.StatusOK, "newSeries.tmpl", &templateData{})
+}
+
 func (m *Module) AuthorViewHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
