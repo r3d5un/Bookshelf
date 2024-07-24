@@ -1,41 +1,4 @@
 {{ block "content" . }}
-<div class="row py-3">
-	<div id="sideBar" class="col-4 pr-3">
-		{{/* TODO: Handle actual profile pictures */}}
-		<div id="profilePicture" class="row py-1">
-			<div class="d-flex justify-content-center">
-				<div class="spinner-border m-5" role="status">
-					<span class="visually-hidden">Loading...</span>
-				</div>
-			</div>
-		</div>
-		<div id="about" class="row py-2">
-			<h5>Brandon Sanderson</h5>
-			<p>Website: www.brandonsanderson.com</p>
-			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-		</div>
-	</div>
-	<div id="newsFeed" class="col px-3">
-		<h3>Bibliography</h3>
-		{{/* TODO: Make Bibliography section collapse */}}
-		<div id="authorBooks">
-			<div class="card mb-3">
-				<div class="card-body">
-					<h5 class="card-title">New Cosmere Novel Published</h5>
-					<p class="card-text">Brandon Sanderson is a writing machine without equal.</p>
-				</div>
-			</div>
-		</div>
-		<h3>Series</h3>
-		{{/* TODO: Make Series section collapse */}}
-		<div id="authorSeries">
-			<div class="card mb-3">
-				<div class="card-body">
-					<h5 class="card-title">New Cosmere Novel Published</h5>
-					<p class="card-text">Brandon Sanderson is a writing machine without equal.</p>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
+<h1 class="display-5 fw-bold">Book</h1>
+<p>Show data about a single book here.</p>
 {{ end }}
