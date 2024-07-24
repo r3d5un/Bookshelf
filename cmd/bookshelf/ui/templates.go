@@ -55,8 +55,18 @@ var functions = template.FuncMap{
 }
 
 type templateData struct {
-	MyLibraryBooks   []myLibraryBook `json:"myLibraryBooks,omitempty"`
-	SelectedCategory string          `json:"selectedCategory,omitempty"`
+	MyLibraryBooks       []myLibraryBook       `json:"myLibraryBooks,omitempty"`
+	SelectedCategory     string                `json:"selectedCategory,omitempty"`
+	BookSeriesAccordions []bookSeriesAccordion `json:"bookSeriesAccordions"`
+}
+
+type bookSeriesAccordion struct {
+	ID          string     `json:"id"`
+	Order       float32    `json:"order"`
+	Title       string     `json:"title"`
+	Published   *time.Time `json:"published,omitempty"`
+	Description string     `json:"description"`
+	Selected    bool       `json:"selected"`
 }
 
 type myLibraryBook struct {

@@ -187,6 +187,36 @@ func (m *Module) BookSeriesAccordionHandler(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	timestamp := time.Now()
+	data := templateData{
+		BookSeriesAccordions: []bookSeriesAccordion{
+			{
+				ID:          "1",
+				Order:       1,
+				Title:       "The Way of Kings",
+				Published:   &timestamp,
+				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+				Selected:    true,
+			},
+			{
+				ID:          "2",
+				Order:       2,
+				Title:       "Words of Radiance",
+				Published:   &timestamp,
+				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+				Selected:    false,
+			},
+			{
+				ID:          "3",
+				Order:       3,
+				Title:       "Oathbringer",
+				Published:   &timestamp,
+				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+				Selected:    false,
+			},
+		},
+	}
+
 	logger.Info("rendering UI component")
-	m.renderPartial(w, http.StatusOK, "bookSeriesAccordion.tmpl", &templateData{})
+	m.renderPartial(w, http.StatusOK, "bookSeriesAccordion.tmpl", &data)
 }
