@@ -2,6 +2,7 @@ package ui
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/logging"
@@ -125,6 +126,35 @@ func (m *Module) BookViewHandler(w http.ResponseWriter, r *http.Request) {
 	m.render(w, http.StatusOK, "book.tmpl", &templateData{})
 }
 
+func (m *Module) DiscoverCategoryMenuHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("reading requested category")
+	category, err := rest.ReadStringParam("category", r)
+	if err != nil {
+		logger.Info("unable to read category parameter", "error", err)
+		rest.BadRequestResponse(w, r, "unable to read category parameter")
+		return
+	}
+	logger.Info("category parsed", "category", category)
+
+	data := templateData{SelectedCategory: *category}
+	allowedCategories := []string{"books", "authors", "genres"}
+	if !slices.Contains(allowedCategories, data.SelectedCategory) {
+		logger.Info(
+			"requested category not implemented",
+			"category", *category,
+			"allowedCategories", allowedCategories,
+		)
+		rest.BadRequestResponse(w, r, "requested category not implemented")
+		return
+	}
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+}
+
 func (m *Module) DiscoverContentHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
@@ -138,20 +168,17 @@ func (m *Module) DiscoverContentHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	logger.Info("category parsed", "category", category)
 
-	data := templateData{
-		SelectedCategory: *category,
-	}
-
+	logger.Info("rendering UI component", "category", *category)
 	switch *category {
 	case "books":
-		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
-	case "authors":
-		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+		m.renderPartial(w, http.StatusOK, "discoverBooks.tmpl", &templateData{})
 	case "genres":
-		m.renderPartial(w, http.StatusOK, "discoveryCategoryMenu.tmpl", &data)
+		m.renderPartial(w, http.StatusOK, "discoverGenres.tmpl", &templateData{})
+	case "authors":
+		m.renderPartial(w, http.StatusOK, "discoverAuthors.tmpl", &templateData{})
 	default:
-		logger.Info("requested category not implemented", "category", *category)
-		rest.BadRequestResponse(w, r, "requested category not implemented")
+		logger.Info("unable to read category parameter", "error", err)
+		rest.BadRequestResponse(w, r, "unable to read category parameter")
 		return
 	}
 }
