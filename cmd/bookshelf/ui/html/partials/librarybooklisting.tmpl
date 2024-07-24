@@ -34,7 +34,8 @@
 					</div>
 					<div class="col">
 						{{ range .Authors }}
-						<h6 class="card-title">{{ . }}</h6>
+						{{/* TODO: Add a real link to author */}}
+						<h6 class="card-title" ><a hx-boost="true" hx-push-url="true"  href="/authors/1">{{ . }}</a></h6>
 						{{ end }}
 					</div>
 					<div class="col">
