@@ -54,6 +54,14 @@ func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	logger.Info("rendering page")
+	m.renderPartial(w, http.StatusOK, "newSeries.tmpl", &templateData{})
+}
+
+func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
 	err := r.ParseForm()
 	if err != nil {
 		logger.Error("unable to parse form", "error", err)
@@ -69,8 +77,8 @@ func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("form parsed", "newSeries", newSeries)
 
-	logger.Info("rendering page")
-	m.render(w, http.StatusOK, "newSeries.tmpl", &templateData{})
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
 }
 
 func (m *Module) AuthorViewHandler(w http.ResponseWriter, r *http.Request) {

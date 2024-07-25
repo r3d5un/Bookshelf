@@ -1,19 +1,28 @@
 {{ block "content" . }}
-<div id="newSeries" class="col py-3">
-<h1>Add New Series</h1>
-<form hx-post="/ui/books/new" hx-boost="true">
-	<div class="mb-3">
-		<label for="seriesNameInput" class="form-label">Add Name</label>
-		<input type="text" class="form-control" id="seriesNameInput" name="seriesNameInput" aria-describedby="seriesNameHelp">
-		<div id="seriesNameHelp" class="form-text">For example, The Stormlight Archives, Malazan: Book of the Fallen</div>
+	<div class="modal-dialog modal-dialog-centered">
+	<div class="modal-content">
+		<form hx-post="/ui/new/series" hx-target="#toastContainer">
+			<div class="modal-header">
+			<h5 class="modal-title">Add New Series</h5>
+			</div>
+			<div class="modal-body">
+				<div id="newSeries" class="col py-3">
+						<div class="mb-3">
+							<label for="seriesNameInput" class="form-label">Add Name</label>
+							<input type="text" class="form-control" id="seriesNameInput" name="seriesNameInput" aria-describedby="seriesNameHelp">
+							<div id="seriesNameHelp" class="form-text">For example, The Stormlight Archives, Malazan: Book of the Fallen</div>
+						</div>
+						<div class="mb-3">
+							<label for="seriesDescriptionTextarea" class="form-label">Series Description</label>
+							<textarea class="form-control" id="seriesDescriptionTextarea" name="seriesDescriptionTextarea" rows="3"></textarea>
+						</div>
+					</div>
+				</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+			</div>
+		</form>
 	</div>
-	<div class="mb-3">
-		<label for="seriesDescriptionTextarea" class="form-label">Series Description</label>
-		<textarea class="form-control" id="seriesDescriptionTextarea" name="seriesDescriptionTextarea" rows="3"></textarea>
-	</div>
-	<div class="row py-4">
-		<button type="submit" class="btn btn-primary">Submit</button>
-	</div>
-</form>
 </div>
 {{ end }}

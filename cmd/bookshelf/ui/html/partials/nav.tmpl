@@ -1,17 +1,17 @@
 {{define "nav"}}
-<nav hx-boost="true" class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
 	<div class="container-fluid col-lg-6">
-		<a class="navbar-brand" href="/">Bookshelf</a>
+		<a hx-boost="true" class="navbar-brand" href="/">Bookshelf</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
 		</button>
 		<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 				<li class="nav-item">
-					<a class="nav-link" href="/home">Home</a>
+					<a hx-boost="true" class="nav-link" href="/home">Home</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="/library">My Library</a>
+					<a hx-boost="true" class="nav-link" href="/library">My Library</a>
 				</li>
 			</ul>
 			<form class="d-flex" role="search">
@@ -21,8 +21,8 @@
 			<div class="btn-group px-3" role="group">
 				<button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Add</button>
 				<ul class="dropdown-menu">
-					<li><a class="dropdown-item" href="/new/author">Author</a></li>
-					<li><a class="dropdown-item" href="/new/series">Series</a></li>
+					<li><a hx-get="/ui/new/series" hx-target="#modals-here" data-bs-toggle="modal" data-bs-target="#modals-here" class="dropdown-item">Author</a></li>
+					<li><a hx-get="/ui/new/series" hx-target="#modals-here" data-bs-toggle="modal" data-bs-target="#modals-here" class="dropdown-item">Series</a></li>
 					<li><a class="dropdown-item" href="/new/genre">Genre</a></li>
 					<li><a class="dropdown-item" href="/new/book">Book</a></li>
 				</ul>

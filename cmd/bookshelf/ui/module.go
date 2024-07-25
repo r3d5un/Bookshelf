@@ -66,15 +66,15 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"GET /authors", m.Authors},
 		{"GET /authors/{id}", m.AuthorViewHandler},
 		{"GET /series", m.Series},
-		{"GET /new/series", m.NewSeries},
 		// UI Components
+		{"GET /ui/new/series", m.NewSeries},
 		{"GET /ui/currentlyreading", m.CurrentlyReading},
 		{"GET /ui/finishedreading", m.FinishedReading},
 		{"POST /ui/librarybooklist", m.MyLibraryBookList},
 		{"GET /ui/discovermenu/{category}", m.DiscoverCategoryMenuHandler},
 		{"GET /ui/discovercontent/{category}", m.DiscoverContentHandler},
 		{"GET /ui/book/bookseriesaccordion/{id}", m.BookSeriesAccordionHandler},
-		{"POST /ui/books/new", m.NewSeries},
+		{"POST /ui/new/series", m.ParseNewSeriesForm},
 	}
 
 	m.logger.Info("adding protected endpoints")
