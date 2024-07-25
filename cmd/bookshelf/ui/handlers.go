@@ -5,6 +5,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/rest"
 )
@@ -52,6 +53,21 @@ func (m *Module) Series(w http.ResponseWriter, r *http.Request) {
 func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
+
+	err := r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	description := r.FormValue("seriesDescriptionTextarea")
+	newSeries := types.NewSeriesData{
+		Name:        r.FormValue("seriesNameInput"),
+		Description: &description,
+	}
+
+	logger.Info("form parsed", "newSeries", newSeries)
 
 	logger.Info("rendering page")
 	m.render(w, http.StatusOK, "newSeries.tmpl", &templateData{})

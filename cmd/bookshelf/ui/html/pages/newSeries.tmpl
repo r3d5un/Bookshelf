@@ -1,2 +1,19 @@
 {{ block "content" . }}
+<div id="newSeries" class="col py-3">
+<h1>Add New Series</h1>
+<form hx-post="/ui/books/new" hx-boost="true">
+	<div class="mb-3">
+		<label for="seriesNameInput" class="form-label">Add Name</label>
+		<input type="text" class="form-control" id="seriesNameInput" name="seriesNameInput" aria-describedby="seriesNameHelp">
+		<div id="seriesNameHelp" class="form-text">For example, The Stormlight Archives, Malazan: Book of the Fallen</div>
+	</div>
+	<div class="mb-3">
+		<label for="seriesDescriptionTextarea" class="form-label">Series Description</label>
+		<textarea class="form-control" id="seriesDescriptionTextarea" name="seriesDescriptionTextarea" rows="3"></textarea>
+	</div>
+	<div class="row py-4">
+		<button type="submit" class="btn btn-primary">Submit</button>
+	</div>
+</form>
+</div>
 {{ end }}
