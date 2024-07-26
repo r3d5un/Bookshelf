@@ -58,6 +58,39 @@ func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
 	m.renderPartial(w, http.StatusOK, "newSeries.tmpl", &templateData{})
 }
 
+func (m *Module) NewAuthorModal(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering page")
+	m.renderPartial(w, http.StatusOK, "newAuthorModal.tmpl", &templateData{})
+}
+
+func (m *Module) ParseNewAuthorForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	err := r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	description := r.FormValue("authorDescriptionTextarea")
+	website := r.FormValue("authorWebsiteInput")
+	newAuthorData := types.NewAuthorData{
+		Name:        r.FormValue("authorNameInput"),
+		Description: &description,
+		Website:     &website,
+	}
+
+	logger.Info("form parsed", "newAuthorData", newAuthorData)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
+}
+
 func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
