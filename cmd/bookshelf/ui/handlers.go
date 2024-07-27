@@ -79,13 +79,21 @@ func (m *Module) ParseNewAuthorForm(w http.ResponseWriter, r *http.Request) {
 
 	description := r.FormValue("authorDescriptionTextarea")
 	website := r.FormValue("authorWebsiteInput")
-	newAuthorData := types.NewAuthorData{
+	newAuthor := types.NewAuthorData{
 		Name:        r.FormValue("authorNameInput"),
 		Description: &description,
 		Website:     &website,
 	}
+	logger.Info("form parsed", "newAuthorData", newAuthor)
 
-	logger.Info("form parsed", "newAuthorData", newAuthorData)
+	logger.Info("creating new author")
+	newAuthorID, err := m.bookModule.CreateAuthor(ctx, newAuthor)
+	if err != nil {
+		logger.Error("error occurred while creating new author", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("new author created", "id", newAuthorID)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})

@@ -17,6 +17,7 @@ type Module struct {
 	mux           *http.ServeMux
 	cfg           *config.Config
 	templateCache map[string]*template.Template
+	bookModule    system.Books
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
@@ -32,6 +33,9 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 		m.logger.Error("unable to load tempaltes", "error", err)
 		return err
 	}
+
+	m.logger.Info("injecting data interface implementations", "requestedModule", "books")
+	m.bookModule = mono.Modules().Books
 
 	m.logger.Info("injecting mux")
 	m.mux = mono.Mux()
