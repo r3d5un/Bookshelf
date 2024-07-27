@@ -6,6 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/books/data"
+	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/config"
 )
 
@@ -14,10 +17,25 @@ type Monolith interface {
 	Mux() *http.ServeMux
 	DB() *sql.DB
 	Config() *config.Config
-	Modules() map[string]Module
+	Modules() *Modules
 }
 
 type Module interface {
 	Startup(context.Context, Monolith) error
 	Shutdown()
 }
+
+type Modules struct {
+	Books Books
+	UI    UI
+}
+
+type Books interface {
+	CreateAuthor(ctx context.Context, data types.NewAuthorData) (*uuid.UUID, error)
+	ReadAuthor(ctx context.Context, id uuid.UUID) (*types.Author, error)
+	ReadAllAuthors(ctx context.Context, filters data.Filters) ([]*types.Author, error)
+	UpdateAuthor(ctx context.Context, data types.Author) (*types.Author, error)
+	DeleteAuthor(ctx context.Context, id uuid.UUID) error
+}
+
+type UI interface{}

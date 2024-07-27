@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"syscall"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 type MonolithApplication struct {
 	logger  *slog.Logger
 	mux     *http.ServeMux
-	modules map[string]Module
+	modules *Modules
 	db      *sql.DB
 	cfg     *config.Config
 }
@@ -40,14 +41,14 @@ func (app *MonolithApplication) Config() *config.Config {
 	return app.cfg
 }
 
-func (app *MonolithApplication) Modules() map[string]Module {
+func (app *MonolithApplication) Modules() *Modules {
 	return app.modules
 }
 
 func NewMonolith(
 	logger *slog.Logger,
 	mux *http.ServeMux,
-	modules map[string]Module,
+	modules *Modules,
 	db *sql.DB,
 	cfg *config.Config,
 ) MonolithApplication {
@@ -111,20 +112,34 @@ func (app *MonolithApplication) routes() http.Handler {
 	return handler
 }
 
-func (app *MonolithApplication) SetupModules(ctx context.Context) error {
-	for _, module := range app.modules {
-		if err := module.Startup(ctx, app); err != nil {
-			return err
+func (app *MonolithApplication) SetupModules(ctx context.Context) {
+	val := reflect.ValueOf(app.modules)
+
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+
+		if module, ok := field.Interface().(Module); ok {
+			module.Startup(ctx, app)
 		}
 	}
-
-	return nil
 }
 
-func (app *MonolithApplication) ShutdownModules() error {
-	for _, module := range app.modules {
-		module.Shutdown()
+func (app *MonolithApplication) ShutdownModules() {
+	val := reflect.ValueOf(app.modules)
+
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
 	}
 
-	return nil
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+
+		if module, ok := field.Interface().(Module); ok {
+			module.Shutdown()
+		}
+	}
 }

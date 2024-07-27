@@ -60,20 +60,16 @@ func run() (err error) {
 	app := system.NewMonolith(
 		logger,
 		http.NewServeMux(),
-		map[string]system.Module{
-			books.ModuleName: &books.Module{},
-			ui.ModuleName:    &ui.Module{},
+		&system.Modules{
+			Books: &books.Module{},
+			UI:    &ui.Module{},
 		},
 		db,
 		cfg,
 	)
 
 	app.Logger().Info("running module startup")
-	err = app.SetupModules(context.Background())
-	if err != nil {
-		return err
-	}
-
+	app.SetupModules(context.Background())
 	err = app.Serve()
 	if err != nil {
 		app.Logger().Error("unable to start server", "error", err)
@@ -81,10 +77,7 @@ func run() (err error) {
 	}
 
 	app.Logger().Info("shutting down modules")
-	err = app.ShutdownModules()
-	if err != nil {
-		return err
-	}
+	app.ShutdownModules()
 
 	app.Logger().Info("exiting...")
 
