@@ -81,6 +81,8 @@ func (m *Module) registerEndpoints(mux *http.ServeMux) {
 		{"POST /ui/new/series", m.ParseNewSeriesForm},
 		{"GET /ui/new/author", m.NewAuthorModal},
 		{"POST /ui/new/author/form", m.ParseNewAuthorForm},
+		{"GET /ui/new/genre", m.NewGenreModal},
+		{"POST /ui/new/genre/form", m.ParseNewGenreForm},
 	}
 
 	m.logger.Info("adding protected endpoints")

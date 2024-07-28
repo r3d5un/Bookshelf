@@ -122,6 +122,37 @@ func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
 }
 
+func (m *Module) NewGenreModal(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering page")
+	m.render(w, http.StatusOK, "newGenreModal.tmpl", &templateData{})
+}
+
+func (m *Module) ParseNewGenreForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	err := r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	description := r.FormValue("genreDescriptionTextarea")
+	newGenre := types.NewSeriesData{
+		Name:        r.FormValue("genreNameInput"),
+		Description: &description,
+	}
+
+	logger.Info("form parsed", "newGenre", newGenre)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
+}
+
 func (m *Module) AuthorViewHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
