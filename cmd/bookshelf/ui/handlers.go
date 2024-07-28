@@ -50,12 +50,35 @@ func (m *Module) Series(w http.ResponseWriter, r *http.Request) {
 	m.render(w, http.StatusOK, "series.tmpl", &templateData{})
 }
 
-func (m *Module) NewSeries(w http.ResponseWriter, r *http.Request) {
+func (m *Module) NewSeriesModal(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
 	logger.Info("rendering page")
-	m.renderPartial(w, http.StatusOK, "newSeries.tmpl", &templateData{})
+	m.renderPartial(w, http.StatusOK, "newSeriesModal.tmpl", &templateData{})
+}
+
+func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	err := r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	description := r.FormValue("seriesDescriptionTextarea")
+	newSeries := types.NewSeriesData{
+		Name:        r.FormValue("seriesNameInput"),
+		Description: &description,
+	}
+
+	logger.Info("form parsed", "newSeries", newSeries)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
 }
 
 func (m *Module) NewAuthorModal(w http.ResponseWriter, r *http.Request) {
@@ -94,29 +117,6 @@ func (m *Module) ParseNewAuthorForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Info("new author created", "id", newAuthorID)
-
-	logger.Info("rendering UI component")
-	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
-}
-
-func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	logger := logging.LoggerFromContext(ctx)
-
-	err := r.ParseForm()
-	if err != nil {
-		logger.Error("unable to parse form", "error", err)
-		rest.ServerErrorResponse(w, r, err)
-		return
-	}
-
-	description := r.FormValue("seriesDescriptionTextarea")
-	newSeries := types.NewSeriesData{
-		Name:        r.FormValue("seriesNameInput"),
-		Description: &description,
-	}
-
-	logger.Info("form parsed", "newSeries", newSeries)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
