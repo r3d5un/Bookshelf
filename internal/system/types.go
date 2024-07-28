@@ -31,11 +31,18 @@ type Modules struct {
 }
 
 type Books interface {
+	// Authors
 	CreateAuthor(ctx context.Context, data types.NewAuthorData) (*uuid.UUID, error)
 	ReadAuthor(ctx context.Context, id uuid.UUID) (*types.Author, error)
 	ReadAllAuthors(ctx context.Context, filters data.Filters) ([]*types.Author, error)
 	UpdateAuthor(ctx context.Context, data types.Author) (*types.Author, error)
 	DeleteAuthor(ctx context.Context, id uuid.UUID) error
+	// Series
+	CreateSeries(ctx context.Context, newSeriesData types.NewSeriesData) (*uuid.UUID, error)
+	ReadSeries(ctx context.Context, seriesID uuid.UUID) (*types.Series, error)
+	ReadAllSeries(ctx context.Context, filters data.Filters) ([]*types.Series, error)
+	UpdateSeries(ctx context.Context, newSeriesData types.Series) (*types.Series, error)
+	DeleteSeries(ctx context.Context, id uuid.UUID) error
 }
 
 type UI interface{}
