@@ -143,6 +143,7 @@ func (m *Module) ParseNewGenreForm(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	logger.Info("parsing form")
 	err := r.ParseForm()
 	if err != nil {
 		logger.Error("unable to parse form", "error", err)
@@ -151,12 +152,20 @@ func (m *Module) ParseNewGenreForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	description := r.FormValue("genreDescriptionTextarea")
-	newGenre := types.NewSeriesData{
+	newGenre := types.NewGenreData{
 		Name:        r.FormValue("genreNameInput"),
 		Description: &description,
 	}
-
 	logger.Info("form parsed", "newGenre", newGenre)
+
+	logger.Info("creating new author")
+	newGenreID, err := m.bookModule.CreateGenre(ctx, newGenre)
+	if err != nil {
+		logger.Error("error occurred while creating new author", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("new author created", "id", newGenreID)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})

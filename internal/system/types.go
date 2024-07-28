@@ -43,6 +43,12 @@ type Books interface {
 	ReadAllSeries(ctx context.Context, filters data.Filters) ([]*types.Series, error)
 	UpdateSeries(ctx context.Context, newSeriesData types.Series) (*types.Series, error)
 	DeleteSeries(ctx context.Context, id uuid.UUID) error
+	// Genre
+	CreateGenre(ctx context.Context, newGenreData types.NewGenreData) (*uuid.UUID, error)
+	ReadGenre(ctx context.Context, genreID uuid.UUID) (*types.Genre, error)
+	ReadAllGenre(ctx context.Context, filters data.Filters) ([]*types.Genre, error)
+	UpdateGenre(ctx context.Context, newGenreData types.Genre) (*types.Genre, error)
+	DeleteGenre(ctx context.Context, id uuid.UUID) error
 }
 
 type UI interface{}

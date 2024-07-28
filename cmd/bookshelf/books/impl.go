@@ -103,3 +103,51 @@ func (m *Module) DeleteSeries(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (m *Module) CreateGenre(ctx context.Context, data types.NewGenreData) (*uuid.UUID, error) {
+	id, err := types.CreateGenre(ctx, &m.models, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return id, nil
+}
+
+func (m *Module) ReadGenre(ctx context.Context, id uuid.UUID) (*types.Genre, error) {
+	a, err := types.ReadGenre(ctx, &m.models, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (m *Module) ReadAllGenre(
+	ctx context.Context,
+	filters data.Filters,
+) ([]*types.Genre, error) {
+	a, err := types.ReadAllGenre(ctx, &m.models, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (m *Module) UpdateGenre(ctx context.Context, data types.Genre) (*types.Genre, error) {
+	a, err := types.UpdateGenre(ctx, &m.models, data)
+	if err != nil {
+		return a, nil
+	}
+
+	return a, nil
+}
+
+func (m *Module) DeleteGenre(ctx context.Context, id uuid.UUID) error {
+	err := types.DeleteGenre(ctx, &m.models, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
