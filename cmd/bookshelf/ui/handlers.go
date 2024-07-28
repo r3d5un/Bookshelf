@@ -62,6 +62,7 @@ func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	logger.Info("parsing form")
 	err := r.ParseForm()
 	if err != nil {
 		logger.Error("unable to parse form", "error", err)
@@ -74,8 +75,16 @@ func (m *Module) ParseNewSeriesForm(w http.ResponseWriter, r *http.Request) {
 		Name:        r.FormValue("seriesNameInput"),
 		Description: &description,
 	}
-
 	logger.Info("form parsed", "newSeries", newSeries)
+
+	logger.Info("creating new series")
+	newSeriesID, err := m.bookModule.CreateSeries(ctx, newSeries)
+	if err != nil {
+		logger.Error("error occurred while creating new series", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("new series created", "id", newSeriesID)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
