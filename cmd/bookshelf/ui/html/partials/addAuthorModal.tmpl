@@ -1,0 +1,31 @@
+{{ block "addAuthorModal" . }}
+	<div class="modal-dialog modal-dialog-centered">
+	<div class="modal-content">
+		<form hx-post="/ui/bookID/add/Author/authorID" hx-target="#toastContainer">
+			<div class="modal-header">
+			<h5 class="modal-title">Add Author</h5>
+			</div>
+			<div class="modal-body">
+				<div id="newAuthor" class="col py-3">
+					<div class="mb-3">
+						<label for="authorSearchInput" class="form-label" placeholder="Search for authors...">Search for Authors</label>
+						<input type="search"
+							class="form-control"
+							placeholder="Search for authors..."
+							id="authorSearchInput"
+							name="authorSearchInput"
+							aria-describedby="authorSearchHelp"
+							hx-post="/ui/search/authors/addAuthorModal"
+							hx-trigger="input changed delay:500ms, search"
+							hx-target="#authorModalSearchResults">
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Add</button>
+			</div>
+		</form>
+	</div>
+</div>
+{{ end }}

@@ -350,3 +350,11 @@ func (m *Module) BookSeriesAccordionHandler(w http.ResponseWriter, r *http.Reque
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "bookSeriesAccordion.tmpl", &data)
 }
+
+func (m *Module) AddAuthorModal(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "addAuthorModal.tmpl", &templateData{})
+}

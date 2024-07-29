@@ -29,7 +29,16 @@
 			<div class="btn-group" role="group">
 				<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Edit</button>
 				<ul class="dropdown-menu">
-					<li><a class="dropdown-item">Add Author</a></li>
+					<li>
+						<a
+							hx-get="/ui/bookID/edit/addAuthor"
+							hx-target="#modals-here"
+							data-bs-toggle="modal"
+							data-bs-target="#modals-here"
+							class="dropdown-item">
+							Add Author
+						</a>
+					</li>
 				</ul>
 			</div>
 		</div>
