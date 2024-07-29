@@ -1,12 +1,13 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"slices"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/books/data"
 	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/rest"
@@ -364,14 +365,29 @@ func (m *Module) AddAuthorModal(w http.ResponseWriter, r *http.Request) {
 func (m *Module) AddAuthorModalDatalist(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
+	filters := data.Filters{
+		Page:     1,
+		PageSize: 50,
+	}
 
-	datalist := fmt.Sprintf(`
-<option value="Brandon Sanderson" author-id="%s"></option>
-<option value="Steven Erikson" author-id="%s"></option>
-<option value="Mark Lawrence" author-id="%s"></option>
-<option value="Hannah Arendt" author-id="%s"></option>
-`, uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String())
+	logger.Info("reading authors", "filters", filters)
+	authors, err := m.bookModule.ReadAllAuthors(ctx, filters)
+	if err != nil {
+		logger.Error("error occurred while reading all authors", "filters", filters, "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("authors retrieved", "length", len(authors))
 
-	logger.Info("rendering UI component")
-	m.rawResponse(w, http.StatusOK, datalist)
+	var buffer bytes.Buffer
+	logger.Info("rendering datalist")
+	for _, a := range authors {
+		buffer.WriteString(
+			fmt.Sprintf(`<option value="%s" author-id="%s"></option>`, *a.Name, a.ID.String()),
+		)
+	}
+	logger.Info("datalist rendered")
+
+	logger.Info("responding with UI component")
+	m.rawResponse(w, http.StatusOK, buffer.String())
 }
