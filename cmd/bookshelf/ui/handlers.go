@@ -358,3 +358,18 @@ func (m *Module) AddAuthorModal(w http.ResponseWriter, r *http.Request) {
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "addAuthorModal.tmpl", &templateData{})
 }
+
+func (m *Module) AddAuthorModalDatalist(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	datalist := `
+<option value="Brandon Sanderson" author-id="1"></option>
+<option value="Steven Erikson" author-id="2"></option>
+<option value="Mark Lawrence" author-id="3"></option>
+<option value="Hannah Arendt" author-id="4"></option>
+`
+
+	logger.Info("rendering UI component")
+	m.rawResponse(w, http.StatusOK, datalist)
+}

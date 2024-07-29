@@ -1,5 +1,5 @@
 {{ block "addAuthorModal" . }}
-	<div class="modal-dialog modal-dialog-centered">
+<div class="modal-dialog modal-dialog-centered">
 	<div class="modal-content">
 		<form hx-post="/ui/bookID/add/Author/authorID" hx-target="#toastContainer">
 			<div class="modal-header">
@@ -9,15 +9,18 @@
 				<div id="newAuthor" class="col py-3">
 					<div class="mb-3">
 						<label for="authorSearchInput" class="form-label" placeholder="Search for authors...">Search for Authors</label>
-						<input type="search"
-							class="form-control"
-							placeholder="Search for authors..."
-							id="authorSearchInput"
-							name="authorSearchInput"
-							aria-describedby="authorSearchHelp"
+						<input 
+							class="form-control" 
+							list="authorModalSearchResultsDatalistOptions" 
+							id="authorModalSelectedOption" 
+							placeholder="Type to search..."
 							hx-post="/ui/search/authors/addAuthorModal"
 							hx-trigger="input changed delay:500ms, search"
-							hx-target="#authorModalSearchResults">
+							hx-target="#authorModalSearchResultsDatalistOptions">
+							<input type="hidden" id="authorModalSelectedValue" name="authorModalSelectedValue" />
+							<datalist id="authorModalSearchResultsDatalistOptions">
+								<option value="Brandon Sanderson" author-id="1234"></option>
+							</datalist>
 					</div>
 				</div>
 			</div>
@@ -27,5 +30,21 @@
 			</div>
 		</form>
 	</div>
+
+    <script>
+        document.getElementById('authorModalSelectedOption').addEventListener('input', function() {
+            var input = this;
+            var list = document.getElementById('authorModalSearchResultsDatalistOptions');
+            var options = list.options;
+            var hiddenInput = document.getElementById('authorModalSelectedValue');
+
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === input.value) {
+                    hiddenInput.value = options[i].getAttribute('author-id');
+                    break;
+                }
+            }
+        });
+    </script>
 </div>
 {{ end }}
