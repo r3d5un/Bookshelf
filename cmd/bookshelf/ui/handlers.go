@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/rest"
@@ -363,12 +365,12 @@ func (m *Module) AddAuthorModalDatalist(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
-	datalist := `
-<option value="Brandon Sanderson" author-id="1"></option>
-<option value="Steven Erikson" author-id="2"></option>
-<option value="Mark Lawrence" author-id="3"></option>
-<option value="Hannah Arendt" author-id="4"></option>
-`
+	datalist := fmt.Sprintf(`
+<option value="Brandon Sanderson" author-id="%s"></option>
+<option value="Steven Erikson" author-id="%s"></option>
+<option value="Mark Lawrence" author-id="%s"></option>
+<option value="Hannah Arendt" author-id="%s"></option>
+`, uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String())
 
 	logger.Info("rendering UI component")
 	m.rawResponse(w, http.StatusOK, datalist)
