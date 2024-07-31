@@ -11,22 +11,21 @@
 						<label for="authorSearchInput" class="form-label" placeholder="Search for authors...">Search for Authors</label>
 						<input 
 							class="form-control" 
-							list="authorModalSearchResultsDatalistOptions" 
+							list="modalAuthorDatalistOptions" 
 							id="modalAuthorNameInput" 
 							name="modalAuthorNameInput"
 							placeholder="Type to search..."
 							hx-post="/ui/search/authors/addAuthorModal"
 							hx-trigger="input changed delay:500ms, search"
-							hx-target="#authorModalSearchResultsDatalistOptions">
+							hx-target="#modalAuthorDatalistOptions">
 						</input>
 						<input
 							type="hidden"
 							id="modalAuthorIdInput"
 							name="modalAuthorIdInput">
 						</input>
-							<datalist id="authorModalSearchResultsDatalistOptions">
-								<option value="Brandon Sanderson" author-id="1234"></option>
-							</datalist>
+						<datalist id="modalAuthorDatalistOptions">
+						</datalist>
 					</div>
 				</div>
 			</div>
@@ -40,7 +39,7 @@
     <script>
         document.getElementById('modalAuthorNameInput').addEventListener('input', function() {
             var input = this;
-            var list = document.getElementById('authorModalSearchResultsDatalistOptions');
+            var list = document.getElementById('modalAuthorDatalistOptions');
             var options = list.options;
             var hiddenInput = document.getElementById('modalAuthorIdInput');
 
