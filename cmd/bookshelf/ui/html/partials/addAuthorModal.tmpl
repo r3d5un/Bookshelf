@@ -1,7 +1,7 @@
 {{ block "addAuthorModal" . }}
 <div class="modal-dialog modal-dialog-centered">
 	<div class="modal-content">
-		<form hx-post="/ui/bookID/add/Author/authorID" hx-target="#toastContainer">
+		<form hx-post="/ui/bookID/add/author" hx-target="#toastContainer">
 			<div class="modal-header">
 			<h5 class="modal-title">Add Author</h5>
 			</div>
@@ -12,12 +12,18 @@
 						<input 
 							class="form-control" 
 							list="authorModalSearchResultsDatalistOptions" 
-							id="authorModalSelectedOption" 
+							id="modalAuthorNameInput" 
+							name="modalAuthorNameInput"
 							placeholder="Type to search..."
 							hx-post="/ui/search/authors/addAuthorModal"
 							hx-trigger="input changed delay:500ms, search"
 							hx-target="#authorModalSearchResultsDatalistOptions">
-							<input type="hidden" id="authorModalSelectedValue" name="authorModalSelectedValue" />
+						</input>
+						<input
+							type="hidden"
+							id="modalAuthorIdInput"
+							name="modalAuthorIdInput">
+						</input>
 							<datalist id="authorModalSearchResultsDatalistOptions">
 								<option value="Brandon Sanderson" author-id="1234"></option>
 							</datalist>
@@ -32,11 +38,11 @@
 	</div>
 
     <script>
-        document.getElementById('authorModalSelectedOption').addEventListener('input', function() {
+        document.getElementById('modalAuthorNameInput').addEventListener('input', function() {
             var input = this;
             var list = document.getElementById('authorModalSearchResultsDatalistOptions');
             var options = list.options;
-            var hiddenInput = document.getElementById('authorModalSelectedValue');
+            var hiddenInput = document.getElementById('modalAuthorIdInput');
 
             for (var i = 0; i < options.length; i++) {
                 if (options[i].value === input.value) {

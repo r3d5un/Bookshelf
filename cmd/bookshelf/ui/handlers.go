@@ -391,3 +391,31 @@ func (m *Module) AddAuthorModalDatalist(w http.ResponseWriter, r *http.Request) 
 	logger.Info("responding with UI component")
 	m.rawResponse(w, http.StatusOK, buffer.String())
 }
+
+func (m *Module) AddAuthorToBookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing book ID from path")
+	bookID, err := rest.ReadStringParam("bookID", r)
+	if err != nil {
+		logger.Info("unable to read category parameter", "error", err)
+		rest.BadRequestResponse(w, r, "unable to read category parameter")
+		return
+	}
+	logger.Info("bookID parsed", "bookID", bookID)
+
+	logger.Info("parsing form")
+	err = r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	authorName := r.FormValue("modalAuthorNameInput")
+	authorID := r.FormValue("modalAuthorIdInput")
+	logger.Info("form parsed", "authorName", authorName, "authorID", authorID)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
+}
