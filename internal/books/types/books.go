@@ -314,3 +314,36 @@ func ReadAllBooks(ctx context.Context, models *data.Models, filters data.Filters
 
 	return books, nil
 }
+
+func AddAuthorsToBook(
+	ctx context.Context,
+	models *data.Models,
+	bookID uuid.UUID,
+	authorIDs []*uuid.UUID,
+) error {
+	var wg sync.WaitGroup
+	errorChan := make(chan error, len(authorIDs))
+
+	for _, authorID := range authorIDs {
+		wg.Add(1)
+		go func(ctx context.Context, models *data.Models, id *uuid.UUID) {
+			defer wg.Done()
+
+			_, err := models.BookAuthors.Insert(ctx, bookID, *authorID)
+			if err != nil {
+				errorChan <- err
+			}
+		}(ctx, models, authorID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
