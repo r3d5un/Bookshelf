@@ -21,11 +21,6 @@ type Book struct {
 	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
 }
 
-type BookAuthorJunction struct {
-	BookID   uuid.UUID `json:"bookId"`
-	AuthorID uuid.UUID `json:"authorId"`
-}
-
 type BookModel struct {
 	DB      *sql.DB
 	Timeout *time.Duration
@@ -631,48 +626,4 @@ ORDER BY b.published;
 
 	logger.Info("returning records", slog.Int("records", numberOfRecords))
 	return books, &numberOfRecords, nil
-}
-
-func (m *BookModel) AddAuthor(
-	ctx context.Context,
-	bookID uuid.UUID,
-	authorID uuid.UUID,
-) (junction *BookAuthorJunction, err error) {
-	logger := logging.LoggerFromContext(ctx)
-
-	query := `
-INSERT INTO books.book_authors (book_id, author_id)
-VALUES ($1, $2)
-RETURNING book_id, author_id;
-`
-
-	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
-	defer cancel()
-
-	logger = logger.With(
-		slog.Group(
-			"query",
-			slog.String("statement", database.MinifySQL(query)),
-		),
-	)
-
-	junction = &BookAuthorJunction{}
-
-	logger.Info("performing query")
-	err = m.DB.QueryRowContext(
-		qCtx,
-		query,
-		bookID,
-		authorID,
-	).Scan(
-		junction.BookID,
-		junction.AuthorID,
-	)
-	if err != nil {
-		logger.Error("unable to insert record", "error", err)
-		return nil, err
-	}
-
-	logger.Info("returning junction", "junction", junction)
-	return junction, nil
 }
