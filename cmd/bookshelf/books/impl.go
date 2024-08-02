@@ -151,3 +151,51 @@ func (m *Module) DeleteGenre(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (m *Module) CreateBook(ctx context.Context, data types.Book) (*uuid.UUID, error) {
+	id, err := types.CreateBook(ctx, &m.models, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return id, nil
+}
+
+func (m *Module) ReadBook(ctx context.Context, id uuid.UUID) (*types.Book, error) {
+	a, err := types.ReadBook(ctx, &m.models, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (m *Module) ReadAllBook(
+	ctx context.Context,
+	filters data.Filters,
+) ([]*types.Book, error) {
+	a, err := types.ReadAllBooks(ctx, &m.models, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (m *Module) UpdateBook(ctx context.Context, data types.Book) (*types.Book, error) {
+	a, err := types.UpdateBook(ctx, &m.models, data)
+	if err != nil {
+		return a, nil
+	}
+
+	return a, nil
+}
+
+func (m *Module) DeleteBook(ctx context.Context, id uuid.UUID) error {
+	err := types.DeleteBook(ctx, &m.models, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
