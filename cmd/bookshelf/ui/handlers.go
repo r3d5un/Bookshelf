@@ -195,11 +195,23 @@ func (m *Module) ParseNewBookForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	description := r.FormValue("bookDescriptionTextarea")
-	newGenre := types.NewGenreData{
-		Name:        r.FormValue("bookTitleInput"),
+	title := r.FormValue("bookTitleInput")
+	timestamp := time.Now()
+	newGenre := types.Book{
+		Title:       &title,
 		Description: &description,
+		Published:   &timestamp,
 	}
 	logger.Info("form parsed", "newBook", newGenre)
+
+	logger.Info("creating new book")
+	newBookID, err := m.bookModule.CreateBook(ctx, newGenre)
+	if err != nil {
+		logger.Error("error occurred while creating new book", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("new book created", "id", newBookID)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
