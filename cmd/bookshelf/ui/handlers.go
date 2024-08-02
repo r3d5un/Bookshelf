@@ -164,11 +164,11 @@ func (m *Module) ParseNewGenreForm(w http.ResponseWriter, r *http.Request) {
 	logger.Info("creating new author")
 	newGenreID, err := m.bookModule.CreateGenre(ctx, newGenre)
 	if err != nil {
-		logger.Error("error occurred while creating new author", "error", err)
+		logger.Error("error occurred while creating new genre", "error", err)
 		rest.ServerErrorResponse(w, r, err)
 		return
 	}
-	logger.Info("new author created", "id", newGenreID)
+	logger.Info("new genre created", "id", newGenreID)
 
 	logger.Info("rendering UI component")
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
