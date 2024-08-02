@@ -182,6 +182,29 @@ func (m *Module) NewBookModal(w http.ResponseWriter, r *http.Request) {
 	m.renderPartial(w, http.StatusOK, "newBookModal.tmpl", &templateData{})
 }
 
+func (m *Module) ParseNewBookForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("parsing form")
+	err := r.ParseForm()
+	if err != nil {
+		logger.Error("unable to parse form", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	description := r.FormValue("bookDescriptionTextarea")
+	newGenre := types.NewGenreData{
+		Name:        r.FormValue("bookTitleInput"),
+		Description: &description,
+	}
+	logger.Info("form parsed", "newBook", newGenre)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
+}
+
 func (m *Module) AuthorViewHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
