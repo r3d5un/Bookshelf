@@ -174,6 +174,14 @@ func (m *Module) ParseNewGenreForm(w http.ResponseWriter, r *http.Request) {
 	m.renderPartial(w, http.StatusOK, "toast.tmpl", &templateData{})
 }
 
+func (m *Module) NewBookModal(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("rendering UI component")
+	m.renderPartial(w, http.StatusOK, "newBookModal.tmpl", &templateData{})
+}
+
 func (m *Module) AuthorViewHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
