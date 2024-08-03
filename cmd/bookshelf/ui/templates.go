@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/r3d5un/Bookshelf/internal/books/types"
 )
 
 //go:embed "html" "static" "static"
@@ -55,7 +57,7 @@ var functions = template.FuncMap{
 }
 
 type templateData struct {
-	MyLibraryBooks       []myLibraryBook       `json:"myLibraryBooks,omitempty"`
+	MyLibraryBooks       []*types.Book         `json:"myLibraryBooks,omitempty"`
 	SelectedCategory     string                `json:"selectedCategory,omitempty"`
 	BookSeriesAccordions []bookSeriesAccordion `json:"bookSeriesAccordions"`
 }

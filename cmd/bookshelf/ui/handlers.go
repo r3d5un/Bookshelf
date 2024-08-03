@@ -245,53 +245,22 @@ func (m *Module) MyLibraryBookList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
-	date := time.Now()
-	erikson := "Steven Erikson"
-	malazan := "Malazan: Book of the Fallen"
+	filters := data.Filters{Page: 1, PageSize: 50}
+	logger.Info("retrieving data", "filters", filters)
+	books, err := m.bookModule.ReadAllBook(ctx, filters)
+	if err != nil {
+		logger.Info("error occurred while retrieving books", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+	logger.Info("data retrieved", "books", books)
 
-	sanderson := "Brandon Sanderson"
-	stormlight := "Stormlight Archives"
-	cosmere := "Cosmere"
-
-	data := templateData{
-		MyLibraryBooks: []myLibraryBook{
-			{
-				Title:     "Gardens of the Moon",
-				Series:    []*string{&malazan},
-				Authors:   []*string{&erikson},
-				Published: &date,
-				Added:     &date,
-				Status:    "Read",
-			},
-			{
-				Title:     "Deadhouse Gates",
-				Series:    []*string{&malazan},
-				Authors:   []*string{&erikson},
-				Published: &date,
-				Added:     &date,
-				Status:    "Want to Read",
-			},
-			{
-				Title:     "The Way of Kings",
-				Series:    []*string{&stormlight, &cosmere},
-				Authors:   []*string{&sanderson},
-				Published: &date,
-				Added:     &date,
-				Status:    "Dropped",
-			},
-			{
-				Title:     "Words of Radiance",
-				Series:    []*string{&stormlight, &cosmere},
-				Authors:   []*string{&sanderson},
-				Published: &date,
-				Added:     &date,
-				Status:    "Reading",
-			},
-		},
+	placeholderData := templateData{
+		MyLibraryBooks: books,
 	}
 
 	logger.Info("rendering UI component")
-	m.renderPartial(w, http.StatusOK, "librarybooklisting.tmpl", &data)
+	m.renderPartial(w, http.StatusOK, "librarybooklisting.tmpl", &placeholderData)
 }
 
 func (m *Module) BookViewHandler(w http.ResponseWriter, r *http.Request) {
