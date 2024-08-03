@@ -25,13 +25,13 @@
 	</div>
 	<div id="newsFeed" class="col px-3">
 		<div class="d-flex justify-content-between align-items-center mb-3">
-			<h3>The Way of Kings</h3>
+			<h3>{{ .BookData.Title }}</h3>
 			<div class="btn-group" role="group">
 				<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Edit</button>
 				<ul class="dropdown-menu">
 					<li>
 						<a
-							hx-get="/ui/bookID/edit/addAuthor"
+							hx-get="/ui/{{ .BookData.ID }}/edit/addAuthor"
 							hx-target="#modals-here"
 							data-bs-toggle="modal"
 							data-bs-target="#modals-here"
@@ -42,8 +42,17 @@
 				</ul>
 			</div>
 		</div>
-		<h5>Brandon Sanderson</h5>
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+		<h5>
+			{{- $length := len .BookData.Authors -}}
+				{{- range $index, $author := .BookData.Authors -}}
+				{{- if lt $index (sub $length 1) -}}
+					{{ $author.Name }};
+				{{- else -}}
+					{{ $author.Name }}
+				{{- end -}}
+			{{- end -}}
+		</h5>
+		{{ paragraphify .BookData.Description }}
 		{{/* TODO: Make Bibliography section collapse */}}
 		<h4>Editions</h4>
 		<div id="authorBooks">

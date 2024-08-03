@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/books/types"
@@ -54,6 +55,10 @@ func (m *Module) newTemplateCache() (map[string]*template.Template, error) {
 // Contains functions that the templates can call internally
 var functions = template.FuncMap{
 	"humanDate": humanDate,
+	"sub": func(a, b int) int {
+		return a - b
+	},
+	"paragraphify": paragraphify,
 }
 
 type templateData struct {
@@ -167,4 +172,16 @@ func humanDate(t time.Time) string {
 		return ""
 	}
 	return t.UTC().Format("2006-01-02")
+}
+func paragraphify(text string) template.HTML {
+	paragraphs := strings.Split(text, "\n\n")
+	var result string
+	for _, para := range paragraphs {
+		// Trim any surrounding whitespace and add paragraph tags
+		trimmedPara := strings.TrimSpace(para)
+		if trimmedPara != "" {
+			result += "<p>" + template.HTMLEscapeString(trimmedPara) + "</p>\n"
+		}
+	}
+	return template.HTML(result)
 }
