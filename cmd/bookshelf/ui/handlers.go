@@ -267,8 +267,30 @@ func (m *Module) BookViewHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	bookID, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to parse parameter", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to parse parameter: %s", err.Error()))
+		return
+	}
+	logger.Info("parameter parsed", "parameter", bookID)
+
+	logger.Info("retrieving book data", "bookId", bookID)
+	book, err := m.bookModule.ReadBook(ctx, *bookID)
+	if err != nil {
+		logger.Error("unable to retrieve data", "error", err, "bookId", bookID)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	logger.Info("setting template data")
+	bookData := templateData{
+		BookData: *book,
+	}
+	logger.Info("template data set", "data", bookData)
+
 	logger.Info("rendering page")
-	m.render(w, http.StatusOK, "book.tmpl", &templateData{})
+	m.render(w, http.StatusOK, "book.tmpl", &bookData)
 }
 
 func (m *Module) DiscoverCategoryMenuHandler(w http.ResponseWriter, r *http.Request) {
