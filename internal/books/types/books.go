@@ -347,3 +347,51 @@ func AddAuthorsToBook(
 
 	return nil
 }
+
+func ReadBooksbySeries(
+	ctx context.Context,
+	models *data.Models,
+	seriesID uuid.UUID,
+) ([]*Book, error) {
+	booksInSeries, totalResults, err := models.Books.GetBySeriesID(ctx, seriesID)
+	if err != nil {
+		return nil, err
+	}
+	if *totalResults < 1 {
+		return []*Book{}, nil
+	}
+
+	var wg sync.WaitGroup
+	var booksMu sync.Mutex
+
+	var books []*Book
+	errorChan := make(chan error, *totalResults)
+
+	for _, bookData := range booksInSeries {
+		wg.Add(1)
+
+		go func(ctx context.Context, models *data.Models, id uuid.UUID) {
+			defer wg.Done()
+
+			b, err := ReadBook(ctx, models, id)
+			if err != nil {
+				errorChan <- err
+			}
+
+			booksMu.Lock()
+			books = append(books, b)
+			booksMu.Unlock()
+		}(ctx, models, bookData.ID)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return books, nil
+}
