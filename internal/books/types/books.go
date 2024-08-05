@@ -348,7 +348,7 @@ func AddAuthorsToBook(
 	return nil
 }
 
-func ReadBooksbySeries(
+func ReadBooksBySeries(
 	ctx context.Context,
 	models *data.Models,
 	seriesID uuid.UUID,

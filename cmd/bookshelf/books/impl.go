@@ -182,6 +182,15 @@ func (m *Module) ReadAllBook(
 	return a, nil
 }
 
+func (m *Module) ReadBooksBySeries(ctx context.Context, seriesID uuid.UUID) ([]*types.Book, error) {
+	books, err := types.ReadBooksBySeries(ctx, &m.models, seriesID)
+	if err != nil {
+		return nil, err
+	}
+
+	return books, nil
+}
+
 func (m *Module) UpdateBook(ctx context.Context, data types.Book) (*types.Book, error) {
 	a, err := types.UpdateBook(ctx, &m.models, data)
 	if err != nil {

@@ -53,6 +53,7 @@ type Books interface {
 	CreateBook(ctx context.Context, newBookData types.Book) (*uuid.UUID, error)
 	ReadBook(ctx context.Context, genreID uuid.UUID) (*types.Book, error)
 	ReadAllBook(ctx context.Context, filters data.Filters) ([]*types.Book, error)
+	ReadBooksBySeries(ctx context.Context, seriesID uuid.UUID) ([]*types.Book, error)
 	UpdateBook(ctx context.Context, newBookDAta types.Book) (*types.Book, error)
 	DeleteBook(ctx context.Context, id uuid.UUID) error
 }
