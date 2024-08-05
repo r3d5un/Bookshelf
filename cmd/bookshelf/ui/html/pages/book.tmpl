@@ -13,7 +13,8 @@
 			<button class="btn btn-primary" type="button" disabled>Read</button>
 			<button class="btn btn-primary" type="button" disabled>Review</button>
 		</div>
-		<div id="about" class="row py-2">
+		{{- if gt (len .BookData.Series) 0 -}}
+		<div id="series" class="row py-2">
 			<h5>Series</h5>
 			{{/* TODO: Set real URL */}}
 			<div id="bookSeriesAccordion" hx-get="/ui/book/bookseriesaccordion/{{ .BookData.ID }}" hx-trigger="load" hx-swap="outerHTML" class="d-flex justify-content-center">
@@ -22,6 +23,7 @@
 				</div>
 			</div>
 		</div>
+		{{ end }}
 	</div>
 	<div id="newsFeed" class="col px-3">
 		<div class="d-flex justify-content-between align-items-center mb-3">
