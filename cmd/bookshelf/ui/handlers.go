@@ -354,6 +354,32 @@ func (m *Module) BookSeriesAccordionHandler(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	logger := logging.LoggerFromContext(ctx)
 
+	bookID, err := rest.ReadUUIDParam("id", r)
+	if err != nil {
+		logger.Info("unable to parse parameter", "error", err)
+		rest.BadRequestResponse(w, r, fmt.Sprintf("unable to parse parameter: %s", err.Error()))
+		return
+	}
+	logger.Info("parameter parsed", "parameter", bookID)
+
+	book, err := m.bookModule.ReadBook(ctx, *bookID)
+	if err != nil {
+		logger.Info("uanble to retrieve book data", "error", err)
+		rest.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	// TODO: Books can have multiple series, adjust template accordingly
+	for _, series := range book.Series {
+		seriesData, err := m.bookModule.ReadBooksBySeries(ctx, series.ID)
+		if err != nil {
+			logger.Info("unable to retrieve books in series", "error", err)
+			rest.ServerErrorResponse(w, r, err)
+			return
+		}
+		logger.Info("retrieved series", "series", seriesData)
+	}
+
 	timestamp := time.Now()
 	data := templateData{
 		BookSeriesAccordions: []bookSeriesAccordion{
