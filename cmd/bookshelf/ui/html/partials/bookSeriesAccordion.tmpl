@@ -1,21 +1,24 @@
 {{ block "bookSeriesAccordion" . }}
 
-<div class="accordion" id="bookSeriesAccordion">
-{{ range .BookSeriesAccordions }}
-	<div class="accordion-item">
-		<h2 class="accordion-header">
-			<button class="accordion-button{{ if .Selected }}{{ else }} collapsed{{ end }}" type="button" data-bs-toggle="collapse" data-bs-target="#accordionBook{{ .ID }}" aria-expanded="true" aria-controls="#accordionBook{{ .ID }}">
-			#{{ .Order }} {{ .Title }}
-			</button>
-		</h2>
-		<div id="accordionBook{{ .ID }}" class="accordion-collapse {{ if .Selected }}collapse show{{ else }}collapse{{ end }}" data-bs-parent="#bookSeriesAccordion">
-			<div class="accordion-body">
-				<p>Published: {{ humanDate .Published }}</p>
-				<p>Ratings: Overwhelmingly Positive</p>
-				<p>{{ .Description }}</p>
+{{ range .SeriesAccordionCollection }}
+	<div class="accordion" id="bookSeriesAccordion">
+	{{ range .Collection }}
+		<div class="accordion-item">
+			<h2 class="accordion-header">
+				<button class="accordion-button{{ if .Selected }}{{ else }} collapsed{{ end }}" type="button" data-bs-toggle="collapse" data-bs-target="#accordionBook{{ .ID }}" aria-expanded="true" aria-controls="#accordionBook{{ .ID }}">
+				#{{ .Order }} {{ .Title }}
+				</button>
+			</h2>
+			<div id="accordionBook{{ .ID }}" class="accordion-collapse {{ if .Selected }}collapse show{{ else }}collapse{{ end }}" data-bs-parent="#bookSeriesAccordion">
+				<div class="accordion-body">
+					<p>Published: {{ humanDate .Published }}</p>
+					<p>Ratings: Overwhelmingly Positive</p>
+					{{ paragraphify .Description }}
+				</div>
 			</div>
 		</div>
+	{{ end }}
 	</div>
 {{ end }}
-</div>
+
 {{ end }}

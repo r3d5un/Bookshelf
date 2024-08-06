@@ -369,45 +369,40 @@ func (m *Module) BookSeriesAccordionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// TODO: Books can have multiple series, adjust template accordingly
+	data := templateData{
+		SeriesAccordionCollection: []SeriesAccordionCollection{},
+	}
+
 	for _, series := range book.Series {
-		seriesData, err := m.bookModule.ReadBooksBySeries(ctx, series.ID)
+		var seriesAccordion SeriesAccordionCollection
+
+		logger.Info("retrieving books in series", "series", series.ID)
+		booksInSeries, err := m.bookModule.ReadBooksBySeries(ctx, series.ID)
 		if err != nil {
 			logger.Info("unable to retrieve books in series", "error", err)
 			rest.ServerErrorResponse(w, r, err)
 			return
 		}
-		logger.Info("retrieved series", "series", seriesData)
-	}
+		logger.Info("retrieved books in series", "books", booksInSeries)
 
-	timestamp := time.Now()
-	data := templateData{
-		BookSeriesAccordions: []bookSeriesAccordion{
-			{
-				ID:          "1",
-				Order:       1,
-				Title:       "The Way of Kings",
-				Published:   &timestamp,
-				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-				Selected:    true,
-			},
-			{
-				ID:          "2",
-				Order:       2,
-				Title:       "Words of Radiance",
-				Published:   &timestamp,
-				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		for orderPlaceholder, book := range booksInSeries {
+			logger.Info("constructing series accordion dataset", "series", book.Title)
+			seriesaccordion := seriesBookAccordionItem{
+				ID:          book.ID.String(),
+				Order:       float32(orderPlaceholder),
+				Title:       *book.Title,
+				Published:   book.Published,
+				Description: *book.Description,
 				Selected:    false,
-			},
-			{
-				ID:          "3",
-				Order:       3,
-				Title:       "Oathbringer",
-				Published:   &timestamp,
-				Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-				Selected:    false,
-			},
-		},
+			}
+
+			seriesAccordion.Collection = append(seriesAccordion.Collection, seriesaccordion)
+		}
+
+		data.SeriesAccordionCollection = append(
+			data.SeriesAccordionCollection,
+			seriesAccordion,
+		)
 	}
 
 	logger.Info("rendering UI component")
