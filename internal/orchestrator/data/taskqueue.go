@@ -63,6 +63,35 @@ func (m *TaskQueueModel) Dequeue(ctx context.Context, id uuid.UUID) (*TaskQueue,
 	return nil, nil
 }
 
+func (m *TaskQueueModel) Notify(ctx context.Context, queue string) error {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := "NOTIFY task_queue_notification, $1;"
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+		),
+	)
+
+	conn, err := m.Pool.Acquire(context.Background())
+	if err != nil {
+		logger.Error("unable to acquire connection", "error", err)
+		return err
+	}
+	defer conn.Release()
+
+	logger.Info("executing notification statement")
+	_, err = conn.Exec(context.Background(), query, queue)
+	if err != nil {
+		logger.Error("unable to execute notification statement", "error", err)
+		return err
+	}
+
+	return nil
+}
+
 func (m *TaskQueueModel) Listen(
 	ctx context.Context,
 	notificationCh chan<- pgconn.Notification,
