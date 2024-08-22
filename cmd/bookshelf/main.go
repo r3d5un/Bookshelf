@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/r3d5un/Bookshelf/cmd/bookshelf/books"
+	"github.com/r3d5un/Bookshelf/cmd/bookshelf/orchestrator"
 	"github.com/r3d5un/Bookshelf/cmd/bookshelf/ui"
 	"github.com/r3d5un/Bookshelf/internal/config"
 	"github.com/r3d5un/Bookshelf/internal/database"
@@ -61,8 +62,9 @@ func run() (err error) {
 		logger,
 		http.NewServeMux(),
 		&system.Modules{
-			Books: &books.Module{},
-			UI:    &ui.Module{},
+			Books:        &books.Module{},
+			UI:           &ui.Module{},
+			Orchestrator: &orchestrator.Module{},
 		},
 		db,
 		cfg,

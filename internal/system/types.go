@@ -26,8 +26,9 @@ type Module interface {
 }
 
 type Modules struct {
-	Books Books
-	UI    UI
+	Books        Books
+	UI           UI
+	Orchestrator Orchestrator
 }
 
 type Books interface {
@@ -59,3 +60,5 @@ type Books interface {
 }
 
 type UI interface{}
+
+type Orchestrator interface{}
