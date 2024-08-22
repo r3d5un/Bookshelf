@@ -1,9 +1,10 @@
 package data
 
 import (
-	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -18,8 +19,8 @@ type Models struct {
 	TaskQueues TaskQueueModel
 }
 
-func NewModels(db *sql.DB, timeout *time.Duration) Models {
+func NewModels(pool *pgxpool.Pool, timeout *time.Duration) Models {
 	return Models{
-		TaskQueues: TaskQueueModel{DB: db, Timeout: timeout},
+		TaskQueues: TaskQueueModel{Pool: pool, Timeout: timeout},
 	}
 }

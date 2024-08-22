@@ -1,10 +1,11 @@
 package data
 
 import (
-	"database/sql"
+	"context"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -24,6 +25,7 @@ type TaskQueue struct {
 }
 
 type TaskQueueModel struct {
-	DB      *sql.DB
 	Timeout *time.Duration
+	Pool    *pgxpool.Pool
+}
 }
