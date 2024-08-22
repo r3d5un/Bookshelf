@@ -33,6 +33,36 @@ type TaskQueueModel struct {
 	Pool    *pgxpool.Pool
 }
 
+func (m *TaskQueueModel) Get(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
+func (m *TaskQueueModel) GetAll(ctx context.Context, filters Filters) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
+func (m *TaskQueueModel) Insert(ctx context.Context, taskQueue string) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
+func (m *TaskQueueModel) Update(ctx context.Context, taskQueue TaskQueue) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
+func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
+func (m *TaskQueueModel) Dequeue(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
 func (m *TaskQueueModel) Listen(
 	ctx context.Context,
 	notificationCh chan<- pgconn.Notification,
