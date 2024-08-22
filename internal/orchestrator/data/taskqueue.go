@@ -70,9 +70,7 @@ func (m *TaskQueueModel) Listen(
 ) {
 	logger := logging.LoggerFromContext(ctx)
 
-	query := `
-LISTEN task_queue_notification;
-`
+	query := `LISTEN task_queue_notification;`
 
 	logger = logger.With(
 		slog.Group(
