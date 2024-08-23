@@ -19,6 +19,7 @@ const (
 	RunningTaskState  string = "running"
 	CompleteTaskState string = "complete"
 	StoppedTaskState  string = "stopped"
+	ErrorTaskState    string = "error"
 )
 
 type TaskQueue struct {
@@ -346,9 +347,252 @@ RETURNING
 	return task, nil
 }
 
-func (m *TaskQueueModel) Dequeue(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+func (m *TaskQueueModel) ConsumeByID(
+	ctx context.Context,
+	taskCh chan<- TaskQueue,
+	taskRunResultCh <-chan error,
+	id uuid.UUID,
+) error {
+	logger := logging.LoggerFromContext(ctx)
+
+	logger.Info("creating transaction for consuming task", "id", id)
+	tx, err := m.Pool.Begin(ctx)
+	if err != nil {
+		slog.Error("unable to begin transaction", "error", err)
+		return err
+	}
+	defer tx.Commit(ctx)
+
+	var commitSuccessful bool
+	defer func() {
+		if !commitSuccessful {
+			tx.Rollback(context.Background())
+		}
+	}()
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	slog.Info("reading and locking task", "id", id)
+	task, err := m.lockTask(qCtx, tx, id)
+	if err != nil {
+		return err
+	}
+
+	// send task to consumer for processing
+	taskCh <- *task
+
+	// receive reply from task processor
+	err = <-taskRunResultCh
+	// An error should only occur when the task was not able to complete.
+	// Any failed tasks should be marked with an error.
+	if err != nil {
+		logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
+		errorState := ErrorTaskState
+		task.State = &errorState
+		_, err = m.updateWithTxByID(ctx, tx, *task)
+		if err != nil {
+			logger.Error(
+				"an error occurred while updating the task state",
+				"task", task,
+				"error", err,
+			)
+			return err
+		}
+
+		return err
+	}
+
+	// dequeue after task run, mark with error if task failed
+	_, err = m.dequeueByID(ctx, tx, id)
+	if err != nil {
+		logger.Info("unable to dequeue item", "id", id, "error", err)
+		return err
+	}
+
+	return nil
+}
+
+// Uses a preexisting transaction to select a task and lock a row by it's ID.
+// The row cannot be changed while the transaction is active.
+func (m *TaskQueueModel) lockTask(
+	ctx context.Context,
+	tx pgx.Tx,
+	id uuid.UUID,
+) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+SELECT id,
+       queue,
+       state,
+       created_at,
+       updated_at,
+       run_at
+FROM orchestrator.tasks
+WHERE id $1
+	AND run_at <= NOW()
+ORDER BY created_at
+    FOR UPDATE SKIP LOCKED
+LIMIT 1;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = tx.QueryRow(qCtx, query, id.String()).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found", slog.String("taskId", id.String()))
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
+
+}
+
+// Uses a preexisting transaction to delete a queue row by it's ID.
+//
+// Differs from a typical delete because it can read a row that has
+// been marked by PostgreSQL with `FOR UPDATE SKIP LOCKED`.
+func (m *TaskQueueModel) dequeueByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	id uuid.UUID,
+) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+DELETE FROM orchestrator.task
+WHERE id = $1
+RETURNING
+    id,
+    queue,
+    state,
+    created_at,
+    updated_at,
+    run_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = tx.QueryRow(qCtx, query, task.ID).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
+}
+
+func (m *TaskQueueModel) updateWithTxByID(
+	ctx context.Context,
+	tx pgx.Tx,
+	taskQueue TaskQueue,
+) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+UPDATE orchestrator.task
+SET queue = COALESCE($2, queue),
+	state = COALESCE($2, state),
+	created_at = COALESCE($3, created_at),
+	run_at = COALESCE($4, run_at)
+WHERE id = $1
+RETURNING
+    id,
+    queue,
+    state,
+    created_at,
+    updated_at,
+    run_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"task", taskQueue,
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = tx.QueryRow(qCtx, query, task.ID).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskQueueModel) Notify(ctx context.Context, queue string) error {
