@@ -22,12 +22,12 @@ const (
 )
 
 type TaskQueue struct {
-	ID        uuid.UUID `json:"id"`
-	Queue     string    `json:"queue"`
-	State     string    `json:"state"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	RunAt     time.Time `json:"runAt"`
+	ID        uuid.UUID  `json:"id"`
+	Queue     *string    `json:"queue"`
+	State     *string    `json:"state"`
+	CreatedAt *time.Time `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
+	RunAt     *time.Time `json:"runAt"`
 }
 
 type TaskQueueModel struct {
@@ -235,12 +235,63 @@ RETURNING
 	return task, nil
 }
 
-func (m *TaskQueueModel) Update(ctx context.Context, taskQueue TaskQueue) (*TaskQueue, error) {
+func (m *TaskQueueModel) Update(
+	ctx context.Context,
+	taskQueue TaskQueue,
+) (task *TaskQueue, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-
+UPDATE orchestrator.task
+SET queue = COALESCE($2, queue),
+	state = COALESCE($2, state),
+	created_at = COALESCE($3, created_at),
+	run_at = COALESCE($4, run_at)
+WHERE id = $1
+RETURNING
+    id,
+    queue,
+    state,
+    created_at,
+    updated_at,
+    run_at;
 `
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"task", taskQueue,
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(qCtx, query, task.ID).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
