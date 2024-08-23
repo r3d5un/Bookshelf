@@ -294,9 +294,56 @@ RETURNING
 	return task, nil
 }
 
-func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+DELETE FROM orchestrator.task
+WHERE id = $1
+RETURNING
+    id,
+    queue,
+    state,
+    created_at,
+    updated_at,
+    run_at;
+
+`
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(qCtx, query, task.ID).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskQueueModel) Dequeue(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
