@@ -46,7 +46,7 @@ SELECT id,
        updated_at,
        run_at
 FROM orchestrator.tasks
-WHERE id = '$1'
+WHERE id = '$1';
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -87,8 +87,18 @@ WHERE id = '$1'
 }
 
 func (m *TaskQueueModel) GetAll(ctx context.Context, filters Filters) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+SELECT id,
+       queue,
+       state,
+       created_at,
+       updated_at,
+       run_at
+FROM orchestrator.tasks
+WHERE id = '$1'
+`
 }
 
 func (m *TaskQueueModel) Insert(ctx context.Context, taskQueue string) (*TaskQueue, error) {
