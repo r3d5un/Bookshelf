@@ -86,19 +86,92 @@ WHERE id = '$1';
 	return task, nil
 }
 
-func (m *TaskQueueModel) GetAll(ctx context.Context, filters Filters) (*TaskQueue, error) {
+func (m *TaskQueueModel) GetAll(
+	ctx context.Context,
+	filters Filters,
+) (tasks []*TaskQueue, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-SELECT id,
+SELECT COUNT(*) OVER() AS total,
+       id,
        queue,
        state,
        created_at,
        updated_at,
        run_at
 FROM orchestrator.tasks
-WHERE id = '$1'
+WHERE ($1::uuid = '' OR id = $1::uuid)
+  AND ($2::text = '' OR queue = $2::text)
+  AND ($3::text = '' OR state = $3::text)
+  AND ($4::timestamp IS NULL OR created_at >= $4::timestamp)
+  AND ($5::timestamp IS NULL OR created_at < $5::timestamp)
+  AND ($6::timestamp IS NULL OR updated_at >= $6::timestamp)
+  AND ($7::timestamp IS NULL OR updated_at < $7::timestamp)
+  AND ($6::timestamp IS NULL OR run_at >= $6::timestamp)
+  AND ($7::timestamp IS NULL OR run_at < $7::timestamp)
+` + database.CreateOrderByClause(filters.OrderBy) + `
+OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 `
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"filters", filters,
+		),
+	)
+
+	tasks = []*TaskQueue{}
+	totalResults := 0
+
+	logger.Info("performing query")
+	rows, err := m.Pool.Query(
+		qCtx,
+		query,
+		filters.ID,
+		filters.Queue,
+		filters.State,
+		filters.CreatedAtFrom,
+		filters.CreatedAtTo,
+		filters.UpdatedAtFrom,
+		filters.UpdatedAtTo,
+		filters.RunAtFrom,
+		filters.RunAtTo,
+	)
+	defer rows.Close()
+
+	for rows.Next() {
+		var task TaskQueue
+
+		err := rows.Scan(
+			&totalResults,
+			&task.ID,
+			&task.Queue,
+			&task.State,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+			&task.RunAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, &task)
+	}
+	if err = rows.Err(); err != nil {
+		logger.Error("an error occurred while parsing query results", "error", err)
+		return nil, err
+	}
+
+	logger.Info("calculating metadata")
+	metadata := calculateMetadata(totalResults, filters.Page, filters.PageSize, filters.OrderBy)
+	logger.Info("metadata calculated", "metadata", metadata)
+
+	logger.Info("returning records")
+	return tasks, nil
 }
 
 func (m *TaskQueueModel) Insert(ctx context.Context, taskQueue string) (*TaskQueue, error) {
