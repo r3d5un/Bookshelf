@@ -2,10 +2,12 @@ package data
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/r3d5un/Bookshelf/internal/database"
@@ -33,9 +35,55 @@ type TaskQueueModel struct {
 	Pool    *pgxpool.Pool
 }
 
-func (m *TaskQueueModel) Get(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+func (m *TaskQueueModel) Get(ctx context.Context, id uuid.UUID) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+SELECT id,
+       queue,
+       state,
+       created_at,
+       updated_at,
+       run_at
+FROM orchestrator.tasks
+WHERE id = '$1'
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("id", id.String()),
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(qCtx, query, id.String()).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found", slog.String("taskId", id.String()))
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskQueueModel) GetAll(ctx context.Context, filters Filters) (*TaskQueue, error) {
