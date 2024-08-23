@@ -174,9 +174,67 @@ OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 	return tasks, nil
 }
 
-func (m *TaskQueueModel) Insert(ctx context.Context, taskQueue string) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+func (m *TaskQueueModel) Insert(
+	ctx context.Context,
+	taskQueue string,
+	state *string,
+	runAt *time.Time,
+) (task *TaskQueue, err error) {
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+INSERT INTO orchestrator.task (
+	queue,
+	state,
+	run_at)
+VALUES (
+	$1::TEXT,
+	COALESCE($2::TEXT, 'waiting'),
+	COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP))
+RETURNING
+	id,
+	queue,
+	state,
+	created_at,
+	updated_at,
+	run_at;
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger = logger.With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			slog.String("taskQueue", taskQueue),
+		),
+	)
+
+	task = &TaskQueue{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(qCtx, query, taskQueue, state, runAt).Scan(
+		&task.ID,
+		&task.Queue,
+		&task.State,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.RunAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Info("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskQueueModel) Update(ctx context.Context, taskQueue TaskQueue) (*TaskQueue, error) {
