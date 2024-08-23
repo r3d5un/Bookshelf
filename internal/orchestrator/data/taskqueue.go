@@ -183,21 +183,19 @@ func (m *TaskQueueModel) Insert(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-INSERT INTO orchestrator.task (
-	queue,
-	state,
-	run_at)
-VALUES (
-	$1::TEXT,
-	COALESCE($2::TEXT, 'waiting'),
-	COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP))
+INSERT INTO orchestrator.task (queue,
+                               state,
+                               run_at)
+VALUES ($1::TEXT,
+        COALESCE($2::TEXT, 'waiting'),
+        COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP))
 RETURNING
-	id,
-	queue,
-	state,
-	created_at,
-	updated_at,
-	run_at;
+    id,
+    queue,
+    state,
+    created_at,
+    updated_at,
+    run_at;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -238,8 +236,11 @@ RETURNING
 }
 
 func (m *TaskQueueModel) Update(ctx context.Context, taskQueue TaskQueue) (*TaskQueue, error) {
-	// TODO: Implement
-	return nil, nil
+	logger := logging.LoggerFromContext(ctx)
+
+	query := `
+
+`
 }
 
 func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (*TaskQueue, error) {
