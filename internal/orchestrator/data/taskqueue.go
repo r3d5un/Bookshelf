@@ -390,9 +390,12 @@ func (m *TaskQueueModel) ConsumeByID(
 	}
 
 	// send task to consumer for processing
+	logger.Info("sending task for processing")
 	taskCh <- *task
+	logger.Info("task sent")
 
 	// receive reply from task processor
+	logger.Info("waiting for reply")
 	err = <-taskRunResultCh
 	// An error should only occur when the task was not able to complete.
 	// Any failed tasks should be marked with an error.
@@ -409,16 +412,25 @@ func (m *TaskQueueModel) ConsumeByID(
 			)
 			return err
 		}
-
 		return err
 	}
+	logger.Info("task complete")
 
 	// dequeue after task run, mark with error if task failed
+	logger.Info("dequeueing task")
 	_, err = m.dequeueByID(ctx, tx, id)
 	if err != nil {
 		logger.Info("unable to dequeue item", "id", id, "error", err)
 		return err
 	}
+
+	commitSuccessful = true
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		logger.Error("failed to commit transaction", "commitError", commitErr)
+		return commitErr
+	}
+
+	logger.Info("task processed and dequeued")
 
 	return nil
 }
@@ -440,8 +452,9 @@ SELECT id,
        updated_at,
        run_at
 FROM orchestrator.tasks
-WHERE id $1
-	AND run_at <= NOW()
+WHERE id = $1::uuid
+	AND run_at >= NOW()
+	AND state = 'waiting'
 ORDER BY created_at
     FOR UPDATE SKIP LOCKED
 LIMIT 1;
@@ -497,7 +510,7 @@ func (m *TaskQueueModel) dequeueByID(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-DELETE FROM orchestrator.task
+DELETE FROM orchestrator.tasks
 WHERE id = $1
 RETURNING
     id,
@@ -522,7 +535,7 @@ RETURNING
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = tx.QueryRow(qCtx, query, task.ID).Scan(
+	err = tx.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
 		&task.Queue,
 		&task.State,
