@@ -47,7 +47,7 @@ SELECT id,
        updated_at,
        run_at
 FROM orchestrator.tasks
-WHERE id = '$1';
+WHERE id = $1;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
