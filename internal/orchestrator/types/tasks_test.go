@@ -57,4 +57,18 @@ func TestTaskTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("UpdateTask", func(t *testing.T) {
+		newTaskState := data.RunningTaskState
+		tq.State = &newTaskState
+
+		updatedTask, err := types.UpdateTask(context.Background(), models, tq)
+		if err != nil {
+			t.Errorf("error occurred while creating task: %s\n", err)
+			return
+		}
+		if *updatedTask.State != newTaskState {
+			t.Errorf("expected task state %s, got %s", newTaskState, *updatedTask.State)
+		}
+	})
 }
