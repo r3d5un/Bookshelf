@@ -90,7 +90,7 @@ WHERE id = $1;
 func (m *TaskQueueModel) GetAll(
 	ctx context.Context,
 	filters Filters,
-) (tasks []*TaskQueue, err error) {
+) (tasks []*TaskQueue, metadata *Metadata, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
@@ -102,17 +102,17 @@ SELECT COUNT(*) OVER() AS total,
        updated_at,
        run_at
 FROM orchestrator.tasks
-WHERE ($1::uuid = '' OR id = $1::uuid)
-  AND ($2::text = '' OR queue = $2::text)
-  AND ($3::text = '' OR state = $3::text)
+WHERE ($1::uuid IS NULL OR id = $1::uuid)
+  AND ($2::text IS NULL OR queue = $2::text)
+  AND ($3::task_state IS NULL OR state = $3::task_state)
   AND ($4::timestamp IS NULL OR created_at >= $4::timestamp)
   AND ($5::timestamp IS NULL OR created_at < $5::timestamp)
   AND ($6::timestamp IS NULL OR updated_at >= $6::timestamp)
   AND ($7::timestamp IS NULL OR updated_at < $7::timestamp)
-  AND ($6::timestamp IS NULL OR run_at >= $6::timestamp)
-  AND ($7::timestamp IS NULL OR run_at < $7::timestamp)
+  AND ($8::timestamp IS NULL OR run_at >= $8::timestamp)
+  AND ($9::timestamp IS NULL OR run_at < $9::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-OFFSET $8 FETCH NEXT $9 ROWS ONLY;
+OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -142,6 +142,8 @@ OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 		filters.UpdatedAtTo,
 		filters.RunAtFrom,
 		filters.RunAtTo,
+		filters.offset(),
+		filters.limit(),
 	)
 	defer rows.Close()
 
@@ -158,21 +160,21 @@ OFFSET $8 FETCH NEXT $9 ROWS ONLY;
 			&task.RunAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		tasks = append(tasks, &task)
 	}
 	if err = rows.Err(); err != nil {
 		logger.Error("an error occurred while parsing query results", "error", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	logger.Info("calculating metadata")
-	metadata := calculateMetadata(totalResults, filters.Page, filters.PageSize, filters.OrderBy)
+	md := calculateMetadata(totalResults, filters.Page, filters.PageSize, filters.OrderBy)
 	logger.Info("metadata calculated", "metadata", metadata)
 
 	logger.Info("returning records")
-	return tasks, nil
+	return tasks, &md, nil
 }
 
 func (m *TaskQueueModel) Insert(
