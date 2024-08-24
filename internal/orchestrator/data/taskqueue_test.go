@@ -2,6 +2,7 @@ package data_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -81,5 +82,48 @@ func TestTaskQueueModel(t *testing.T) {
 			t.Errorf("error occurred while deleting task: %s\n", err)
 			return
 		}
+	})
+
+	t.Run("ConsumeByID", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		timestamp := time.Now().Add(-1 * time.Hour)
+		state := data.WaitingTaskState
+		targetTask, err := models.TaskQueues.Insert(
+			ctx,
+			"test_queue",
+			&state,
+			&timestamp,
+		)
+		if err != nil {
+			t.Fatalf("error inserting task: %s", err)
+		}
+
+		taskCh := make(chan data.TaskQueue, 1)
+		taskRunResultCh := make(chan error, 1)
+
+		go func() {
+			// Ensure this happens after ConsumeByID has sent the task
+			task := <-taskCh
+			slog.Info("task retrieved", "task", task)
+
+			// Simulate task processing completion
+			taskRunResultCh <- nil
+			close(taskRunResultCh)
+		}()
+
+		err = models.TaskQueues.ConsumeByID(
+			ctx,
+			taskCh,
+			taskRunResultCh,
+			targetTask.ID,
+		)
+		if err != nil {
+			t.Errorf("error occurred while consuming task by ID: %s\n", err)
+			return
+		}
+
+		close(taskCh)
 	})
 }
