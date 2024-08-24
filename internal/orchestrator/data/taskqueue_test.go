@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 )
 
@@ -14,7 +13,6 @@ func TestTaskQueueModel(t *testing.T) {
 	state := data.WaitingTaskState
 	timestamp := time.Now()
 	tq := data.TaskQueue{
-		ID:        uuid.New(),
 		Queue:     &queue,
 		State:     &state,
 		CreatedAt: &timestamp,
@@ -23,11 +21,21 @@ func TestTaskQueueModel(t *testing.T) {
 	}
 
 	t.Run("Insert", func(t *testing.T) {
-		_, err := models.TaskQueues.Insert(
+		insertedTask, err := models.TaskQueues.Insert(
 			context.Background(), *tq.Queue, tq.State, tq.RunAt,
 		)
 		if err != nil {
 			t.Errorf("error occurred while inserting new task: %s", err)
+			return
+		}
+
+		tq = *insertedTask
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		_, err := models.TaskQueues.Get(context.Background(), tq.ID)
+		if err != nil {
+			t.Errorf("error occurred while reading task: %s", err)
 			return
 		}
 	})
