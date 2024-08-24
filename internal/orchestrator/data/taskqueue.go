@@ -240,17 +240,17 @@ RETURNING
 
 func (m *TaskQueueModel) Update(
 	ctx context.Context,
-	taskQueue TaskQueue,
-) (task *TaskQueue, err error) {
+	newTaskData TaskQueue,
+) (updatedTask *TaskQueue, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-UPDATE orchestrator.task
-SET queue = COALESCE($2, queue),
-	state = COALESCE($2, state),
-	created_at = COALESCE($3, created_at),
-	run_at = COALESCE($4, run_at)
-WHERE id = $1
+UPDATE orchestrator.tasks
+SET queue = COALESCE($2::text, queue),
+	state = COALESCE($3::task_state, state),
+	created_at = COALESCE($4::timestamp, created_at),
+	run_at = COALESCE($5::timestamp, run_at)
+WHERE id = $1::uuid
 RETURNING
     id,
     queue,
@@ -267,20 +267,28 @@ RETURNING
 		slog.Group(
 			"query",
 			slog.String("statement", database.MinifySQL(query)),
-			"task", taskQueue,
+			"task", newTaskData,
 		),
 	)
 
-	task = &TaskQueue{}
+	updatedTask = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = m.Pool.QueryRow(qCtx, query, task.ID).Scan(
-		&task.ID,
-		&task.Queue,
-		&task.State,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-		&task.RunAt,
+	err = m.Pool.QueryRow(
+		qCtx,
+		query,
+		newTaskData.ID.String(),
+		newTaskData.Queue,
+		newTaskData.State,
+		newTaskData.CreatedAt,
+		newTaskData.RunAt,
+	).Scan(
+		&updatedTask.ID,
+		&updatedTask.Queue,
+		&updatedTask.State,
+		&updatedTask.CreatedAt,
+		&updatedTask.UpdatedAt,
+		&updatedTask.RunAt,
 	)
 	if err != nil {
 		switch {
@@ -294,7 +302,7 @@ RETURNING
 	}
 
 	logger.Info("returning task")
-	return task, nil
+	return updatedTask, nil
 }
 
 func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (task *TaskQueue, err error) {
