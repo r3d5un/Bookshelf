@@ -30,4 +30,11 @@ func TestTaskTypes(t *testing.T) {
 
 		tq = *createdTask
 	})
+
+	t.Run("ReadTask", func(t *testing.T) {
+		_, err := types.ReadTask(context.Background(), models, tq.ID)
+		if err != nil {
+			t.Errorf("error occurred while reading task: %s\n", err)
+		}
+	})
 }
