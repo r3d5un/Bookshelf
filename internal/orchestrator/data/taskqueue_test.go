@@ -39,4 +39,25 @@ func TestTaskQueueModel(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("GetAll", func(t *testing.T) {
+		filters := data.Filters{
+			Page:     1,
+			PageSize: 100,
+			OrderBy:  []string{"id"},
+		}
+		tasks, metadata, err := models.TaskQueues.GetAll(context.Background(), filters)
+		if err != nil {
+			t.Errorf("error occurred while reading tasks: %s", err)
+			return
+		}
+		if len(tasks) < 1 {
+			t.Errorf("no tasks returned")
+			return
+		}
+		if metadata.CurrentPage != filters.Page {
+			t.Errorf("expected page %d in metadata, got %d", filters.Page, metadata.CurrentPage)
+			return
+		}
+	})
 }
