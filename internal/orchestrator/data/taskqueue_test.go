@@ -60,4 +60,18 @@ func TestTaskQueueModel(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("Update", func(t *testing.T) {
+		newTaskState := data.RunningTaskState
+		tq.State = &newTaskState
+
+		updatedTask, err := models.TaskQueues.Update(context.Background(), tq)
+		if err != nil {
+			t.Errorf("error occurred while updating task: %s", err)
+			return
+		}
+		if *updatedTask.State != newTaskState {
+			t.Errorf("expected task state %s, got %s", newTaskState, *updatedTask.State)
+		}
+	})
 }
