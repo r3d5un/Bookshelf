@@ -184,11 +184,11 @@ func (m *TaskQueueModel) Insert(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-INSERT INTO orchestrator.task (queue,
+INSERT INTO orchestrator.tasks (queue,
                                state,
                                run_at)
 VALUES ($1::TEXT,
-        COALESCE($2::TEXT, 'waiting'),
+        COALESCE($2::task_state, 'waiting'),
         COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP))
 RETURNING
     id,
