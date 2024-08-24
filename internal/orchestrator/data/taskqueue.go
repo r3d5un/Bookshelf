@@ -384,7 +384,7 @@ func (m *TaskQueueModel) ConsumeByID(
 	defer cancel()
 
 	slog.Info("reading and locking task", "id", id)
-	task, err := m.LockTask(qCtx, tx, id)
+	task, err := m.ClaimTx(qCtx, tx, id)
 	if err != nil {
 		return err
 	}
@@ -403,7 +403,7 @@ func (m *TaskQueueModel) ConsumeByID(
 		logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
 		errorState := ErrorTaskState
 		task.State = &errorState
-		_, err = m.updateWithTxByID(ctx, tx, *task)
+		_, err = m.UpdateTx(ctx, tx, *task)
 		if err != nil {
 			logger.Error(
 				"an error occurred while updating the task state",
@@ -418,7 +418,7 @@ func (m *TaskQueueModel) ConsumeByID(
 
 	// dequeue after task run, mark with error if task failed
 	logger.Info("dequeueing task")
-	_, err = m.dequeueByID(ctx, tx, id)
+	_, err = m.DequeueTx(ctx, tx, id)
 	if err != nil {
 		logger.Info("unable to dequeue item", "id", id, "error", err)
 		return err
