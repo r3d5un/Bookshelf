@@ -309,7 +309,7 @@ func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (task *TaskQu
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-DELETE FROM orchestrator.task
+DELETE FROM orchestrator.tasks
 WHERE id = $1
 RETURNING
     id,
@@ -334,7 +334,7 @@ RETURNING
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = m.Pool.QueryRow(qCtx, query, task.ID).Scan(
+	err = m.Pool.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
 		&task.Queue,
 		&task.State,
