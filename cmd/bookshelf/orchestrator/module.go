@@ -24,9 +24,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.logger.Info("injecting database connection")
 	m.cfg = mono.Config()
 
-	dbConfig, err := pgxpool.ParseConfig(
-		"postgresql://postgres:postgres@localhost:5432?database=dbmq",
-	)
+	dbConfig, err := pgxpool.ParseConfig(m.cfg.DB.DSN)
 	if err != nil {
 		slog.Error("unable to parse postgresql pool configuration", "error", err)
 		return nil
