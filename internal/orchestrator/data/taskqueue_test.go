@@ -74,4 +74,12 @@ func TestTaskQueueModel(t *testing.T) {
 			t.Errorf("expected task state %s, got %s", newTaskState, *updatedTask.State)
 		}
 	})
+
+	t.Run("Delete", func(t *testing.T) {
+		_, err := models.TaskQueues.Delete(context.Background(), tq.ID)
+		if err != nil {
+			t.Errorf("error occurred while deleting task: %s\n", err)
+			return
+		}
+	})
 }
