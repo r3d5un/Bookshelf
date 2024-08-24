@@ -132,3 +132,25 @@ func UpdateTask(
 
 	return updatedTask, nil
 }
+
+func DeleteTask(
+	ctx context.Context,
+	models *data.Models,
+	id uuid.UUID,
+) (deletedTask *Task, err error) {
+	deletedTaskRow, err := models.TaskQueues.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	task := Task{
+		ID:        deletedTaskRow.ID,
+		Queue:     deletedTaskRow.Queue,
+		State:     deletedTaskRow.State,
+		CreatedAt: deletedTaskRow.CreatedAt,
+		UpdatedAt: deletedTaskRow.UpdatedAt,
+		RunAt:     deletedTaskRow.RunAt,
+	}
+
+	return &task, nil
+}
