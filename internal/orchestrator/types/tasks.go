@@ -102,3 +102,33 @@ func CreateTask(
 
 	return createdTask, nil
 }
+
+func UpdateTask(
+	ctx context.Context,
+	models *data.Models,
+	newTaskData Task,
+) (updatedTask *Task, err error) {
+	newTaskRow := data.TaskQueue{
+		ID:        newTaskData.ID,
+		Queue:     newTaskData.Queue,
+		State:     newTaskData.State,
+		CreatedAt: newTaskData.CreatedAt,
+		UpdatedAt: newTaskData.UpdatedAt,
+		RunAt:     newTaskData.RunAt,
+	}
+	updatedTaskRow, err := models.TaskQueues.Update(ctx, newTaskRow)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedTask = &Task{
+		ID:        updatedTaskRow.ID,
+		Queue:     updatedTaskRow.Queue,
+		State:     updatedTaskRow.State,
+		CreatedAt: updatedTaskRow.CreatedAt,
+		UpdatedAt: updatedTaskRow.UpdatedAt,
+		RunAt:     updatedTaskRow.RunAt,
+	}
+
+	return updatedTask, nil
+}
