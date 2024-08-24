@@ -384,7 +384,7 @@ func (m *TaskQueueModel) ConsumeByID(
 	defer cancel()
 
 	slog.Info("reading and locking task", "id", id)
-	task, err := m.lockTask(qCtx, tx, id)
+	task, err := m.LockTask(qCtx, tx, id)
 	if err != nil {
 		return err
 	}
@@ -437,7 +437,7 @@ func (m *TaskQueueModel) ConsumeByID(
 
 // Uses a preexisting transaction to select a task and lock a row by it's ID.
 // The row cannot be changed while the transaction is active.
-func (m *TaskQueueModel) lockTask(
+func (m *TaskQueueModel) ClaimTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	id uuid.UUID,
@@ -502,7 +502,7 @@ LIMIT 1;
 //
 // Differs from a typical delete because it can read a row that has
 // been marked by PostgreSQL with `FOR UPDATE SKIP LOCKED`.
-func (m *TaskQueueModel) dequeueByID(
+func (m *TaskQueueModel) DequeueTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	id uuid.UUID,
@@ -558,7 +558,7 @@ RETURNING
 	return task, nil
 }
 
-func (m *TaskQueueModel) updateWithTxByID(
+func (m *TaskQueueModel) UpdateTx(
 	ctx context.Context,
 	tx pgx.Tx,
 	taskQueue TaskQueue,
