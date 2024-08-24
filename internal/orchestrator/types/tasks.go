@@ -80,3 +80,25 @@ func ReadAllTasks(
 
 	return tc, nil
 }
+
+func CreateTask(
+	ctx context.Context,
+	models *data.Models,
+	newTask Task,
+) (createdTask *Task, err error) {
+	insertedTask, err := models.TaskQueues.Insert(ctx, *newTask.Queue, newTask.State, newTask.RunAt)
+	if err != nil {
+		return nil, err
+	}
+
+	createdTask = &Task{
+		ID:        insertedTask.ID,
+		Queue:     insertedTask.Queue,
+		State:     insertedTask.State,
+		CreatedAt: insertedTask.CreatedAt,
+		UpdatedAt: insertedTask.UpdatedAt,
+		RunAt:     insertedTask.RunAt,
+	}
+
+	return createdTask, nil
+}
