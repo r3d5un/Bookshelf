@@ -3,7 +3,7 @@ CREATE TYPE task_state AS ENUM ('waiting', 'running', 'complete', 'stopped', 'er
 CREATE TABLE IF NOT EXISTS orchestrator.tasks
 (
     id         UUID                 DEFAULT gen_random_uuid() PRIMARY KEY,
-    queue      VARCHAR(32) NOT NULL,
+    name       VARCHAR(32) NOT NULL,
     state      task_state  NOT NULL DEFAULT 'waiting',
     created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,

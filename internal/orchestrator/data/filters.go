@@ -23,7 +23,7 @@ type Filters struct {
 	StartIndex      int        `json:"startIndex,omitempty"`
 	Count           int        `json:"count,omitempty"`
 	ID              *uuid.UUID `json:"id,omitempty"`
-	Queue           *string    `json:"queue"`
+	Name            *string    `json:"queue"`
 	State           *string    `json:"state,omitempty"`
 	CreatedAtFrom   *time.Time `json:"createdAtFrom,omitempty"`
 	CreatedAtTo     *time.Time `json:"createdAtTo,omitempty"`

@@ -14,7 +14,7 @@ func TestTaskTypes(t *testing.T) {
 	state := data.WaitingTaskState
 	timestamp := time.Now()
 	tq := types.Task{
-		Queue:     &queue,
+		Name:      &queue,
 		State:     &state,
 		CreatedAt: &timestamp,
 		UpdatedAt: &timestamp,

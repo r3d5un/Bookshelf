@@ -14,7 +14,7 @@ func TestTaskQueueModel(t *testing.T) {
 	state := data.WaitingTaskState
 	timestamp := time.Now()
 	tq := data.TaskQueue{
-		Queue:     &queue,
+		Name:      &queue,
 		State:     &state,
 		CreatedAt: &timestamp,
 		UpdatedAt: &timestamp,
@@ -23,7 +23,7 @@ func TestTaskQueueModel(t *testing.T) {
 
 	t.Run("Insert", func(t *testing.T) {
 		insertedTask, err := models.TaskQueues.Insert(
-			context.Background(), *tq.Queue, tq.State, tq.RunAt, nil,
+			context.Background(), *tq.Name, tq.State, tq.RunAt, nil,
 		)
 		if err != nil {
 			t.Errorf("error occurred while inserting new task: %s", err)

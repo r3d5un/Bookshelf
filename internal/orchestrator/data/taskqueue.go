@@ -23,7 +23,7 @@ const (
 
 type TaskQueue struct {
 	ID        uuid.UUID  `json:"id"`
-	Queue     *string    `json:"queue"`
+	Name      *string    `json:"name"`
 	State     *string    `json:"state"`
 	CreatedAt *time.Time `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt"`
@@ -41,7 +41,7 @@ func (m *TaskQueueModel) Get(ctx context.Context, id uuid.UUID) (task *TaskQueue
 
 	query := `
 SELECT id,
-       queue,
+       name,
        state,
        created_at,
        updated_at,
@@ -67,7 +67,7 @@ WHERE id = $1;
 	logger.Info("performing query")
 	err = m.Pool.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -80,7 +80,7 @@ WHERE id = $1;
 			logger.Info("no rows found", slog.String("taskId", id.String()))
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -98,7 +98,7 @@ func (m *TaskQueueModel) GetAll(
 	query := `
 SELECT COUNT(*) OVER() AS total,
        id,
-       queue,
+       name,
        state,
        created_at,
        updated_at,
@@ -106,7 +106,7 @@ SELECT COUNT(*) OVER() AS total,
        task_data
 FROM orchestrator.tasks
 WHERE ($1::uuid IS NULL OR id = $1::uuid)
-  AND ($2::text IS NULL OR queue = $2::text)
+  AND ($2::text IS NULL OR name = $2::text)
   AND ($3::task_state IS NULL OR state = $3::task_state)
   AND ($4::timestamp IS NULL OR created_at >= $4::timestamp)
   AND ($5::timestamp IS NULL OR created_at < $5::timestamp)
@@ -137,7 +137,7 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 		qCtx,
 		query,
 		filters.ID,
-		filters.Queue,
+		filters.Name,
 		filters.State,
 		filters.CreatedAtFrom,
 		filters.CreatedAtTo,
@@ -156,7 +156,7 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 		err := rows.Scan(
 			&totalResults,
 			&task.ID,
-			&task.Queue,
+			&task.Name,
 			&task.State,
 			&task.CreatedAt,
 			&task.UpdatedAt,
@@ -191,7 +191,7 @@ func (m *TaskQueueModel) Insert(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-INSERT INTO orchestrator.tasks (queue,
+INSERT INTO orchestrator.tasks (name,
                                state,
                                run_at,
                                task_data)
@@ -201,7 +201,7 @@ VALUES ($1::TEXT,
         COALESCE($4::JSONB, NULL))
 RETURNING
     id,
-    queue,
+    name,
     state,
     created_at,
     updated_at,
@@ -225,7 +225,7 @@ RETURNING
 	logger.Info("performing query")
 	err = m.Pool.QueryRow(qCtx, query, taskQueue, state, runAt, task_data).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -238,7 +238,7 @@ RETURNING
 			logger.Info("no rows found")
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -255,7 +255,7 @@ func (m *TaskQueueModel) Update(
 
 	query := `
 UPDATE orchestrator.tasks
-SET queue = COALESCE($2::text, queue),
+SET name = COALESCE($2::text, name),
 	state = COALESCE($3::task_state, state),
 	created_at = COALESCE($4::timestamp, created_at),
 	run_at = COALESCE($5::timestamp, run_at),
@@ -263,7 +263,7 @@ SET queue = COALESCE($2::text, queue),
 WHERE id = $1::uuid
 RETURNING
     id,
-    queue,
+    name,
     state,
     created_at,
     updated_at,
@@ -289,14 +289,14 @@ RETURNING
 		qCtx,
 		query,
 		newTaskData.ID.String(),
-		newTaskData.Queue,
+		newTaskData.Name,
 		newTaskData.State,
 		newTaskData.CreatedAt,
 		newTaskData.RunAt,
 		newTaskData.TaskData,
 	).Scan(
 		&updatedTask.ID,
-		&updatedTask.Queue,
+		&updatedTask.Name,
 		&updatedTask.State,
 		&updatedTask.CreatedAt,
 		&updatedTask.UpdatedAt,
@@ -309,7 +309,7 @@ RETURNING
 			logger.Info("no rows found")
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -326,7 +326,7 @@ DELETE FROM orchestrator.tasks
 WHERE id = $1
 RETURNING
     id,
-    queue,
+    name,
     state,
     created_at,
     updated_at,
@@ -350,7 +350,7 @@ RETURNING
 	logger.Info("performing query")
 	err = m.Pool.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -363,7 +363,7 @@ RETURNING
 			logger.Info("no rows found")
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -435,7 +435,7 @@ func (m *TaskQueueModel) ConsumeByID(
 	logger.Info("dequeueing task")
 	_, err = m.DequeueTx(ctx, tx, id)
 	if err != nil {
-		logger.Info("unable to dequeue item", "id", id, "error", err)
+		logger.Error("unable to dequeue item", "id", id, "error", err)
 		return err
 	}
 
@@ -461,7 +461,7 @@ func (m *TaskQueueModel) ClaimTx(
 
 	query := `
 SELECT id,
-       queue,
+       name,
        state,
        created_at,
        updated_at,
@@ -492,7 +492,7 @@ LIMIT 1;
 	logger.Info("performing query")
 	err = tx.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -505,7 +505,7 @@ LIMIT 1;
 			logger.Info("no rows found", slog.String("taskId", id.String()))
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -531,7 +531,7 @@ DELETE FROM orchestrator.tasks
 WHERE id = $1
 RETURNING
     id,
-    queue,
+    name,
     state,
     created_at,
     updated_at,
@@ -555,7 +555,7 @@ RETURNING
 	logger.Info("performing query")
 	err = tx.QueryRow(qCtx, query, id.String()).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -568,7 +568,7 @@ RETURNING
 			logger.Info("no rows found")
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}
@@ -586,7 +586,7 @@ func (m *TaskQueueModel) UpdateTx(
 
 	query := `
 UPDATE orchestrator.task
-SET queue = COALESCE($2, queue),
+SET name = COALESCE($2, name),
 	state = COALESCE($2, state),
 	created_at = COALESCE($3, created_at),
 	run_at = COALESCE($4, run_at),
@@ -594,7 +594,7 @@ SET queue = COALESCE($2, queue),
 WHERE id = $1
 RETURNING
     id,
-    queue,
+    name,
     state,
     created_at,
     updated_at,
@@ -618,7 +618,7 @@ RETURNING
 	logger.Info("performing query")
 	err = tx.QueryRow(qCtx, query, task.ID).Scan(
 		&task.ID,
-		&task.Queue,
+		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
@@ -630,7 +630,7 @@ RETURNING
 			logger.Info("no rows found")
 			return nil, ErrRecordNotFound
 		default:
-			logger.Info("an error occurred while performing query", "error", err)
+			logger.Error("an error occurred while performing query", "error", err)
 			return nil, err
 		}
 	}

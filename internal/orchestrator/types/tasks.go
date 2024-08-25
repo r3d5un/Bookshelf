@@ -10,7 +10,7 @@ import (
 
 type Task struct {
 	ID        uuid.UUID  `json:"id"`
-	Queue     *string    `json:"queue"`
+	Name      *string    `json:"queue"`
 	State     *string    `json:"state"`
 	CreatedAt *time.Time `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt"`
@@ -36,7 +36,7 @@ func ReadTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task
 
 	task := Task{
 		ID:        tq.ID,
-		Queue:     tq.Queue,
+		Name:      tq.Name,
 		State:     tq.State,
 		CreatedAt: tq.CreatedAt,
 		UpdatedAt: tq.UpdatedAt,
@@ -61,7 +61,7 @@ func ReadAllTasks(
 	for _, t := range tq {
 		task := Task{
 			ID:        t.ID,
-			Queue:     t.Queue,
+			Name:      t.Name,
 			State:     t.State,
 			CreatedAt: t.CreatedAt,
 			UpdatedAt: t.UpdatedAt,
@@ -90,7 +90,7 @@ func CreateTask(
 	newTask Task,
 ) (createdTask *Task, err error) {
 	insertedTask, err := models.TaskQueues.Insert(
-		ctx, *newTask.Queue, newTask.State, newTask.RunAt, nil,
+		ctx, *newTask.Name, newTask.State, newTask.RunAt, nil,
 	)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func CreateTask(
 
 	createdTask = &Task{
 		ID:        insertedTask.ID,
-		Queue:     insertedTask.Queue,
+		Name:      insertedTask.Name,
 		State:     insertedTask.State,
 		CreatedAt: insertedTask.CreatedAt,
 		UpdatedAt: insertedTask.UpdatedAt,
@@ -116,7 +116,7 @@ func UpdateTask(
 ) (updatedTask *Task, err error) {
 	newTaskRow := data.TaskQueue{
 		ID:        newTaskData.ID,
-		Queue:     newTaskData.Queue,
+		Name:      newTaskData.Name,
 		State:     newTaskData.State,
 		CreatedAt: newTaskData.CreatedAt,
 		UpdatedAt: newTaskData.UpdatedAt,
@@ -130,7 +130,7 @@ func UpdateTask(
 
 	updatedTask = &Task{
 		ID:        updatedTaskRow.ID,
-		Queue:     updatedTaskRow.Queue,
+		Name:      updatedTaskRow.Name,
 		State:     updatedTaskRow.State,
 		CreatedAt: updatedTaskRow.CreatedAt,
 		UpdatedAt: updatedTaskRow.UpdatedAt,
@@ -153,7 +153,7 @@ func DeleteTask(
 
 	task := Task{
 		ID:        deletedTaskRow.ID,
-		Queue:     deletedTaskRow.Queue,
+		Name:      deletedTaskRow.Name,
 		State:     deletedTaskRow.State,
 		CreatedAt: deletedTaskRow.CreatedAt,
 		UpdatedAt: deletedTaskRow.UpdatedAt,
