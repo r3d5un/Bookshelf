@@ -15,7 +15,7 @@ import (
 
 // TaskNotification is used by the TaskNotificationModel to create a payload for the notification.
 type TaskNotification struct {
-	// ID of the notification, not the task causing the notification
+	// ID task causing the notification
 	ID uuid.UUID `json:"id"`
 	// Queue refers to the task causing the notification
 	Queue string `json:"queue"`
