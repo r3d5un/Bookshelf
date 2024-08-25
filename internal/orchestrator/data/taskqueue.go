@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/r3d5un/Bookshelf/internal/database"
 	"github.com/r3d5un/Bookshelf/internal/logging"
@@ -616,93 +615,4 @@ RETURNING
 
 	logger.Info("returning task")
 	return task, nil
-}
-
-func (m *TaskQueueModel) Notify(ctx context.Context, queue string) error {
-	logger := logging.LoggerFromContext(ctx)
-
-	query := "NOTIFY task_queue_notification, $1;"
-
-	logger = logger.With(
-		slog.Group(
-			"query",
-			slog.String("statement", database.MinifySQL(query)),
-		),
-	)
-
-	conn, err := m.Pool.Acquire(context.Background())
-	if err != nil {
-		logger.Error("unable to acquire connection", "error", err)
-		return err
-	}
-	defer conn.Release()
-
-	logger.Info("executing notification statement")
-	_, err = conn.Exec(context.Background(), query, queue)
-	if err != nil {
-		logger.Error("unable to execute notification statement", "error", err)
-		return err
-	}
-
-	return nil
-}
-
-func (m *TaskQueueModel) Listen(
-	ctx context.Context,
-	notificationCh chan<- pgconn.Notification,
-	done <-chan bool,
-) {
-	logger := logging.LoggerFromContext(ctx)
-
-	query := `LISTEN task_queue_notification;`
-
-	logger = logger.With(
-		slog.Group(
-			"query",
-			slog.String("statement", database.MinifySQL(query)),
-		),
-	)
-
-	for {
-		conn, err := m.Pool.Acquire(ctx)
-		if err != nil {
-			logger.Error("unable to acquire connection", "error", err)
-			time.Sleep(5 * time.Second)
-			continue
-		}
-
-		logger.Info("listening for task notifications")
-		_, err = conn.Exec(context.Background(), query)
-		if err != nil {
-			logger.Error("unable to listen", "error", err)
-			conn.Release()
-			continue
-		}
-
-		for {
-			select {
-			case <-done:
-				logger.Info("received done signal, stopping listener.")
-				return
-			default:
-				if notification, err := conn.Conn().WaitForNotification(ctx); err != nil {
-					logger.Info("unable to receive notification", "error", err)
-					break
-				} else {
-					select {
-					case notificationCh <- *notification:
-						logger.Info("notification sent to channel")
-					case <-done:
-						logger.Info("received done signal, stopping listener.")
-						return
-					default:
-						logger.Error("channel full, notification not sent")
-						time.Sleep(5 * time.Second)
-						continue
-					}
-				}
-			}
-		}
-
-	}
 }

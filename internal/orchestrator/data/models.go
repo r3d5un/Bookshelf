@@ -16,11 +16,13 @@ var (
 )
 
 type Models struct {
-	TaskQueues TaskQueueModel
+	TaskQueues        TaskQueueModel
+	TaskNotifications TaskNotificationModel
 }
 
 func NewModels(pool *pgxpool.Pool, timeout *time.Duration) Models {
 	return Models{
-		TaskQueues: TaskQueueModel{Pool: pool, Timeout: timeout},
+		TaskQueues:        TaskQueueModel{Pool: pool, Timeout: timeout},
+		TaskNotifications: TaskNotificationModel{Pool: pool, Timeout: timeout},
 	}
 }
