@@ -12,7 +12,7 @@ var (
 )
 
 var (
-	DplicateKeyMatchString = "cannot insert duplicate key object"
+	DuplicateKeyMatchString = "cannot insert duplicate key object"
 )
 
 type Models struct {
