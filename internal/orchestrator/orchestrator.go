@@ -9,13 +9,13 @@ var (
 	ErrNoTask = errors.New("task does not exist")
 )
 
-type OrchestratorTask func(context.Context) error
+type Task func(context.Context) error
 
-type OrchestratorTaskCollection map[string]OrchestratorTask
+type Collection map[string]Task
 
 // Run is executes a function that matches the given name, injecting the
 // given context as a function parameter.
-func (otc *OrchestratorTaskCollection) Run(ctx context.Context, taskName string) error {
+func (otc *Collection) Run(ctx context.Context, taskName string) error {
 	if task, exists := (*otc)[taskName]; exists {
 		return task(ctx)
 	}
@@ -24,12 +24,12 @@ func (otc *OrchestratorTaskCollection) Run(ctx context.Context, taskName string)
 }
 
 // Adds a new task to the task collection
-func (otc *OrchestratorTaskCollection) Add(taskName string, newTask OrchestratorTask) {
+func (otc *Collection) Add(taskName string, newTask Task) {
 	(*otc)[taskName] = newTask
 }
 
 // Get a task function without executing it
-func (otc *OrchestratorTaskCollection) Get(taskName string) (ot *OrchestratorTask, err error) {
+func (otc *Collection) Get(taskName string) (ot *Task, err error) {
 	if task, exists := (*otc)[taskName]; exists {
 		return &task, nil
 	}
