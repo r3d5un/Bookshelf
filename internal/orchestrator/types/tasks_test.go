@@ -71,4 +71,12 @@ func TestTaskTypes(t *testing.T) {
 			t.Errorf("expected task state %s, got %s", newTaskState, *updatedTask.State)
 		}
 	})
+
+	t.Run("DeleteTask", func(t *testing.T) {
+		_, err := types.DeleteTask(context.Background(), models, tq.ID)
+		if err != nil {
+			t.Errorf("error occurred while creating task: %s\n", err)
+			return
+		}
+	})
 }
