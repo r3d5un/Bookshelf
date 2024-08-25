@@ -15,6 +15,7 @@ type Task struct {
 	CreatedAt *time.Time `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt"`
 	RunAt     *time.Time `json:"runAt"`
+	TaskData  *string    `json:"task_data,omitempty"`
 }
 
 type TaskCollection struct {
@@ -40,6 +41,7 @@ func ReadTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task
 		CreatedAt: tq.CreatedAt,
 		UpdatedAt: tq.UpdatedAt,
 		RunAt:     tq.RunAt,
+		TaskData:  tq.TaskData,
 	}
 
 	return &task, nil
@@ -64,6 +66,7 @@ func ReadAllTasks(
 			CreatedAt: t.CreatedAt,
 			UpdatedAt: t.UpdatedAt,
 			RunAt:     t.RunAt,
+			TaskData:  t.TaskData,
 		}
 
 		tasks = append(tasks, &task)
@@ -86,7 +89,9 @@ func CreateTask(
 	models *data.Models,
 	newTask Task,
 ) (createdTask *Task, err error) {
-	insertedTask, err := models.TaskQueues.Insert(ctx, *newTask.Queue, newTask.State, newTask.RunAt)
+	insertedTask, err := models.TaskQueues.Insert(
+		ctx, *newTask.Queue, newTask.State, newTask.RunAt, nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +103,7 @@ func CreateTask(
 		CreatedAt: insertedTask.CreatedAt,
 		UpdatedAt: insertedTask.UpdatedAt,
 		RunAt:     insertedTask.RunAt,
+		TaskData:  insertedTask.TaskData,
 	}
 
 	return createdTask, nil
@@ -115,6 +121,7 @@ func UpdateTask(
 		CreatedAt: newTaskData.CreatedAt,
 		UpdatedAt: newTaskData.UpdatedAt,
 		RunAt:     newTaskData.RunAt,
+		TaskData:  newTaskData.TaskData,
 	}
 	updatedTaskRow, err := models.TaskQueues.Update(ctx, newTaskRow)
 	if err != nil {
@@ -128,6 +135,7 @@ func UpdateTask(
 		CreatedAt: updatedTaskRow.CreatedAt,
 		UpdatedAt: updatedTaskRow.UpdatedAt,
 		RunAt:     updatedTaskRow.RunAt,
+		TaskData:  updatedTaskRow.TaskData,
 	}
 
 	return updatedTask, nil
@@ -150,6 +158,7 @@ func DeleteTask(
 		CreatedAt: deletedTaskRow.CreatedAt,
 		UpdatedAt: deletedTaskRow.UpdatedAt,
 		RunAt:     deletedTaskRow.RunAt,
+		TaskData:  deletedTaskRow.TaskData,
 	}
 
 	return &task, nil

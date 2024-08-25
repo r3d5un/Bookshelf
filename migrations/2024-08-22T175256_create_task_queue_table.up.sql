@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS orchestrator.tasks
     state      task_state  NOT NULL DEFAULT 'waiting',
     created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    run_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    run_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    task_data  JSONB       NULL     DEFAULT NULL
 );
 
 -- Function and trigger to always update the updated_at column when changed
