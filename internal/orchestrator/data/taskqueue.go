@@ -220,7 +220,7 @@ RETURNING
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = m.Pool.QueryRow(qCtx, query, newTask.Name, newTask.State, newTask.RunAt, newTask.RunAt).
+	err = m.Pool.QueryRow(qCtx, query, newTask.Name, newTask.State, newTask.RunAt, newTask.TaskData).
 		Scan(
 			&task.ID,
 			&task.Name,
