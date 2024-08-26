@@ -93,7 +93,7 @@ func (m *TaskNotificationModel) Listen(
 		defer conn.Release()
 
 		logger.Info("listening for task notifications")
-		_, err = conn.Exec(context.Background(), query)
+		_, err = conn.Exec(ctx, query)
 		if err != nil {
 			logger.Error("unable to listen", "error", err)
 			conn.Release()
