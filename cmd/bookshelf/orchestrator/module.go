@@ -2,9 +2,11 @@ package orchestrator
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/r3d5un/Bookshelf/internal/config"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator"
@@ -16,14 +18,19 @@ import (
 const ModuleName string = "orchestrator"
 
 type Module struct {
-	logger    *slog.Logger
-	cfg       *config.Config
-	db        *pgxpool.Pool
-	models    data.Models
-	scheduler *orchestrator.Scheduler
+	logger             *slog.Logger
+	cfg                *config.Config
+	db                 *pgxpool.Pool
+	models             data.Models
+	scheduler          *orchestrator.Scheduler
+	done               chan struct{}
+	taskNotificationCh chan pgconn.Notification
+	taskCollection     orchestrator.Collection
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
+	// TODO: Figure out how to handle coordinate which instance is the scheduler
+	// between multiple instances
 	m.initModuleLogger(mono.Logger())
 	m.logger.Info("starting module")
 
@@ -42,8 +49,19 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	}
 	m.logger.Info("connection pool established")
 
+	m.logger.Info("initializing channels")
+	m.done = make(chan struct{})
+	m.taskNotificationCh = make(chan pgconn.Notification, 100)
+
 	timeout := time.Duration(m.cfg.DB.Timeout) * time.Second
 	m.models = data.NewModels(m.db, &timeout)
+
+	m.logger.Info("creating task collection")
+	m.taskCollection = orchestrator.Collection{}
+	m.taskCollection.Add("hello-world", m.helloWorld)
+
+	m.logger.Info("creating task runner")
+	go m.taskRunner(ctx)
 
 	m.logger.Info("creating task scheduler")
 	m.scheduler = orchestrator.NewScheduler(&m.models)
@@ -63,6 +81,13 @@ func (m *Module) Shutdown() {
 	m.logger.Info("stopping scheduler")
 	m.scheduler.Stop()
 
+	m.logger.Info("sending stop signal")
+	close(m.done)
+
+	m.logger.Info("closing notification channel")
+	close(m.taskNotificationCh)
+
+	// TODO: App hangs upon shutting down the connection pool
 	m.logger.Info("closing module connection pool")
 	m.db.Close()
 
@@ -71,4 +96,25 @@ func (m *Module) Shutdown() {
 
 func (m *Module) initModuleLogger(monoLogger *slog.Logger) {
 	m.logger = monoLogger.With(slog.Group("module", slog.String("name", ModuleName)))
+}
+
+func (m *Module) taskRunner(ctx context.Context) {
+	go m.models.TaskNotifications.Listen(ctx, m.taskNotificationCh, m.done)
+
+	for task := range m.taskNotificationCh {
+		m.logger.Info("received task", "task", task)
+		var taskNotification data.TaskNotification
+		err := json.Unmarshal([]byte(task.Payload), &taskNotification)
+		if err != nil {
+			m.logger.Info("unable to decode notification", "error", err)
+		}
+
+		// TODO: Consume the task from the queue, not just the notification
+		go func() {
+			err = m.taskCollection.Run(ctx, taskNotification.Queue)
+			if err != nil {
+				m.logger.Info("an error occurred while running the task", "error", err)
+			}
+		}()
+	}
 }
