@@ -183,10 +183,7 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 
 func (m *TaskQueueModel) Insert(
 	ctx context.Context,
-	taskQueue string,
-	state *string,
-	runAt *time.Time,
-	task_data *string,
+	newTask TaskQueue,
 ) (task *TaskQueue, err error) {
 	logger := logging.LoggerFromContext(ctx)
 
@@ -216,22 +213,23 @@ RETURNING
 		slog.Group(
 			"query",
 			slog.String("statement", database.MinifySQL(query)),
-			slog.String("taskQueue", taskQueue),
+			"newTask", newTask,
 		),
 	)
 
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = m.Pool.QueryRow(qCtx, query, taskQueue, state, runAt, task_data).Scan(
-		&task.ID,
-		&task.Name,
-		&task.State,
-		&task.CreatedAt,
-		&task.UpdatedAt,
-		&task.RunAt,
-		&task.TaskData,
-	)
+	err = m.Pool.QueryRow(qCtx, query, newTask.Name, newTask.State, newTask.RunAt, newTask.RunAt).
+		Scan(
+			&task.ID,
+			&task.Name,
+			&task.State,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+			&task.RunAt,
+			&task.TaskData,
+		)
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):

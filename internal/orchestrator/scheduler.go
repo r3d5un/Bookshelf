@@ -2,8 +2,6 @@ package orchestrator
 
 import (
 	"context"
-	"log/slog"
-	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
@@ -29,7 +27,7 @@ func (s *Scheduler) AddCronJob(ctx context.Context, cronExpr string, task types.
 	logger := logging.LoggerFromContext(ctx)
 
 	_, err = s.cron.AddFunc(cronExpr, func() {
-		err := s.Enqueue(ctx, *task.Name, task.State, task.RunAt, task.TaskData)
+		err := s.Enqueue(ctx, task)
 		if err != nil {
 			logger.Error("unable to enqueue task", "error", err)
 			// Ideally, an alert should be sent here to notify the admin of the error
@@ -44,12 +42,16 @@ func (s *Scheduler) AddCronJob(ctx context.Context, cronExpr string, task types.
 }
 
 // TODO: Cleanup the function signature
-func (s *Scheduler) Enqueue(
-	ctx context.Context, taskName string, state *string, runAt *time.Time, taskData *string,
-) error {
-	logger := logging.LoggerFromContext(ctx).With(slog.String("taskName", taskName))
+func (s *Scheduler) Enqueue(ctx context.Context, newTask types.Task) error {
+	logger := logging.LoggerFromContext(ctx).With("newTask", newTask)
+	newTaskRow := data.TaskQueue{
+		Name:     newTask.Name,
+		State:    newTask.State,
+		RunAt:    newTask.RunAt,
+		TaskData: newTask.TaskData,
+	}
 
-	enqueuedTask, err := s.models.TaskQueues.Insert(ctx, taskName, state, runAt, taskData)
+	enqueuedTask, err := s.models.TaskQueues.Insert(ctx, newTaskRow)
 	if err != nil {
 		logger.Error("unable to enqueue task")
 		return err
@@ -59,7 +61,7 @@ func (s *Scheduler) Enqueue(
 	logger.Info("notifying listeners of new task")
 	err = s.models.TaskNotifications.Notify(
 		ctx,
-		data.TaskNotification{ID: enqueuedTask.ID, Queue: taskName},
+		data.TaskNotification{ID: enqueuedTask.ID, Queue: *enqueuedTask.Name},
 	)
 	logger.Info("listeners notified")
 

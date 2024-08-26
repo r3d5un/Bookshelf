@@ -84,14 +84,23 @@ func ReadAllTasks(
 	return tc, nil
 }
 
+// CreateTask enqueues a new task to the task queue.
+//
+// NOTE: The ID will be ignored when creating new tasks. The database generates an ID
+// at insertion.
 func CreateTask(
 	ctx context.Context,
 	models *data.Models,
 	newTask Task,
 ) (createdTask *Task, err error) {
-	insertedTask, err := models.TaskQueues.Insert(
-		ctx, *newTask.Name, newTask.State, newTask.RunAt, nil,
-	)
+	newTaskRow := data.TaskQueue{
+		Name:     newTask.Name,
+		State:    newTask.State,
+		RunAt:    newTask.RunAt,
+		TaskData: newTask.TaskData,
+	}
+
+	insertedTask, err := models.TaskQueues.Insert(ctx, newTaskRow)
 	if err != nil {
 		return nil, err
 	}
