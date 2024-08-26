@@ -70,7 +70,7 @@ func (m *TaskNotificationModel) Notify(ctx context.Context, notification TaskNot
 func (m *TaskNotificationModel) Listen(
 	ctx context.Context,
 	notificationCh chan<- pgconn.Notification,
-	done <-chan bool,
+	done <-chan struct{},
 ) {
 	logger := logging.LoggerFromContext(ctx)
 

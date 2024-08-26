@@ -16,7 +16,7 @@ func TestTaskNotificationModel(t *testing.T) {
 	defer cancel()
 
 	notificationCh := make(chan pgconn.Notification, 1)
-	doneCh := make(chan bool)
+	doneCh := make(chan struct{})
 	defer close(doneCh)
 
 	go models.TaskNotifications.Listen(ctx, notificationCh, doneCh)
