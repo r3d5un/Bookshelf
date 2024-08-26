@@ -26,15 +26,15 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 
 	dbConfig, err := pgxpool.ParseConfig(m.cfg.DB.DSN)
 	if err != nil {
-		slog.Error("unable to parse postgresql pool configuration", "error", err)
+		m.logger.Error("unable to parse postgresql pool configuration", "error", err)
 		return nil
 	}
 	m.db, err = pgxpool.NewWithConfig(ctx, dbConfig)
 	if err != nil {
-		slog.Error("unable to create connection pool", "error", err)
+		m.logger.Error("unable to create connection pool", "error", err)
 		return nil
 	}
-	slog.Info("connection pool established")
+	m.logger.Info("connection pool established")
 
 	return nil
 }
