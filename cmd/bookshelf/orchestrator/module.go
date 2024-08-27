@@ -80,16 +80,28 @@ func (m *Module) Shutdown() {
 
 	m.logger.Info("stopping scheduler")
 	m.scheduler.Stop()
-
-	m.logger.Info("sending stop signal")
-	close(m.done)
+	m.wg.Done()
 
 	m.logger.Info("closing notification channel")
 	close(m.taskNotificationCh)
 
+	m.logger.Info("sending stop signal")
+	close(m.done)
+
+	m.logger.Info("waiting for scheduler background processes to complete")
+	m.wg.Wait()
+
 	// TODO: App hangs upon shutting down the connection pool
 	m.logger.Info("closing module connection pool")
-	m.db.Close()
+	activeConns := m.db.Stat().AcquiredConns()
+	if activeConns > 0 {
+		m.logger.Error(
+			"acquired connections not released, unclean shutdown",
+			"activeConnections", activeConns,
+		)
+	} else {
+		m.db.Close()
+	}
 
 	m.logger.Info("module shutdown complete")
 }
