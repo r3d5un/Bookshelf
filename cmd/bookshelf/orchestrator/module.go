@@ -78,6 +78,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.scheduler.Start()
 
 	m.logger.Info("startup complete")
+
 	return nil
 }
 
@@ -117,22 +118,34 @@ func (m *Module) initModuleLogger(monoLogger *slog.Logger) {
 }
 
 func (m *Module) taskRunner(ctx context.Context) {
+	defer m.wg.Done()
 	go m.models.TaskNotifications.Listen(ctx, m.taskNotificationCh, m.done)
 
-	for task := range m.taskNotificationCh {
-		m.logger.Info("received task", "task", task)
-		var taskNotification data.TaskNotification
-		err := json.Unmarshal([]byte(task.Payload), &taskNotification)
-		if err != nil {
-			m.logger.Info("unable to decode notification", "error", err)
-		}
-
-		// TODO: Consume the task from the queue, not just the notification
-		go func() {
-			err = m.taskCollection.Run(ctx, taskNotification.Queue)
-			if err != nil {
-				m.logger.Info("an error occurred while running the task", "error", err)
+	for {
+		select {
+		case notification, ok := <-m.taskNotificationCh:
+			if !ok {
+				m.logger.Info("task notification channel closed, stopping task runner")
+				return
 			}
-		}()
+
+			m.logger.Info("received task", "notification", notification)
+			var notificationPayload data.TaskNotification
+			if err := json.Unmarshal([]byte(notification.Payload), &notificationPayload); err != nil {
+				m.logger.Error("unable to decode notification payload", "error", err)
+				continue
+			}
+
+			go func() {
+				err := m.taskCollection.Run(ctx, notificationPayload.Queue)
+				if err != nil {
+					m.logger.Info("an error occurred while running the task", "error", err)
+				}
+			}()
+
+		case <-m.done:
+			m.logger.Info("done signal received, stopping task runner")
+			return
+		}
 	}
 }
