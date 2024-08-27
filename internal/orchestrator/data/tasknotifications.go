@@ -75,6 +75,7 @@ func (m *TaskNotificationModel) Listen(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `LISTEN task_queue_notification;`
+	unlistenQuery := "UNLISTEN task_queue_notification;"
 
 	logger = logger.With(
 		slog.Group(
@@ -84,6 +85,7 @@ func (m *TaskNotificationModel) Listen(
 	)
 
 	for {
+		logger.Info("acquiring connection")
 		conn, err := m.Pool.Acquire(ctx)
 		if err != nil {
 			logger.Error("unable to acquire connection", "error", err)
@@ -91,11 +93,12 @@ func (m *TaskNotificationModel) Listen(
 			continue
 		}
 		defer conn.Release()
+		logger.Info("connection acuired")
 
 		logger.Info("listening for task notifications")
 		_, err = conn.Exec(ctx, query)
 		if err != nil {
-			logger.Error("unable to listen", "error", err)
+			logger.Error("unable to listen, releasing connection", "error", err)
 			conn.Release()
 			continue
 		}
@@ -104,6 +107,10 @@ func (m *TaskNotificationModel) Listen(
 			select {
 			case <-done:
 				logger.Info("received done signal, stopping listener.")
+				_, err := conn.Exec(ctx, unlistenQuery)
+				if err != nil {
+					logger.Info("unable to stop listening", "error", err, "query", unlistenQuery)
+				}
 				return
 			default:
 				if notification, err := conn.Conn().WaitForNotification(ctx); err != nil {
@@ -115,6 +122,11 @@ func (m *TaskNotificationModel) Listen(
 						logger.Info("notification sent to channel")
 					case <-done:
 						logger.Info("received done signal, stopping listener.")
+
+						_, err := conn.Exec(ctx, unlistenQuery)
+						if err != nil {
+							logger.Info("unable to stop listening", "error", err, "query", unlistenQuery)
+						}
 						return
 					default:
 						logger.Error("channel full, notification not sent")
