@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -26,6 +27,7 @@ type Module struct {
 	done               chan struct{}
 	taskNotificationCh chan pgconn.Notification
 	taskCollection     orchestrator.Collection
+	wg                 sync.WaitGroup
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
@@ -50,6 +52,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.logger.Info("connection pool established")
 
 	m.logger.Info("initializing channels")
+	m.wg = sync.WaitGroup{}
 	m.done = make(chan struct{})
 	m.taskNotificationCh = make(chan pgconn.Notification, 100)
 
@@ -61,6 +64,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.taskCollection.Add("hello-world", m.helloWorld)
 
 	m.logger.Info("creating task runner")
+	m.wg.Add(1)
 	go m.taskRunner(ctx)
 
 	m.logger.Info("creating task scheduler")
@@ -70,8 +74,10 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 		Name: &taskName,
 	})
 	m.logger.Info("starting scheduler")
+	m.wg.Add(1)
 	m.scheduler.Start()
 
+	m.logger.Info("startup complete")
 	return nil
 }
 
