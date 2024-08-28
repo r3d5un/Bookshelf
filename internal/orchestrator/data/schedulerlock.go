@@ -27,9 +27,9 @@ type SchedulerLockModel struct {
 func (m *SchedulerLockModel) AcquireLock(ctx context.Context, instanceID uuid.UUID) (bool, error) {
 	query := `
 UPDATE orchestrator.scheduler_lock
-SET instance_id    = $1,
+SET instance_id    = $1::uuid,
     last_heartbeat = NOW()
-WHERE (instance_id = '' OR last_heartbeat < NOW() - INTERVAL '10 seconds')
+WHERE (instance_id = $1::uuid OR last_heartbeat < NOW() - INTERVAL '10 seconds')
 RETURNING
     id,
     instance_id,
@@ -74,7 +74,7 @@ func (m *SchedulerLockModel) MaintainLock(ctx context.Context, instanceID uuid.U
 	query := `
 UPDATE orchestrator.scheduler_lock
 SET last_heartbeat = NOW()
-WHERE instance_id = $1;
+WHERE instance_id = $1::uuid;
 `
 
 	logger := logging.LoggerFromContext(ctx).With(slog.Group(
