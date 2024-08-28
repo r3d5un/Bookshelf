@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS orchestrator.scheduler_lock (
 );
 
 INSERT INTO orchestrator.scheduler_lock (id, instance_id, last_heartbeat)
-VALUES (gen_random_uuid(), gen_random_uuid(), NOW());
+VALUES (gen_random_uuid(), gen_random_uuid(), '1970-01-01 00:00:00');
 
