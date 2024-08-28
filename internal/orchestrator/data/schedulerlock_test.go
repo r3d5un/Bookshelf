@@ -23,4 +23,11 @@ func TestSchedulerLock(t *testing.T) {
 		}
 	})
 
+	t.Run("MaintainLock", func(t *testing.T) {
+		err := models.SchedulerLock.MaintainLock(context.Background(), instanceID)
+		if err != nil {
+			t.Errorf("unable to maintain scheduler lock: %s\n", err)
+			return
+		}
+	})
 }
