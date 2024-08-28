@@ -19,12 +19,20 @@ func TestTaskNotificationModel(t *testing.T) {
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 
-	go models.TaskNotifications.Listen(ctx, notificationCh, doneCh)
+	readyCh := make(chan struct{})
+	go func() {
+		close(readyCh)
+		models.TaskNotifications.Listen(ctx, notificationCh, doneCh)
+	}()
+
+	<-readyCh
 
 	notification := data.TaskNotification{
 		ID:    uuid.New(),
 		Queue: "test_queue",
 	}
+
+	time.Sleep(1 * time.Second)
 
 	err := models.TaskNotifications.Notify(ctx, notification)
 	if err != nil {
