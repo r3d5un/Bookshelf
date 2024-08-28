@@ -69,3 +69,37 @@ RETURNING
 	logger.Info("lock acquired", "acquiredLock", acquiredLock)
 	return true, nil
 }
+
+func (m *SchedulerLockModel) MaintainLock(ctx context.Context, instanceID uuid.UUID) error {
+	query := `
+UPDATE orchestrator.scheduler_lock
+SET last_heartbeat = NOW()
+WHERE instance_id = $1;
+`
+
+	logger := logging.LoggerFromContext(ctx).With(slog.Group(
+		"query",
+		slog.String("query", database.MinifySQL(query)),
+		slog.String("instanceId", instanceID.String())),
+	)
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger.Info("performing query")
+	res, err := m.Pool.Exec(qCtx, query, instanceID)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("unable to acquire lock, lock updated within the last 10 seconds")
+			return nil
+		default:
+			logger.Error("error occurred while performing query", "error", err)
+			return err
+		}
+	}
+
+	logger.Info("query completed", "rowsAffected", res.RowsAffected())
+
+	return nil
+}
