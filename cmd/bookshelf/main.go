@@ -26,11 +26,14 @@ func main() {
 }
 
 func run() (err error) {
+	instanceID := uuid.New()
+	ctx := context.WithValue(context.Background(), "instanceID", instanceID)
+
 	handler := slog.NewJSONHandler(os.Stdout, nil)
 	logger := slog.New(handler).With(
 		slog.Group(
 			"instance",
-			slog.String("id", uuid.NewString()),
+			slog.String("id", string(system.InstanceFromContext(ctx).String())),
 		),
 	)
 	slog.SetDefault(logger)
