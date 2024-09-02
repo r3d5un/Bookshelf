@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/r3d5un/Bookshelf/internal/config"
@@ -19,15 +20,17 @@ import (
 const ModuleName string = "orchestrator"
 
 type Module struct {
-	logger             *slog.Logger
-	cfg                *config.Config
-	db                 *pgxpool.Pool
-	models             data.Models
-	scheduler          *orchestrator.Scheduler
-	done               chan struct{}
-	taskNotificationCh chan pgconn.Notification
-	taskCollection     orchestrator.Collection
-	wg                 sync.WaitGroup
+	schedulerID         uuid.UUID
+	logger              *slog.Logger
+	cfg                 *config.Config
+	db                  *pgxpool.Pool
+	models              data.Models
+	scheduler           *orchestrator.Scheduler
+	done                chan struct{}
+	taskNotificationCh  chan pgconn.Notification
+	taskCollection      orchestrator.Collection
+	wg                  sync.WaitGroup
+	isSchedulerMasterCh chan bool
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
@@ -35,6 +38,10 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	// between multiple instances
 	m.initModuleLogger(mono.Logger())
 	m.logger.Info("starting module")
+
+	m.logger.Info("setting scheduler ID from instance")
+	m.schedulerID = system.InstanceFromContext(mono.Context())
+	m.logger.Info("scheduler instance ID set", "id", m.schedulerID)
 
 	m.logger.Info("injecting database connection")
 	m.cfg = mono.Config()
@@ -73,13 +80,71 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.scheduler.AddCronJob(ctx, "* * * * *", types.Task{
 		Name: &taskName,
 	})
-	m.logger.Info("starting scheduler")
 	m.wg.Add(1)
-	m.scheduler.Start()
+	go func() { // Goroutine for checking the scheduler lock
+		defer m.wg.Done()
+		m.checkSchedulerLock(ctx)
+	}()
+
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		m.maintainSchedulerLock(ctx)
+	}()
 
 	m.logger.Info("startup complete")
 
 	return nil
+}
+
+// checkSchedulerLock attempts to acquire the scheduler lock in a continuous loop.
+// The current state of the lock is communicated through the m.isSchedulerMasterCh,
+// which is responsible for managing the task scheduler
+func (m *Module) checkSchedulerLock(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		select {
+		case <-m.done:
+			m.logger.Info("received done signal; stopping scheduler")
+			return
+		default:
+			acquired, err := m.models.SchedulerLock.AcquireLock(ctx, m.schedulerID)
+			if err != nil {
+				m.logger.Error("error occurred while acquiring scheduler lock", "error", err)
+			}
+			m.isSchedulerMasterCh <- acquired
+		}
+	}
+}
+
+// maintainSchedulerLock is responsible for starting and stopping the scheduler
+// based on the state and value of the m.isSchedulerMasterCh.
+//
+// If the current intance acquires the lock, attempts to maintain the lock will
+// occur on each subsequent signal through the m.isSchedulerMasterCh channel.
+func (m *Module) maintainSchedulerLock(ctx context.Context) {
+	for {
+		select {
+		case <-m.done:
+			m.logger.Info("received done signal; no longer maintaining scheduler lock")
+			return
+		case active, ok := <-m.isSchedulerMasterCh:
+			if !ok {
+				m.logger.Info("scheduler lock channel closed")
+				return
+			}
+			if !active {
+				m.logger.Info("unable to acquire scheduler lock")
+				m.scheduler.Stop()
+			} else {
+				m.logger.Info("scheduler lock acquired")
+				m.scheduler.Start()
+				m.models.SchedulerLock.MaintainLock(ctx, m.schedulerID)
+			}
+		}
+	}
 }
 
 func (m *Module) Shutdown() {
@@ -94,6 +159,7 @@ func (m *Module) Shutdown() {
 
 	m.logger.Info("sending stop signal")
 	close(m.done)
+	close(m.isSchedulerMasterCh)
 
 	m.logger.Info("waiting for scheduler background processes to complete")
 	m.wg.Wait()
