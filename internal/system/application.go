@@ -18,11 +18,16 @@ import (
 )
 
 type MonolithApplication struct {
+	ctx     context.Context
 	logger  *slog.Logger
 	mux     *http.ServeMux
 	modules *Modules
 	db      *sql.DB
 	cfg     *config.Config
+}
+
+func (app *MonolithApplication) Context() context.Context {
+	return app.ctx
 }
 
 func (app *MonolithApplication) Logger() *slog.Logger {
@@ -46,6 +51,7 @@ func (app *MonolithApplication) Modules() *Modules {
 }
 
 func NewMonolith(
+	ctx context.Context,
 	logger *slog.Logger,
 	mux *http.ServeMux,
 	modules *Modules,
@@ -53,6 +59,7 @@ func NewMonolith(
 	cfg *config.Config,
 ) MonolithApplication {
 	return MonolithApplication{
+		ctx:     ctx,
 		logger:  logger,
 		mux:     mux,
 		modules: modules,

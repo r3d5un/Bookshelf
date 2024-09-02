@@ -13,6 +13,7 @@ import (
 )
 
 type Monolith interface {
+	Context() context.Context
 	Logger() *slog.Logger
 	Mux() *http.ServeMux
 	DB() *sql.DB

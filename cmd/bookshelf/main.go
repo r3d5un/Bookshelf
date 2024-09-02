@@ -62,6 +62,7 @@ func run() (err error) {
 	}
 
 	app := system.NewMonolith(
+		ctx,
 		logger,
 		http.NewServeMux(),
 		&system.Modules{
