@@ -68,10 +68,12 @@ func (s *Scheduler) Enqueue(ctx context.Context, newTask types.Task) error {
 	return nil
 }
 
+// Start the scheduler in it's own goroutine, or no-op if already running.
 func (s *Scheduler) Start() {
 	s.cron.Start()
 }
 
+// Stop stops the scheduler if it is running; otherwise it does nothing.
 func (s *Scheduler) Stop() {
 	s.cron.Stop()
 }
