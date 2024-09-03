@@ -467,7 +467,7 @@ SELECT id,
        task_data
 FROM orchestrator.tasks
 WHERE id = $1::uuid
-	AND run_at >= NOW()
+	AND run_at <= NOW()
 	AND state = 'waiting'
 ORDER BY created_at
     FOR UPDATE SKIP LOCKED
