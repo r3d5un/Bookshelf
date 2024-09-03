@@ -85,7 +85,12 @@ func (m *Module) maintainSchedulerLock(ctx context.Context) {
 			} else {
 				m.logger.Info("scheduler lock acquired")
 				m.scheduler.Start()
-				m.models.SchedulerLock.MaintainLock(ctx, m.schedulerID)
+				err := m.models.SchedulerLock.MaintainLock(ctx, m.schedulerID)
+				if err != nil {
+					m.logger.Info("unable to maintain scheduler lock", "error", err)
+					m.scheduler.Stop()
+					continue
+				}
 			}
 		}
 	}
