@@ -73,12 +73,12 @@ func (m *Module) checkSchedulerLock(ctx context.Context) {
 	}
 }
 
-// maintainSchedulerLock is responsible for starting and stopping the scheduler
+// manageScheduler is responsible for starting and stopping the scheduler
 // based on the state and value of the m.isSchedulerMasterCh.
 //
 // If the current intance acquires the lock, attempts to maintain the lock will
 // occur on each subsequent signal through the m.isSchedulerMasterCh channel.
-func (m *Module) maintainSchedulerLock(ctx context.Context) {
+func (m *Module) manageScheduler(ctx context.Context) {
 	for {
 		select {
 		case <-m.done:

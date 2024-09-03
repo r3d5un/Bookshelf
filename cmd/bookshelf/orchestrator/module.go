@@ -86,7 +86,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		m.maintainSchedulerLock(ctx)
+		m.manageScheduler(ctx)
 	}()
 
 	m.logger.Info("startup complete")
