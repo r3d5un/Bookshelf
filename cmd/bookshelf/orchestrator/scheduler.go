@@ -3,8 +3,12 @@ package orchestrator
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log/slog"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
@@ -38,10 +42,7 @@ func (m *Module) taskRunner(ctx context.Context) {
 			}
 
 			go func() {
-				err := m.taskCollection.Run(ctx, notificationPayload.Queue)
-				if err != nil {
-					m.logger.Info("an error occurred while running the task", "error", err)
-				}
+				m.runTaskByID(ctx, notificationPayload.ID)
 			}()
 
 		case <-m.done:
@@ -49,6 +50,62 @@ func (m *Module) taskRunner(ctx context.Context) {
 			return
 		}
 	}
+}
+
+// runTaskByID consumes the a task from the task queue that corresponds to the given ID,
+// runs the task, then dequeues the task.
+//
+// The queue is marked for updates, and a transaction active througout the task run, and
+// will not be invisible for any other worker instance attempting to consume the same task.
+func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
+	m.logger.Info("attempting to consume task", slog.String("taskId", id.String()))
+
+	var wg sync.WaitGroup
+	taskCh := make(chan data.TaskQueue, 1)
+	taskRunResultCh := make(chan error, 1)
+	defer close(taskCh)
+	defer close(taskRunResultCh)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err := m.models.TaskQueues.ConsumeByID(ctx, taskCh, taskRunResultCh, id)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				m.logger.Info(
+					"not able to find task; assuming taking by other worker",
+					"error", err,
+				)
+			default:
+				m.logger.Info("error occurred while consuming ID", "error", err)
+			}
+			return
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		select {
+		case <-m.done:
+			m.logger.Info("done signal received, stopping task runner")
+			return
+		case task, ok := <-taskCh:
+			if !ok {
+				m.logger.Info("unable run task, negative taskCh signal", "ok", ok)
+				taskRunResultCh <- errors.New("unable to run task; negative taskCh signal")
+				return
+			}
+
+			err := m.taskCollection.Run(ctx, *task.Name)
+			m.logger.Info("an error occurred while running the task", "error", err)
+			taskRunResultCh <- err
+		}
+	}()
+
+	wg.Wait()
 }
 
 // checkSchedulerLock attempts to acquire the scheduler lock in a continuous loop.
