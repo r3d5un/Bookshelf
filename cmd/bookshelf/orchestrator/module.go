@@ -33,8 +33,6 @@ type Module struct {
 }
 
 func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) {
-	// TODO: Figure out how to handle coordinate which instance is the scheduler
-	// between multiple instances
 	m.initModuleLogger(mono.Logger())
 	m.logger.Info("starting module")
 
