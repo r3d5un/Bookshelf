@@ -89,6 +89,8 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 		m.manageScheduler(ctx)
 	}()
 
+	// TODO: Handle due/stale tasks in queue without notifications
+
 	m.logger.Info("startup complete")
 
 	return nil
