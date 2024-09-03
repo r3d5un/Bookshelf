@@ -6,7 +6,17 @@ import (
 	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
+	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
+
+// addTasks is where any tasks the scheduler is resposible for queueing
+// should be added.
+func (m *Module) addTasks(ctx context.Context) {
+	taskName := "hello-world"
+	m.scheduler.AddCronJob(ctx, "* * * * *", types.Task{
+		Name: &taskName,
+	})
+}
 
 func (m *Module) taskRunner(ctx context.Context) {
 	defer m.wg.Done()

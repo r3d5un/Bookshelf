@@ -12,7 +12,6 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/config"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
-	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 	"github.com/r3d5un/Bookshelf/internal/system"
 )
 
@@ -74,10 +73,10 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 
 	m.logger.Info("creating task scheduler")
 	m.scheduler = orchestrator.NewScheduler(&m.models)
-	taskName := "hello-world"
-	m.scheduler.AddCronJob(ctx, "* * * * *", types.Task{
-		Name: &taskName,
-	})
+
+	m.logger.Info("adding tasks")
+	m.addTasks(ctx)
+
 	m.wg.Add(1)
 	go func() { // Goroutine for checking the scheduler lock
 		defer m.wg.Done()
