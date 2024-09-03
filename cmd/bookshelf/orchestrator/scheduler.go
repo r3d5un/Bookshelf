@@ -85,6 +85,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 		}
 	}()
 
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
