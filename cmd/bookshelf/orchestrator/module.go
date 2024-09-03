@@ -59,6 +59,7 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.wg = sync.WaitGroup{}
 	m.done = make(chan struct{})
 	m.taskNotificationCh = make(chan pgconn.Notification, 100)
+	m.isSchedulerMasterCh = make(chan bool, 1)
 
 	timeout := time.Duration(m.cfg.DB.Timeout) * time.Second
 	m.models = data.NewModels(m.db, &timeout)
