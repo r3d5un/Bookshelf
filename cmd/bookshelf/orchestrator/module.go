@@ -112,7 +112,7 @@ func (m *Module) Shutdown() {
 	m.logger.Info("waiting for scheduler background processes to complete")
 	m.wg.Wait()
 
-	// TODO: App hangs upon shutting down the connection pool
+	// TODO: Listener refusing to let go of connection. Hang causes unclean shutdown.
 	m.logger.Info("closing module connection pool")
 	activeConns := m.db.Stat().AcquiredConns()
 	if activeConns > 0 {
