@@ -10,6 +10,8 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/books/data"
 	"github.com/r3d5un/Bookshelf/internal/books/types"
 	"github.com/r3d5un/Bookshelf/internal/config"
+	orchestratorData "github.com/r3d5un/Bookshelf/internal/orchestrator/data"
+	orchestratorTypes "github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
 
 type Monolith interface {
@@ -62,4 +64,16 @@ type Books interface {
 
 type UI interface{}
 
-type Orchestrator interface{}
+type Orchestrator interface {
+	ReadTask(ctx context.Context, taskID uuid.UUID)
+	ReadAllTasks(
+		ctx context.Context,
+		filters orchestratorData.Filters,
+	) (*orchestratorTypes.TaskCollection, error)
+	CreateTask(ctx context.Context, newTask orchestratorTypes.Task) (*orchestratorTypes.Task, error)
+	UpdateTask(
+		ctx context.Context,
+		newTaskData orchestratorTypes.Task,
+	) (*orchestratorTypes.Task, error)
+	DeleteTask(ctx context.Context, id uuid.UUID) (*orchestratorTypes.Task, error)
+}
