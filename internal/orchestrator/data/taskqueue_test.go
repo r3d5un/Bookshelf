@@ -11,7 +11,7 @@ import (
 
 func TestTaskQueueModel(t *testing.T) {
 	queue := "test_queue"
-	state := data.WaitingTaskState
+	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
 	tq := data.TaskQueue{
 		Name:      &queue,
@@ -61,7 +61,7 @@ func TestTaskQueueModel(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		newTaskState := data.RunningTaskState
+		newTaskState := string(data.RunningTaskState)
 		tq.State = &newTaskState
 
 		updatedTask, err := models.TaskQueues.Update(context.Background(), tq)
@@ -88,7 +88,7 @@ func TestTaskQueueModel(t *testing.T) {
 
 		taskName := "test_queue"
 		timestamp := time.Now().Add(-1 * time.Hour)
-		state := data.WaitingTaskState
+		state := string(data.WaitingTaskState)
 		task := data.TaskQueue{
 			Name:     &taskName,
 			State:    &state,

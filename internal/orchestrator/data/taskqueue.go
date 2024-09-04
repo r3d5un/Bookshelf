@@ -13,12 +13,14 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/logging"
 )
 
+type TaskState string
+
 const (
-	WaitingTaskState  string = "waiting"
-	RunningTaskState  string = "running"
-	CompleteTaskState string = "complete"
-	StoppedTaskState  string = "stopped"
-	ErrorTaskState    string = "error"
+	WaitingTaskState  TaskState = "waiting"
+	RunningTaskState  TaskState = "running"
+	CompleteTaskState TaskState = "complete"
+	StoppedTaskState  TaskState = "stopped"
+	ErrorTaskState    TaskState = "error"
 )
 
 type TaskQueue struct {
@@ -414,7 +416,7 @@ func (m *TaskQueueModel) ConsumeByID(
 	// Any failed tasks should be marked with an error.
 	if err != nil {
 		logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
-		errorState := ErrorTaskState
+		errorState := string(ErrorTaskState)
 		task.State = &errorState
 		_, err = m.UpdateTx(ctx, tx, *task)
 		if err != nil {

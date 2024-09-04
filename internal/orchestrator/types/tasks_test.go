@@ -11,7 +11,7 @@ import (
 
 func TestTaskTypes(t *testing.T) {
 	queue := "test_queue"
-	state := data.WaitingTaskState
+	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
 	tq := types.Task{
 		Name:      &queue,
@@ -59,7 +59,7 @@ func TestTaskTypes(t *testing.T) {
 	})
 
 	t.Run("UpdateTask", func(t *testing.T) {
-		newTaskState := data.RunningTaskState
+		newTaskState := string(data.RunningTaskState)
 		tq.State = &newTaskState
 
 		updatedTask, err := types.UpdateTask(context.Background(), models, tq)
