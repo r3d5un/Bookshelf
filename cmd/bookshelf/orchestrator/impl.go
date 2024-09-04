@@ -35,3 +35,10 @@ func (m *Module) ClaimTaskByID(ctx context.Context, taskID uuid.UUID) (*types.Ta
 	return types.ClaimTaskByID(ctx, &m.models, taskID)
 }
 
+func (m *Module) SetTaskState(
+	ctx context.Context,
+	taskID uuid.UUID,
+	state data.TaskState,
+) (*types.Task, error) {
+	return types.SetTaskState(ctx, &m.models, taskID, state)
+}

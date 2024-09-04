@@ -217,3 +217,37 @@ func ClaimTaskByID(ctx context.Context, models *data.Models, taskID uuid.UUID) (
 	return &task, nil
 }
 
+// SetTaskState selects and locks a task from the queue, setting it with the desired
+// state given by the caller.
+func SetTaskState(
+	ctx context.Context,
+	models *data.Models,
+	taskID uuid.UUID,
+	state data.TaskState,
+) (*Task, error) {
+	tx, err := models.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	taskRow, err := models.TaskQueues.ClaimTx(ctx, tx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	newState := string(state)
+	taskRow.State = &newState
+
+	task := Task{
+		ID:        taskRow.ID,
+		Name:      taskRow.Name,
+		State:     taskRow.State,
+		CreatedAt: taskRow.CreatedAt,
+		UpdatedAt: taskRow.UpdatedAt,
+		RunAt:     taskRow.RunAt,
+		TaskData:  taskRow.TaskData,
+	}
+
+	return &task, nil
+}

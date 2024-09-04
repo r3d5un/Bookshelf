@@ -80,4 +80,9 @@ type Orchestrator interface {
 		ctx context.Context,
 		taskID uuid.UUID,
 	) (*orchestratorTypes.Task, error)
+	SetTaskState(
+		ctx context.Context,
+		taskID uuid.UUID,
+		state orchestratorData.TaskState,
+	) (*orchestratorTypes.Task, error)
 }
