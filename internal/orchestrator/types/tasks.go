@@ -251,3 +251,35 @@ func SetTaskState(
 
 	return &task, nil
 }
+
+// DequeueTask selects and locks a task from the queue, then deletes it. The task is returned
+// in as it was in it's last state in the task queue.
+func DequeueTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task, error) {
+	tx, err := models.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	taskRow, err := models.TaskQueues.ClaimTx(ctx, tx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	taskRow, err = models.TaskQueues.DequeueTx(ctx, tx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	task := Task{
+		ID:        taskRow.ID,
+		Name:      taskRow.Name,
+		State:     taskRow.State,
+		CreatedAt: taskRow.CreatedAt,
+		UpdatedAt: taskRow.UpdatedAt,
+		RunAt:     taskRow.RunAt,
+		TaskData:  taskRow.TaskData,
+	}
+
+	return &task, nil
+}

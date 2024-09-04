@@ -42,3 +42,7 @@ func (m *Module) SetTaskState(
 ) (*types.Task, error) {
 	return types.SetTaskState(ctx, &m.models, taskID, state)
 }
+
+func (m *Module) DequeueTask(ctx context.Context, taskID uuid.UUID) (*types.Task, error) {
+	return types.DequeueTask(ctx, &m.models, taskID)
+}

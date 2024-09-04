@@ -85,4 +85,8 @@ type Orchestrator interface {
 		taskID uuid.UUID,
 		state orchestratorData.TaskState,
 	) (*orchestratorTypes.Task, error)
+	DequeueTask(
+		ctx context.Context,
+		taskID uuid.UUID,
+	) (*orchestratorTypes.Task, error)
 }
