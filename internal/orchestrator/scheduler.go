@@ -9,21 +9,25 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// Scheduler emits tasks to the orchestrator task queue, and notifies
+// CronScheduler emits tasks to the orchestrator task queue, and notifies
 // listeners about new tasks. The scheduler does not run any tasks itself.
-type Scheduler struct {
+type CronScheduler struct {
 	cron   *cron.Cron
 	models *data.Models
 }
 
-func NewScheduler(models *data.Models) *Scheduler {
-	return &Scheduler{
+func NewScheduler(models *data.Models) *CronScheduler {
+	return &CronScheduler{
 		cron:   cron.New(),
 		models: models,
 	}
 }
 
-func (s *Scheduler) AddCronJob(ctx context.Context, cronExpr string, task types.Task) (err error) {
+func (s *CronScheduler) AddCronJob(
+	ctx context.Context,
+	cronExpr string,
+	task types.Task,
+) (err error) {
 	logger := logging.LoggerFromContext(ctx)
 
 	_, err = s.cron.AddFunc(cronExpr, func() {
@@ -42,7 +46,7 @@ func (s *Scheduler) AddCronJob(ctx context.Context, cronExpr string, task types.
 }
 
 // TODO: Cleanup the function signature
-func (s *Scheduler) Enqueue(ctx context.Context, newTask types.Task) error {
+func (s *CronScheduler) Enqueue(ctx context.Context, newTask types.Task) error {
 	logger := logging.LoggerFromContext(ctx).With("newTask", newTask)
 	newTaskRow := data.TaskQueue{
 		Name:     newTask.Name,
@@ -69,11 +73,11 @@ func (s *Scheduler) Enqueue(ctx context.Context, newTask types.Task) error {
 }
 
 // Start the scheduler in it's own goroutine, or no-op if already running.
-func (s *Scheduler) Start() {
+func (s *CronScheduler) Start() {
 	s.cron.Start()
 }
 
 // Stop stops the scheduler if it is running; otherwise it does nothing.
-func (s *Scheduler) Stop() {
+func (s *CronScheduler) Stop() {
 	s.cron.Stop()
 }

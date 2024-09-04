@@ -23,7 +23,7 @@ type Module struct {
 	cfg                 *config.Config
 	db                  *pgxpool.Pool
 	models              data.Models
-	scheduler           *orchestrator.Scheduler
+	scheduler           *orchestrator.CronScheduler
 	done                chan struct{}
 	taskNotificationCh  chan pgconn.Notification
 	taskCollection      orchestrator.Collection
