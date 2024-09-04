@@ -65,7 +65,7 @@ type Books interface {
 type UI interface{}
 
 type Orchestrator interface {
-	ReadTask(ctx context.Context, taskID uuid.UUID)
+	ReadTask(ctx context.Context, taskID uuid.UUID) (*orchestratorTypes.Task, error)
 	ReadAllTasks(
 		ctx context.Context,
 		filters orchestratorData.Filters,
