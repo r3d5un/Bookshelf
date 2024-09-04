@@ -172,3 +172,48 @@ func DeleteTask(
 
 	return &task, nil
 }
+
+// ClaimTaskByID selects and locks a task from the queue, marking it with the running state
+// before returning the task from the queue to the caller. Note that the task is unlocked once
+// the task is set to a running state, and is therefore available to other callers to manipulate.
+//
+// If a task fails, it needs to be set to a failed state in the queue by the caller in a separate
+// function call.
+func ClaimTaskByID(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task, error) {
+	tx, err := models.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	taskRow, err := models.TaskQueues.ClaimTx(ctx, tx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	state := string(data.RunningTaskState)
+	taskRow.State = &state
+
+	taskRow, err = models.TaskQueues.UpdateTx(ctx, tx, *taskRow)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	task := Task{
+		ID:        taskRow.ID,
+		Name:      taskRow.Name,
+		State:     taskRow.State,
+		CreatedAt: taskRow.CreatedAt,
+		UpdatedAt: taskRow.UpdatedAt,
+		RunAt:     taskRow.RunAt,
+		TaskData:  taskRow.TaskData,
+	}
+
+	return &task, nil
+}
+

@@ -30,3 +30,8 @@ func (m *Module) UpdateTask(ctx context.Context, newTaskData types.Task) (*types
 func (m *Module) DeleteTask(ctx context.Context, id uuid.UUID) (*types.Task, error) {
 	return types.DeleteTask(ctx, &m.models, id)
 }
+
+func (m *Module) ClaimTaskByID(ctx context.Context, taskID uuid.UUID) (*types.Task, error) {
+	return types.ClaimTaskByID(ctx, &m.models, taskID)
+}
+

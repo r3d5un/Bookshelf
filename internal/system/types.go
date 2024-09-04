@@ -76,4 +76,8 @@ type Orchestrator interface {
 		newTaskData orchestratorTypes.Task,
 	) (*orchestratorTypes.Task, error)
 	DeleteTask(ctx context.Context, id uuid.UUID) (*orchestratorTypes.Task, error)
+	ClaimTaskByID(
+		ctx context.Context,
+		taskID uuid.UUID,
+	) (*orchestratorTypes.Task, error)
 }
