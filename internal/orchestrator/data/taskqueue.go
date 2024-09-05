@@ -21,6 +21,7 @@ const (
 	CompleteTaskState TaskState = "complete"
 	StoppedTaskState  TaskState = "stopped"
 	ErrorTaskState    TaskState = "error"
+	SkippedTaskState  TaskState = "skipped"
 )
 
 type TaskQueue struct {

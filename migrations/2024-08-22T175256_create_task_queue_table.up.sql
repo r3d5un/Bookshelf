@@ -1,4 +1,4 @@
-CREATE TYPE task_state AS ENUM ('waiting', 'running', 'complete', 'stopped', 'error');
+CREATE TYPE task_state AS ENUM ('waiting', 'running', 'complete', 'stopped', 'error', 'skipped');
 
 CREATE TABLE IF NOT EXISTS orchestrator.tasks
 (
