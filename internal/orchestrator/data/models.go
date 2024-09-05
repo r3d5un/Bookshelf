@@ -18,6 +18,7 @@ var (
 )
 
 type Models struct {
+	Tasks             TaskModel
 	TaskQueues        TaskQueueModel
 	TaskNotifications TaskNotificationModel
 	SchedulerLock     SchedulerLockModel
@@ -26,6 +27,7 @@ type Models struct {
 
 func NewModels(pool *pgxpool.Pool, timeout *time.Duration) Models {
 	return Models{
+		Tasks:             TaskModel{Pool: pool, Timeout: timeout},
 		TaskQueues:        TaskQueueModel{Pool: pool, Timeout: timeout},
 		TaskNotifications: TaskNotificationModel{Pool: pool, Timeout: timeout},
 		SchedulerLock:     SchedulerLockModel{Pool: pool, Timeout: timeout},
