@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS orchestrator.tasks (
+    name VARCHAR(128) PRIMARY KEY,
+    cron_expr VARCHAR(128) NULL,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
