@@ -58,10 +58,10 @@ func (m *Module) taskRunner(ctx context.Context) {
 // The queue is marked for updates, and a transaction active througout the task run, and
 // will not be invisible for any other worker instance attempting to consume the same task.
 func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
-	m.logger.Info("attempting to consume task", slog.String("taskId", id.String()))
+	logger := m.logger.With(slog.String("taskId", id.String()))
 
 	var wg sync.WaitGroup
-	taskCh := make(chan data.TaskQueue, 1)
+	taskCh := make(chan types.Task, 1)
 	taskRunResultCh := make(chan error, 1)
 	defer close(taskCh)
 	defer close(taskRunResultCh)
@@ -70,19 +70,47 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 	go func() {
 		defer wg.Done()
 
-		err := m.models.TaskQueues.ConsumeByID(ctx, taskCh, taskRunResultCh, id)
+		task, err := types.ClaimTaskByID(ctx, &m.models, id)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
-				m.logger.Info(
+				logger.Info(
 					"not able to find task; assuming taking by other worker",
 					"error", err,
 				)
 			default:
-				m.logger.Info("error occurred while consuming ID", "error", err)
+				logger.Info("error occurred while consuming ID", "error", err)
 			}
 			return
 		}
+
+		logger.Info("task sent to runner")
+		taskCh <- *task
+
+		logger.Info("waiting for runner return signal")
+		taskRunErr := <-taskRunResultCh
+		logger.Info("result received")
+
+		if taskRunErr != nil {
+			logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
+			task, err = types.SetTaskState(ctx, &m.models, id, data.ErrorTaskState)
+			if err != nil {
+				logger.Error(
+					"an error occurred while marking the task as failed",
+					"error", err,
+				)
+			}
+			return
+		}
+
+		task, err = types.SetTaskState(ctx, &m.models, id, data.CompleteTaskState)
+		if err != nil {
+			logger.Error(
+				"an error occurred while marking the task as complete",
+				"error", err,
+			)
+		}
+		return
 	}()
 
 	wg.Add(1)
@@ -100,6 +128,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 				return
 			}
 
+			// TODO: Check if the task is enabled, if false set task status to skipped
 			err := m.taskCollection.Run(ctx, *task.Name)
 			m.logger.Info("an error occurred while running the task", "error", err)
 			taskRunResultCh <- err
