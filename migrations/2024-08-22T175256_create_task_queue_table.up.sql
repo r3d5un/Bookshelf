@@ -1,6 +1,7 @@
 CREATE TYPE task_state AS ENUM ('waiting', 'running', 'complete', 'stopped', 'error', 'skipped');
 
-CREATE TABLE IF NOT EXISTS orchestrator.tasks
+-- TODO: Refactor the TaskQueue model
+CREATE TABLE IF NOT EXISTS orchestrator.task_queue
 (
     id         UUID                 DEFAULT gen_random_uuid() PRIMARY KEY,
     name       VARCHAR(32) NOT NULL,
@@ -23,6 +24,6 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER set_updated_at
     BEFORE UPDATE
-    ON orchestrator.tasks
+    ON orchestrator.task_queue
     FOR EACH ROW
 EXECUTE FUNCTION update_task_timestamp();

@@ -50,7 +50,7 @@ SELECT id,
        updated_at,
        run_at,
        task_data
-FROM orchestrator.tasks
+FROM orchestrator.task_queue
 WHERE id = $1;
 `
 
@@ -107,7 +107,7 @@ SELECT COUNT(*) OVER() AS total,
        updated_at,
        run_at,
        task_data
-FROM orchestrator.tasks
+FROM orchestrator.task_queue
 WHERE ($1::uuid IS NULL OR id = $1::uuid)
   AND ($2::text IS NULL OR name = $2::text)
   AND ($3::task_state IS NULL OR state = $3::task_state)
@@ -191,7 +191,7 @@ func (m *TaskQueueModel) Insert(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-INSERT INTO orchestrator.tasks (name,
+INSERT INTO orchestrator.task_queue (name,
                                state,
                                run_at,
                                task_data)
@@ -255,7 +255,7 @@ func (m *TaskQueueModel) Update(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-UPDATE orchestrator.tasks
+UPDATE orchestrator.task_queue
 SET name = COALESCE($2::text, name),
 	state = COALESCE($3::task_state, state),
 	created_at = COALESCE($4::timestamp, created_at),
@@ -323,7 +323,7 @@ func (m *TaskQueueModel) Delete(ctx context.Context, id uuid.UUID) (task *TaskQu
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-DELETE FROM orchestrator.tasks
+DELETE FROM orchestrator.task_queue
 WHERE id = $1
 RETURNING
     id,
@@ -468,7 +468,7 @@ SELECT id,
        updated_at,
        run_at,
        task_data
-FROM orchestrator.tasks
+FROM orchestrator.task_queue
 WHERE id = $1::uuid
 	AND run_at <= NOW()
 	AND state = 'waiting'
@@ -528,7 +528,7 @@ func (m *TaskQueueModel) DequeueTx(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-DELETE FROM orchestrator.tasks
+DELETE FROM orchestrator.task_queue
 WHERE id = $1
 RETURNING
     id,
