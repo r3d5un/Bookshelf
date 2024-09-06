@@ -22,6 +22,9 @@ type Filters struct {
 	PageSize        int        `json:"pageSize,omitempty"`
 	StartIndex      int        `json:"startIndex,omitempty"`
 	Count           int        `json:"count,omitempty"`
+	Deleted         *bool      `json:"deleted,omitempty"`
+	Enabled         *bool      `json:"enabled,omitempty"`
+	CronExpr        *string    `json:"cronExpr,omitempty"`
 	ID              *uuid.UUID `json:"id,omitempty"`
 	Name            *string    `json:"queue"`
 	State           *string    `json:"state,omitempty"`
