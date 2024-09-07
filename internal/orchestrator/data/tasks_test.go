@@ -14,7 +14,6 @@ func TestTaskModel(t *testing.T) {
 		Name:      sql.NullString{String: "test_task", Valid: true},
 		CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 		Enabled:   sql.NullBool{Bool: false, Valid: true},
-		Deleted:   sql.NullBool{Bool: false, Valid: true},
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
@@ -99,7 +98,6 @@ func TestTaskModel(t *testing.T) {
 			Name:      sql.NullString{String: "upserted_task", Valid: true},
 			CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 			Enabled:   sql.NullBool{Bool: false, Valid: true},
-			Deleted:   sql.NullBool{Bool: false, Valid: true},
 			UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 		}
 

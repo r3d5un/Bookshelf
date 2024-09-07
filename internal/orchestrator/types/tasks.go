@@ -11,7 +11,6 @@ type Task struct {
 	Name      string     `json:"name"`
 	CronExpr  *string    `json:"cronExpr,omitempty"`
 	Enabled   *bool      `json:"enabled,omitempty"`
-	Deleted   *bool      `json:"deleted,omitempty"`
 	UpdatedAt *time.Time `json:"timestamp,omitempty"`
 }
 
@@ -35,7 +34,6 @@ func ReadTask(ctx context.Context, models *data.Models, taskName string) (*Task,
 		Name:      taskRow.Name.String,
 		CronExpr:  &taskRow.CronExpr.String,
 		Enabled:   &taskRow.Enabled.Bool,
-		Deleted:   &taskRow.Deleted.Bool,
 		UpdatedAt: &taskRow.UpdatedAt.Time,
 	}
 
@@ -64,7 +62,6 @@ func ReadAllTasks(
 			Name:      t.Name.String,
 			CronExpr:  &t.CronExpr.String,
 			Enabled:   &t.Enabled.Bool,
-			Deleted:   &t.Deleted.Bool,
 			UpdatedAt: &t.UpdatedAt.Time,
 		}
 

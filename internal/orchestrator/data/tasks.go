@@ -17,7 +17,6 @@ type Task struct {
 	Name      sql.NullString `json:"name"`
 	CronExpr  sql.NullString `json:"cronExpr"`
 	Enabled   sql.NullBool   `json:"enabled"`
-	Deleted   sql.NullBool   `json:"deleted"`
 	UpdatedAt sql.NullTime   `json:"timestamp"`
 }
 
@@ -32,7 +31,6 @@ SELECT
     name,
     cron_expr,
     enabled,
-    deleted,
     updated_at
 FROM orchestrator.tasks
 WHERE name = $1;
@@ -54,7 +52,6 @@ WHERE name = $1;
 		&task.Name,
 		&task.CronExpr,
 		&task.Enabled,
-		&task.Deleted,
 		&task.UpdatedAt,
 	)
 	if err != nil {
@@ -81,17 +78,15 @@ SELECT COUNT(*) OVER() AS total,
        name,
        cron_expr,
        enabled,
-       deleted,
        updated_at
 FROM orchestrator.tasks
 WHERE ($1::text IS NULL OR name = $1::text)
   AND ($2::text IS NULL OR cron_expr = $2::text)
   AND ($3::boolean IS NULL OR enabled = $3::boolean)
-  AND ($4::boolean IS NULL OR deleted >= $4::boolean)
-  AND ($5::timestamp IS NULL OR updated_at >= $5::timestamp)
-  AND ($6::timestamp IS NULL OR updated_at < $6::timestamp)
+  AND ($4::timestamp IS NULL OR updated_at >= $4::timestamp)
+  AND ($5::timestamp IS NULL OR updated_at < $5::timestamp)
 ` + database.CreateOrderByClause(filters.OrderBy) + `
-OFFSET $7 FETCH NEXT $8 ROWS ONLY;
+OFFSET $6 FETCH NEXT $7 ROWS ONLY;
 `
 
 	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -113,7 +108,6 @@ OFFSET $7 FETCH NEXT $8 ROWS ONLY;
 		filters.Name,
 		filters.CronExpr,
 		filters.Enabled,
-		filters.Deleted,
 		filters.UpdatedAtFrom,
 		filters.UpdatedAtTo,
 		filters.offset(),
@@ -129,7 +123,6 @@ OFFSET $7 FETCH NEXT $8 ROWS ONLY;
 			&task.Name,
 			&task.CronExpr,
 			&task.Enabled,
-			&task.Deleted,
 			&task.UpdatedAt,
 		)
 		if err != nil {
@@ -155,18 +148,15 @@ func (m *TaskModel) Insert(ctx context.Context, newTask Task) (task *Task, err e
 INSERT INTO orchestrator.tasks (name,
                                 cron_expr,
                                 enabled,
-                                deleted,
                                 updated_at)
 VALUES ($1::TEXT,
         $2::TEXT,
         COALESCE($3::BOOLEAN, false),
-        COALESCE($4::BOOLEAN, false),
-        COALESCE($5::TIMESTAMP, NOW()))
+        NOW())
 RETURNING
     name,
     cron_expr,
     enabled,
-    deleted,
     updated_at;
 `
 
@@ -188,13 +178,10 @@ RETURNING
 		newTask.Name,
 		newTask.CronExpr,
 		newTask.Enabled,
-		newTask.Deleted,
-		newTask.UpdatedAt,
 	).Scan(
 		&task.Name,
 		&task.CronExpr,
 		&task.Enabled,
-		&task.Deleted,
 		&task.UpdatedAt,
 	)
 	if err != nil {
@@ -217,14 +204,12 @@ func (m *TaskModel) Update(ctx context.Context, newTask Task) (task *Task, err e
 UPDATE orchestrator.tasks
 SET cron_expr  = COALESCE($2::text, cron_expr),
     enabled    = COALESCE($3::boolean, enabled),
-    deleted    = COALESCE($4::boolean, deleted),
-    updated_at = COALESCE($5::timestamp, now())
+    updated_at = NOW()
 WHERE name = $1::text
 RETURNING
     name,
     cron_expr,
     enabled,
-    deleted,
     updated_at;
 `
 
@@ -246,13 +231,10 @@ RETURNING
 		newTask.Name,
 		newTask.CronExpr,
 		newTask.Enabled,
-		newTask.Deleted,
-		newTask.UpdatedAt,
 	).Scan(
 		&task.Name,
 		&task.CronExpr,
 		&task.Enabled,
-		&task.Deleted,
 		&task.UpdatedAt,
 	)
 	if err != nil {
@@ -272,18 +254,16 @@ RETURNING
 
 func (m *TaskModel) Upsert(ctx context.Context, newTask Task) (task *Task, err error) {
 	query := `
-INSERT INTO orchestrator.tasks (name, cron_expr, enabled, deleted, updated_at)
+INSERT INTO orchestrator.tasks (name, cron_expr, enabled, updated_at)
 VALUES ($1,
         $2,
         $3,
-        $4,
         NOW())
 ON CONFLICT (name)
     DO UPDATE SET cron_expr  = EXCLUDED.cron_expr,
                   enabled    = EXCLUDED.enabled,
-                  deleted    = EXCLUDED.deleted,
                   updated_at = EXCLUDED.updated_at
-RETURNING name, cron_expr, enabled, deleted, updated_at;
+RETURNING name, cron_expr, enabled, updated_at;
 `
 
 	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -304,12 +284,10 @@ RETURNING name, cron_expr, enabled, deleted, updated_at;
 		newTask.Name,
 		newTask.CronExpr,
 		newTask.Enabled,
-		newTask.Deleted,
 	).Scan(
 		&task.Name,
 		&task.CronExpr,
 		&task.Enabled,
-		&task.Deleted,
 		&task.UpdatedAt,
 	)
 	if err != nil {
@@ -336,7 +314,6 @@ RETURNING
     name,
     cron_expr,
     enabled,
-    deleted,
     updated_at;
 `
 	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -359,7 +336,6 @@ RETURNING
 		&task.Name,
 		&task.CronExpr,
 		&task.Enabled,
-		&task.Deleted,
 		&task.UpdatedAt,
 	)
 	if err != nil {
