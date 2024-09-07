@@ -18,7 +18,7 @@ type Task struct {
 	CronExpr  sql.NullString `json:"cronExpr"`
 	Enabled   sql.NullBool   `json:"enabled"`
 	Deleted   sql.NullBool   `json:"deleted"`
-	Timestamp sql.NullTime   `json:"timestamp"`
+	UpdatedAt sql.NullTime   `json:"timestamp"`
 }
 
 type TaskModel struct {
@@ -55,7 +55,7 @@ WHERE name = $1;
 		&task.CronExpr,
 		&task.Enabled,
 		&task.Deleted,
-		&task.Timestamp,
+		&task.UpdatedAt,
 	)
 	if err != nil {
 		switch {
@@ -130,7 +130,7 @@ OFFSET $7 FETCH NEXT $8 ROWS ONLY;
 			&task.CronExpr,
 			&task.Enabled,
 			&task.Deleted,
-			&task.Timestamp,
+			&task.UpdatedAt,
 		)
 		if err != nil {
 			return nil, nil, err

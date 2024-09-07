@@ -15,7 +15,7 @@ func TestTaskModel(t *testing.T) {
 		CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 		Enabled:   sql.NullBool{Bool: false, Valid: true},
 		Deleted:   sql.NullBool{Bool: false, Valid: true},
-		Timestamp: sql.NullTime{Time: time.Now(), Valid: true},
+		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
 	t.Run("Get", func(t *testing.T) {
