@@ -150,8 +150,66 @@ OFFSET $7 FETCH NEXT $8 ROWS ONLY;
 	return tasks, &md, nil
 }
 
-func (m *TaskModel) Insert(ctx context.Context, newTask Task) (task []*Task, err error) {
-	return nil, nil
+func (m *TaskModel) Insert(ctx context.Context, newTask Task) (task *Task, err error) {
+	query := `
+INSERT INTO orchestrator.tasks (name,
+                                cron_expr,
+                                enabled,
+                                deleted,
+                                updated_at)
+VALUES ($1::TEXT,
+        $2::TEXT,
+        COALESCE($3::BOOLEAN, false),
+        COALESCE($4::BOOLEAN, false),
+        COALESCE($5::TIMESTAMP, NOW()))
+RETURNING
+    name,
+    cron_expr,
+    enabled,
+    deleted,
+    updated_at;
+`
+
+	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger := logging.LoggerFromContext(ctx).With(slog.Group(
+		"query",
+		slog.String("query", database.MinifySQL(query)),
+		"name", slog.Any("task", task),
+	))
+
+	task = &Task{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(
+		ctx,
+		query,
+		newTask.Name,
+		newTask.CronExpr,
+		newTask.Enabled,
+		newTask.Deleted,
+		newTask.UpdatedAt,
+	).Scan(
+		&task.Name,
+		&task.CronExpr,
+		&task.Enabled,
+		&task.Deleted,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskModel) Update(ctx context.Context, newData Task) (task *Task, err error) {

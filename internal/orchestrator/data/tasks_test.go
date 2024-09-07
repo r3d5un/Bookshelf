@@ -18,6 +18,19 @@ func TestTaskModel(t *testing.T) {
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
+	t.Run("Insert", func(t *testing.T) {
+		insertedTask, err := models.Tasks.Insert(context.Background(), task)
+		if err != nil {
+			t.Errorf("error occurred while inserting task: %s\n", err)
+			return
+		}
+
+		if insertedTask.Name.String != task.Name.String {
+			t.Errorf("expected task name %s, got %s\n", task.Name.String, insertedTask.Name.String)
+			return
+		}
+	})
+
 	t.Run("Get", func(t *testing.T) {
 		_, err := models.Tasks.Get(context.Background(), task.Name.String)
 		if err != nil {
