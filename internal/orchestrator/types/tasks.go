@@ -105,6 +105,29 @@ func CreateTask(ctx context.Context, models *data.Models, task Task) (*Task, err
 	return &task, nil
 }
 
+func UpdateTask(ctx context.Context, models *data.Models, task Task) (*Task, error) {
+	dbRow := data.Task{
+		Name:      task.Name,
+		CronExpr:  newNullString(task.CronExpr),
+		Enabled:   newNullBool(task.Enabled),
+		UpdatedAt: newNullTime(task.UpdatedAt),
+	}
+
+	updatedTask, err := models.Tasks.Update(ctx, dbRow)
+	if err != nil {
+		return nil, err
+	}
+
+	task = Task{
+		Name:      updatedTask.Name,
+		CronExpr:  nullStringToPtr(updatedTask.CronExpr),
+		Enabled:   nullBoolToPtr(updatedTask.Enabled),
+		UpdatedAt: nullTimeToPtr(updatedTask.UpdatedAt),
+	}
+
+	return &task, nil
+}
+
 func newNullString(s *string) sql.NullString {
 	if s == nil {
 		return sql.NullString{Valid: false}
