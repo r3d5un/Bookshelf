@@ -140,15 +140,29 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 		case <-m.done:
 			m.logger.Info("done signal received, stopping task runner")
 			return
-		case task, ok := <-taskCh:
+		case scheduledTask, ok := <-taskCh:
 			if !ok {
 				m.logger.Info("unable run task, negative taskCh signal", "ok", ok)
 				taskRunResultCh <- errors.New("unable to run task; negative taskCh signal")
 				return
 			}
 
-			// TODO: Check if the task is enabled, if false set task status to skipped
-			err := m.taskCollection.Run(ctx, *task.Name)
+			// Check if the task is enabled. If not, this run is skipped
+			task, err := types.ReadTask(ctx, &m.models, *scheduledTask.Name)
+			if !*task.Enabled {
+				m.logger.Info(
+					"task not enabled; skipping run",
+					"task", task,
+					"scheduledRun", scheduledTask,
+				)
+				state := string(data.SkippedTaskState)
+				scheduledTask.State = &state
+				_, err := types.UpdateScheduledTask(ctx, &m.models, scheduledTask)
+				taskRunResultCh <- err
+				return
+			}
+
+			err = m.taskCollection.Run(ctx, *scheduledTask.Name)
 			m.logger.Info("an error occurred while running the task", "error", err)
 			taskRunResultCh <- err
 		}
