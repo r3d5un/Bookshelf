@@ -64,6 +64,9 @@ func ReadAllTasks(
 	if len(filters.OrderBy) < 1 {
 		filters.OrderBy = []string{"name"}
 	}
+	if filters.Page <= 0 {
+		filters.Page = 1
+	}
 
 	taskRows, metadata, err := models.Tasks.GetAll(ctx, filters)
 	if err != nil {
