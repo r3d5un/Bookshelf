@@ -44,7 +44,7 @@ WHERE name = $1;
 	logger := logging.LoggerFromContext(ctx).With(slog.Group(
 		"query",
 		slog.String("query", database.MinifySQL(query)),
-		"name", slog.String("name", name),
+		slog.String("name", name),
 	))
 
 	task = &Task{}
@@ -100,7 +100,7 @@ OFFSET $7 FETCH NEXT $8 ROWS ONLY;
 	logger := logging.LoggerFromContext(ctx).With(slog.Group(
 		"query",
 		slog.String("query", database.MinifySQL(query)),
-		"name", slog.Any("filters", filters),
+		slog.Any("filters", filters),
 	))
 
 	tasks = []*Task{}
@@ -176,7 +176,7 @@ RETURNING
 	logger := logging.LoggerFromContext(ctx).With(slog.Group(
 		"query",
 		slog.String("query", database.MinifySQL(query)),
-		"name", slog.Any("task", task),
+		slog.Any("task", newTask),
 	))
 
 	task = &Task{}
@@ -292,7 +292,7 @@ RETURNING name, cron_expr, enabled, deleted, updated_at;
 	logger := logging.LoggerFromContext(ctx).With(slog.Group(
 		"query",
 		slog.String("query", database.MinifySQL(query)),
-		"name", slog.Any("task", task),
+		slog.Any("task", newTask),
 	))
 
 	task = &Task{}
