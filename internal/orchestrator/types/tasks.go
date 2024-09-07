@@ -181,6 +181,10 @@ func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
 
 	for _, appTask := range tasks {
 		if _, found := dbTasks[appTask.Name]; found {
+			// Tasks that already exists should not have their enabled status updated.
+			// They should keep their enabled state as set by the users of the app,
+			// independent of what the scheduler sets during their initialization.
+			appTask.Enabled = dbTasks[appTask.Name].Enabled
 			updateableTasks = append(updateableTasks, appTask)
 		} else {
 			enabled := false
