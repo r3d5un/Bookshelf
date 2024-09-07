@@ -1,6 +1,5 @@
 CREATE TYPE task_state AS ENUM ('waiting', 'running', 'complete', 'stopped', 'error', 'skipped');
 
--- TODO: Refactor the TaskQueue model
 CREATE TABLE IF NOT EXISTS orchestrator.task_queue
 (
     id         UUID                 DEFAULT gen_random_uuid() PRIMARY KEY,
