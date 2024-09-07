@@ -77,7 +77,8 @@ func (m *TaskModel) GetAll(
 	filters Filters,
 ) (tasks []*Task, metadata *Metadata, err error) {
 	query := `
-SELECT name,
+SELECT COUNT(*) OVER() AS total,
+       name,
        cron_expr,
        enabled,
        deleted,
