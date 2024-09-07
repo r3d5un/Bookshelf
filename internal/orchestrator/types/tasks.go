@@ -2,6 +2,8 @@ package types
 
 import (
 	"context"
+	"database/sql"
+	"sync"
 	"time"
 
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
@@ -31,7 +33,7 @@ func ReadTask(ctx context.Context, models *data.Models, taskName string) (*Task,
 	}
 
 	task := Task{
-		Name:      taskRow.Name.String,
+		Name:      taskRow.Name,
 		CronExpr:  &taskRow.CronExpr.String,
 		Enabled:   &taskRow.Enabled.Bool,
 		UpdatedAt: &taskRow.UpdatedAt.Time,
@@ -59,7 +61,7 @@ func ReadAllTasks(
 	var tasks []*Task
 	for _, t := range taskRows {
 		task := Task{
-			Name:      t.Name.String,
+			Name:      t.Name,
 			CronExpr:  &t.CronExpr.String,
 			Enabled:   &t.Enabled.Bool,
 			UpdatedAt: &t.UpdatedAt.Time,

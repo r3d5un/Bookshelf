@@ -14,7 +14,7 @@ import (
 )
 
 type Task struct {
-	Name      sql.NullString `json:"name"`
+	Name      string         `json:"name"`
 	CronExpr  sql.NullString `json:"cronExpr"`
 	Enabled   sql.NullBool   `json:"enabled"`
 	UpdatedAt sql.NullTime   `json:"timestamp"`

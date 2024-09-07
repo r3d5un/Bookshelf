@@ -11,7 +11,7 @@ import (
 
 func TestTaskQueueModel(t *testing.T) {
 	task := data.Task{
-		Name:      sql.NullString{String: "test_queue", Valid: true},
+		Name:      "test_queue",
 		CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 		Enabled:   sql.NullBool{Bool: false, Valid: true},
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
@@ -25,7 +25,7 @@ func TestTaskQueueModel(t *testing.T) {
 	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
 	tq := data.TaskQueue{
-		Name:      &task.Name.String,
+		Name:      &task.Name,
 		State:     &state,
 		CreatedAt: &timestamp,
 		UpdatedAt: &timestamp,

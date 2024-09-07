@@ -11,7 +11,7 @@ import (
 
 func TestTaskModel(t *testing.T) {
 	task := data.Task{
-		Name:      sql.NullString{String: "test_task", Valid: true},
+		Name:      "test_task",
 		CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 		Enabled:   sql.NullBool{Bool: false, Valid: true},
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
@@ -24,14 +24,14 @@ func TestTaskModel(t *testing.T) {
 			return
 		}
 
-		if insertedTask.Name.String != task.Name.String {
-			t.Errorf("expected task name %s, got %s\n", task.Name.String, insertedTask.Name.String)
+		if insertedTask.Name != task.Name {
+			t.Errorf("expected task name %s, got %s\n", task.Name, insertedTask.Name)
 			return
 		}
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		_, err := models.Tasks.Get(context.Background(), task.Name.String)
+		_, err := models.Tasks.Get(context.Background(), task.Name)
 		if err != nil {
 			t.Errorf("error occurred while querying task: %s\n", err)
 			return
@@ -95,7 +95,7 @@ func TestTaskModel(t *testing.T) {
 
 	t.Run("UpsertNew", func(t *testing.T) {
 		newTask := data.Task{
-			Name:      sql.NullString{String: "upserted_task", Valid: true},
+			Name:      "upserted_task",
 			CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
 			Enabled:   sql.NullBool{Bool: false, Valid: true},
 			UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
@@ -116,7 +116,7 @@ func TestTaskModel(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		_, err := models.Tasks.Delete(context.Background(), task.Name.String)
+		_, err := models.Tasks.Delete(context.Background(), task.Name)
 		if err != nil {
 			t.Errorf("an error occurred while deleting task: %s\n", err)
 			return
