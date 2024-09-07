@@ -144,6 +144,108 @@ func DeleteTask(ctx context.Context, models *data.Models, name string) (*Task, e
 	return &task, nil
 }
 
+// SyncTasks accepts a slice of tasks which from the caller, which acts
+// as the master, syncing the task overview.
+//
+// New tasks are inserted in a disabled state.
+//
+// Old tasks are updated with data from the given list.
+//
+// Tasks in the task overview not found in the given task slice is deleted from
+// the overview. The deletion is cascading, meaning all task run records will
+// also be deleted.
+func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
+	filters := data.Filters{
+		PageSize: 50_000, // Set to a high value to retrieve all tasks
+		OrderBy:  []string{"name"},
+	}
+	tc, err := ReadAllTasks(ctx, models, filters)
+	if err != nil {
+		return err
+	}
+
+	appTasks := make(map[string]Task, len(tasks))
+	dbTasks := make(map[string]Task, len(tc.Tasks))
+
+	for _, appTask := range tasks {
+		appTasks[appTask.Name] = appTask
+	}
+
+	for _, dbTask := range tc.Tasks {
+		appTasks[dbTask.Name] = *dbTask
+	}
+
+	var newTasks []Task
+	var deletableTasks []Task
+	var updateableTasks []Task
+
+	for _, appTask := range tasks {
+		if _, found := dbTasks[appTask.Name]; found {
+			updateableTasks = append(updateableTasks, appTask)
+		} else {
+			enabled := false
+			appTask.Enabled = &enabled
+			newTasks = append(newTasks, appTask)
+		}
+	}
+
+	for _, dbTask := range tc.Tasks {
+		if _, found := appTasks[dbTask.Name]; !found {
+			deletableTasks = append(deletableTasks, *dbTask)
+		}
+	}
+
+	var wg sync.WaitGroup
+	errorChan := make(chan error)
+
+	for _, task := range newTasks {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			_, err := CreateTask(ctx, models, task)
+			if err != nil {
+				errorChan <- err
+			}
+		}()
+	}
+
+	for _, task := range deletableTasks {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			_, err := DeleteTask(ctx, models, task.Name)
+			if err != nil {
+				errorChan <- err
+			}
+		}()
+	}
+
+	for _, task := range updateableTasks {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			_, err := UpdateTask(ctx, models, task)
+			if err != nil {
+				errorChan <- err
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	for err := range errorChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func newNullString(s *string) sql.NullString {
 	if s == nil {
 		return sql.NullString{Valid: false}
