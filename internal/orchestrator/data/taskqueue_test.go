@@ -2,6 +2,7 @@ package data_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -9,11 +10,22 @@ import (
 )
 
 func TestTaskQueueModel(t *testing.T) {
-	queue := "test_queue"
+	task := data.Task{
+		Name:      sql.NullString{String: "test_queue", Valid: true},
+		CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
+		Enabled:   sql.NullBool{Bool: false, Valid: true},
+		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+	}
+	_, err := models.Tasks.Insert(context.Background(), task)
+	if err != nil {
+		t.Errorf("error occurred while inserting task: %s\n", err)
+		return
+	}
+
 	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
 	tq := data.TaskQueue{
-		Name:      &queue,
+		Name:      &task.Name.String,
 		State:     &state,
 		CreatedAt: &timestamp,
 		UpdatedAt: &timestamp,
