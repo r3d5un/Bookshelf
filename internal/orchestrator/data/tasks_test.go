@@ -59,4 +59,21 @@ func TestTaskModel(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("Update", func(t *testing.T) {
+		task.CronExpr = sql.NullString{String: "1 * * * *", Valid: true}
+
+		updatedTask, err := models.Tasks.Update(context.Background(), task)
+		if err != nil {
+			t.Errorf("error occurred while updating tasks: %s\n", err)
+			return
+		}
+		if task.CronExpr.String != updatedTask.CronExpr.String {
+			t.Errorf(
+				"expected cron expression %s, got %s\n",
+				task.CronExpr.String,
+				updatedTask.CronExpr.String,
+			)
+		}
+	})
 }

@@ -212,8 +212,62 @@ RETURNING
 	return task, nil
 }
 
-func (m *TaskModel) Update(ctx context.Context, newData Task) (task *Task, err error) {
-	return nil, nil
+func (m *TaskModel) Update(ctx context.Context, newTask Task) (task *Task, err error) {
+	query := `
+UPDATE orchestrator.tasks
+SET cron_expr  = COALESCE($2::text, cron_expr),
+    enabled    = COALESCE($3::boolean, enabled),
+    deleted    = COALESCE($4::boolean, deleted),
+    updated_at = COALESCE($5::timestamp, now())
+WHERE name = $1::text
+RETURNING
+    name,
+    cron_expr,
+    enabled,
+    deleted,
+    updated_at;
+`
+
+	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger := logging.LoggerFromContext(ctx).With(slog.Group(
+		"query",
+		slog.String("query", database.MinifySQL(query)),
+		"name", slog.Any("task", task),
+	))
+
+	task = &Task{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(
+		ctx,
+		query,
+		newTask.Name,
+		newTask.CronExpr,
+		newTask.Enabled,
+		newTask.Deleted,
+		newTask.UpdatedAt,
+	).Scan(
+		&task.Name,
+		&task.CronExpr,
+		&task.Enabled,
+		&task.Deleted,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }
 
 func (m *TaskModel) Upsert(ctx context.Context, newTask Task) (task *Task, err error) {
