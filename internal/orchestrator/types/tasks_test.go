@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
 
@@ -40,6 +41,22 @@ func TestTaskTypes(t *testing.T) {
 		}
 		if readTask.Name != task.Name {
 			t.Errorf("expected task name %s, got %s\n", task.Name, readTask.Name)
+			return
+		}
+	})
+
+	t.Run("ReadAllTasks", func(t *testing.T) {
+		filters := data.Filters{
+			Page:     1,
+			PageSize: 50_000,
+		}
+		taskCollection, err := types.ReadAllTasks(context.Background(), models, filters)
+		if err != nil {
+			t.Errorf("an error occurred while reading all tasks: %s\n", err)
+			return
+		}
+		if len(taskCollection.Tasks) < 1 {
+			t.Errorf("no tasks returned")
 			return
 		}
 	})
