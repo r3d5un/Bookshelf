@@ -109,4 +109,14 @@ func TestTaskTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("Delete", func(t *testing.T) {
+		for _, task := range tasks {
+			_, err := types.DeleteTask(context.Background(), models, task.Name)
+			if err != nil {
+				t.Errorf("error occurred while deleting task: %s\n", err)
+				return
+			}
+		}
+	})
 }
