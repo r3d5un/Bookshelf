@@ -128,6 +128,22 @@ func UpdateTask(ctx context.Context, models *data.Models, task Task) (*Task, err
 	return &task, nil
 }
 
+func DeleteTask(ctx context.Context, models *data.Models, name string) (*Task, error) {
+	deletedTask, err := models.Tasks.Delete(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	task := Task{
+		Name:      deletedTask.Name,
+		CronExpr:  nullStringToPtr(deletedTask.CronExpr),
+		Enabled:   nullBoolToPtr(deletedTask.Enabled),
+		UpdatedAt: nullTimeToPtr(deletedTask.UpdatedAt),
+	}
+
+	return &task, nil
+}
+
 func newNullString(s *string) sql.NullString {
 	if s == nil {
 		return sql.NullString{Valid: false}
