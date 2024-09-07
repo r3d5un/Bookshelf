@@ -76,4 +76,44 @@ func TestTaskModel(t *testing.T) {
 			)
 		}
 	})
+
+	t.Run("UpsertOld", func(t *testing.T) {
+		task.CronExpr = sql.NullString{String: "2 * * * *", Valid: true}
+
+		upsertedTask, err := models.Tasks.Upsert(context.Background(), task)
+		if err != nil {
+			t.Errorf("error occurred while updating tasks: %s\n", err)
+			return
+		}
+		if task.CronExpr.String != upsertedTask.CronExpr.String {
+			t.Errorf(
+				"expected cron expression %s, got %s\n",
+				task.CronExpr.String,
+				upsertedTask.CronExpr.String,
+			)
+		}
+	})
+
+	t.Run("UpsertNew", func(t *testing.T) {
+		newTask := data.Task{
+			Name:      sql.NullString{String: "upserted_task", Valid: true},
+			CronExpr:  sql.NullString{String: "* * * * *", Valid: true},
+			Enabled:   sql.NullBool{Bool: false, Valid: true},
+			Deleted:   sql.NullBool{Bool: false, Valid: true},
+			UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		}
+
+		upsertedTask, err := models.Tasks.Upsert(context.Background(), newTask)
+		if err != nil {
+			t.Errorf("error occurred while updating tasks: %s\n", err)
+			return
+		}
+		if newTask.CronExpr.String != upsertedTask.CronExpr.String {
+			t.Errorf(
+				"expected cron expression %s, got %s\n",
+				newTask.CronExpr.String,
+				upsertedTask.CronExpr.String,
+			)
+		}
+	})
 }
