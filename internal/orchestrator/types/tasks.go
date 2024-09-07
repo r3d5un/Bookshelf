@@ -26,6 +26,18 @@ type TaskCollection struct {
 	Tasks        []*Task `json:"tasks"`
 }
 
+// NewTask created a new task object. Not to be confused with CreateTask.
+//
+// NewTask does not persist data.
+func NewTask(name string, cronExpr string, enabled bool, updatedAt time.Time) Task {
+	return Task{
+		Name:      name,
+		CronExpr:  &cronExpr,
+		Enabled:   &enabled,
+		UpdatedAt: &updatedAt,
+	}
+}
+
 func ReadTask(ctx context.Context, models *data.Models, taskName string) (*Task, error) {
 	taskRow, err := models.Tasks.Get(ctx, taskName)
 	if err != nil {
