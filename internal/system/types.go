@@ -72,7 +72,7 @@ type Orchestrator interface {
 	ReadAllScheduledTasks(
 		ctx context.Context,
 		filters orchestratorData.Filters,
-	) (*orchestratorTypes.TaskCollection, error)
+	) (*orchestratorTypes.ScheduledTaskCollection, error)
 	CreateScheduledTask(
 		ctx context.Context,
 		newTask orchestratorTypes.ScheduledTask,

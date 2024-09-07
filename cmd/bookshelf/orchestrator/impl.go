@@ -18,7 +18,7 @@ func (m *Module) ReadScheduledTask(
 func (m *Module) ReadAllScheduledTasks(
 	ctx context.Context,
 	filters data.Filters,
-) (*types.TaskCollection, error) {
+) (*types.ScheduledTaskCollection, error) {
 	return types.ReadAllScheudledTasks(ctx, &m.models, filters)
 }
 

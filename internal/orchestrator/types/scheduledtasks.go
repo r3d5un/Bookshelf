@@ -18,7 +18,7 @@ type ScheduledTask struct {
 	TaskData  *string    `json:"task_data,omitempty"`
 }
 
-type TaskCollection struct {
+type ScheduledTaskCollection struct {
 	CurrentPage  int              `json:"current_page,omitempty"`
 	PageSize     int              `json:"page_size,omitempty"`
 	FirstPage    int              `json:"first_page,omitempty"`
@@ -55,7 +55,7 @@ func ReadAllScheudledTasks(
 	ctx context.Context,
 	models *data.Models,
 	filters data.Filters,
-) (tc *TaskCollection, err error) {
+) (tc *ScheduledTaskCollection, err error) {
 	tq, metadata, err := models.TaskQueues.GetAll(ctx, filters)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func ReadAllScheudledTasks(
 		tasks = append(tasks, &task)
 	}
 
-	tc = &TaskCollection{
+	tc = &ScheduledTaskCollection{
 		CurrentPage:  metadata.CurrentPage,
 		PageSize:     metadata.PageSize,
 		FirstPage:    metadata.FirstPage,
