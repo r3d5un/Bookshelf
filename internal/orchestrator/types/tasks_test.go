@@ -60,4 +60,18 @@ func TestTaskTypes(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("UpdateTask", func(t *testing.T) {
+		cronExpr := "1 * * * *"
+		task.CronExpr = &cronExpr
+		updatedTask, err := types.UpdateTask(context.Background(), models, task)
+		if err != nil {
+			t.Errorf("an error occurred while updating task: %s\n", err)
+			return
+		}
+		if *updatedTask.CronExpr != cronExpr {
+			t.Errorf("expected %s, got %s\n", cronExpr, *updatedTask.CronExpr)
+			return
+		}
+	})
 }
