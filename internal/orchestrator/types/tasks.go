@@ -81,3 +81,68 @@ func ReadAllTasks(
 
 	return tc, nil
 }
+
+func CreateTask(ctx context.Context, models *data.Models, task Task) (*Task, error) {
+	dbRow := data.Task{
+		Name:      task.Name,
+		CronExpr:  newNullString(task.CronExpr),
+		Enabled:   newNullBool(task.Enabled),
+		UpdatedAt: newNullTime(task.UpdatedAt),
+	}
+
+	insertedTask, err := models.Tasks.Insert(ctx, dbRow)
+	if err != nil {
+		return nil, err
+	}
+
+	task = Task{
+		Name:      insertedTask.Name,
+		CronExpr:  nullStringToPtr(insertedTask.CronExpr),
+		Enabled:   nullBoolToPtr(insertedTask.Enabled),
+		UpdatedAt: nullTimeToPtr(insertedTask.UpdatedAt),
+	}
+
+	return &task, nil
+}
+
+func newNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{Valid: false}
+	}
+	return sql.NullString{String: *s, Valid: true}
+}
+
+func newNullBool(b *bool) sql.NullBool {
+	if b == nil {
+		return sql.NullBool{Valid: false}
+	}
+	return sql.NullBool{Bool: *b, Valid: true}
+}
+
+func newNullTime(t *time.Time) sql.NullTime {
+	if t == nil {
+		return sql.NullTime{Valid: false}
+	}
+	return sql.NullTime{Time: *t, Valid: true}
+}
+
+func nullStringToPtr(ns sql.NullString) *string {
+	if !ns.Valid {
+		return nil
+	}
+	return &ns.String
+}
+
+func nullBoolToPtr(nb sql.NullBool) *bool {
+	if !nb.Valid {
+		return nil
+	}
+	return &nb.Bool
+}
+
+func nullTimeToPtr(nt sql.NullTime) *time.Time {
+	if !nt.Valid {
+		return nil
+	}
+	return &nt.Time
+}
