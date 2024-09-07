@@ -328,5 +328,51 @@ RETURNING name, cron_expr, enabled, deleted, updated_at;
 }
 
 func (m *TaskModel) Delete(ctx context.Context, name string) (task *Task, err error) {
-	return nil, nil
+	query := `
+DELETE
+FROM orchestrator.tasks
+WHERE name = $1
+RETURNING
+    name,
+    cron_expr,
+    enabled,
+    deleted,
+    updated_at;
+`
+	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger := logging.LoggerFromContext(ctx).With(slog.Group(
+		"query",
+		slog.String("query", database.MinifySQL(query)),
+		slog.String("taskName", name),
+	))
+
+	task = &Task{}
+
+	logger.Info("performing query")
+	err = m.Pool.QueryRow(
+		ctx,
+		query,
+		name,
+	).Scan(
+		&task.Name,
+		&task.CronExpr,
+		&task.Enabled,
+		&task.Deleted,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			logger.Info("no rows found")
+			return nil, ErrRecordNotFound
+		default:
+			logger.Error("an error occurred while performing query", "error", err)
+			return nil, err
+		}
+	}
+
+	logger.Info("returning task")
+	return task, nil
 }

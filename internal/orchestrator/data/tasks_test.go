@@ -116,4 +116,12 @@ func TestTaskModel(t *testing.T) {
 			)
 		}
 	})
+
+	t.Run("Delete", func(t *testing.T) {
+		_, err := models.Tasks.Delete(context.Background(), task.Name.String)
+		if err != nil {
+			t.Errorf("an error occurred while deleting task: %s\n", err)
+			return
+		}
+	})
 }
