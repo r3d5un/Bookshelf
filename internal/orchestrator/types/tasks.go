@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 )
 
@@ -170,15 +171,23 @@ func DeleteTask(ctx context.Context, models *data.Models, name string) (*Task, e
 // the overview. The deletion is cascading, meaning all task run records will
 // also be deleted.
 func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
+	logger := logging.LoggerFromContext(ctx)
+
 	filters := data.Filters{
 		PageSize: 50_000, // Set to a high value to retrieve all tasks
 		OrderBy:  []string{"name"},
 	}
+	logger.Info("filters set", "filters", filters)
+
+	logger.Info("reading existing tasks from database")
 	tc, err := ReadAllTasks(ctx, models, filters)
 	if err != nil {
+		logger.Error("an error occurred while reading tasks", "error", err)
 		return err
 	}
+	logger.Info("tasks read", "taskCollection", tc)
 
+	logger.Info("checking for differences between wanted tasks and tasks in database")
 	appTasks := make(map[string]Task, len(tasks))
 	dbTasks := make(map[string]Task, len(tc.Tasks))
 
@@ -187,7 +196,7 @@ func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
 	}
 
 	for _, dbTask := range tc.Tasks {
-		appTasks[dbTask.Name] = *dbTask
+		dbTasks[dbTask.Name] = *dbTask
 	}
 
 	var newTasks []Task
@@ -217,6 +226,14 @@ func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
 	var wg sync.WaitGroup
 	errorChan := make(chan error)
 
+	logger.Info(
+		"task differences set",
+		"newTasks", newTasks,
+		"deletableTasks", deletableTasks,
+		"updateableTasks", updateableTasks,
+	)
+
+	logger.Info("updating database")
 	for _, task := range newTasks {
 		wg.Add(1)
 		go func() {
@@ -255,12 +272,17 @@ func SyncTasks(ctx context.Context, models *data.Models, tasks []Task) error {
 
 	wg.Wait()
 	close(errorChan)
+	logger.Info("database updated")
 
+	logger.Info("checking for errors from update process")
 	for err := range errorChan {
 		if err != nil {
+			logger.Error("error occurred while syncing tasks with database", "error", err)
 			return err
 		}
 	}
+
+	logger.Info("database tasks updated")
 
 	return nil
 }
