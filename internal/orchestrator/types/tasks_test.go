@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -10,11 +11,16 @@ import (
 )
 
 func TestTaskTypes(t *testing.T) {
-	_ = []types.Task{
+	tasks := []types.Task{
 		types.NewTask("task1", "* * * * *", false, time.Now()),
 		types.NewTask("task2", "* * * * *", false, time.Now()),
 		types.NewTask("task3", "* * * * *", false, time.Now()),
 		types.NewTask("task4", "* * * * *", false, time.Now()),
+	}
+
+	filters := data.Filters{
+		Page:     1,
+		PageSize: 50_000,
 	}
 
 	var task types.Task
@@ -46,10 +52,6 @@ func TestTaskTypes(t *testing.T) {
 	})
 
 	t.Run("ReadAllTasks", func(t *testing.T) {
-		filters := data.Filters{
-			Page:     1,
-			PageSize: 50_000,
-		}
 		taskCollection, err := types.ReadAllTasks(context.Background(), models, filters)
 		if err != nil {
 			t.Errorf("an error occurred while reading all tasks: %s\n", err)
@@ -71,6 +73,39 @@ func TestTaskTypes(t *testing.T) {
 		}
 		if *updatedTask.CronExpr != cronExpr {
 			t.Errorf("expected %s, got %s\n", cronExpr, *updatedTask.CronExpr)
+			return
+		}
+	})
+
+	t.Run("SyncTasks", func(t *testing.T) {
+		err := types.SyncTasks(context.Background(), models, tasks)
+		if err != nil {
+			t.Errorf("an error occurred while syncing tasks: %s\n", err)
+			return
+		}
+
+		syncedTasks, err := types.ReadAllTasks(context.Background(), models, filters)
+		if err != nil {
+			t.Errorf("an error occurred while reading synced tasks: %s\n", err)
+			return
+		}
+
+		if len(syncedTasks.Tasks) < len(tasks) {
+			t.Errorf(
+				"expected equal or more than %d tasks, got %d\n",
+				len(tasks), len(syncedTasks.Tasks),
+			)
+			return
+		}
+
+		_, err = types.ReadTask(context.Background(), models, task.Name)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				return
+			default:
+				t.Errorf("unable to read desynced task: %s\n", err)
+			}
 			return
 		}
 	})
