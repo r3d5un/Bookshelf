@@ -9,19 +9,28 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
 
-func TestTaskTypes(t *testing.T) {
-	queue := "test_queue"
+func TestScheduledTaskTypes(t *testing.T) {
+	insertedTask, err := types.CreateTask(
+		context.Background(),
+		models,
+		types.NewTask("test_queue", "* * * * *", false, time.Now()),
+	)
+	if err != nil {
+		t.Errorf("an error occurred while creating parent task for overview: %s\n", err)
+		return
+	}
+
 	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
 	tq := types.ScheduledTask{
-		Name:      &queue,
+		Name:      &insertedTask.Name,
 		State:     &state,
 		CreatedAt: &timestamp,
 		UpdatedAt: &timestamp,
 		RunAt:     &timestamp,
 	}
 
-	t.Run("CreateTask", func(t *testing.T) {
+	t.Run("CreateScheduledTask", func(t *testing.T) {
 		createdTask, err := types.ScheduleTask(context.Background(), models, tq)
 		if err != nil {
 			t.Errorf("error occurred while creating task: %s\n", err)
@@ -31,14 +40,14 @@ func TestTaskTypes(t *testing.T) {
 		tq = *createdTask
 	})
 
-	t.Run("ReadTask", func(t *testing.T) {
+	t.Run("ReadScheduledTask", func(t *testing.T) {
 		_, err := types.ReadScheduledTask(context.Background(), models, tq.ID)
 		if err != nil {
 			t.Errorf("error occurred while reading task: %s\n", err)
 		}
 	})
 
-	t.Run("ReadAllTasks", func(t *testing.T) {
+	t.Run("ReadAllScheduledTask", func(t *testing.T) {
 		filters := data.Filters{
 			Page:     1,
 			PageSize: 100,
@@ -58,7 +67,7 @@ func TestTaskTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("UpdateTask", func(t *testing.T) {
+	t.Run("UpdateScheduledTask", func(t *testing.T) {
 		newTaskState := string(data.RunningTaskState)
 		tq.State = &newTaskState
 
@@ -72,7 +81,7 @@ func TestTaskTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("DeleteTask", func(t *testing.T) {
+	t.Run("DeleteScheduledTask", func(t *testing.T) {
 		_, err := types.DeleteScheduledTask(context.Background(), models, tq.ID)
 		if err != nil {
 			t.Errorf("error occurred while creating task: %s\n", err)
