@@ -9,21 +9,36 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
 
 // addTasks is where any tasks the scheduler is resposible for queueing
 // should be added.
-func (m *Module) addTasks(ctx context.Context) {
-	// TODO: Create a slice containg a list of tasks.
+func (m *Module) addTasks(ctx context.Context) error {
+	logger := logging.LoggerFromContext(ctx)
 
-	// TODO: Loop through teach task, updating the database with it's state
+	logger.Info("adding tasks")
+	tasks := []types.Task{
+		types.NewTask("Hello, World!", "* * * * *", false, time.Now()),
+	}
 
-	taskName := "hello-world"
-	m.scheduler.AddCronJob(ctx, "* * * * *", types.ScheduledTask{
-		Name: &taskName,
-	})
+	logger.Info("syncing task with database")
+	err := types.SyncTasks(ctx, &m.models, tasks)
+	if err != nil {
+		logger.Error("an error occurred while syncing tasks with the database", "error", err)
+		return err
+	}
+	logger.Info("tasks synced")
+
+	for _, task := range tasks {
+		m.scheduler.AddCronJob(ctx, *task.CronExpr, types.ScheduledTask{
+			Name: &task.Name,
+		})
+	}
+
+	return nil
 }
 
 func (m *Module) taskRunner(ctx context.Context) {
