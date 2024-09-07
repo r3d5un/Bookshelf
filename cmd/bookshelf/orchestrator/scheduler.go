@@ -16,8 +16,12 @@ import (
 // addTasks is where any tasks the scheduler is resposible for queueing
 // should be added.
 func (m *Module) addTasks(ctx context.Context) {
+	// TODO: Create a slice containg a list of tasks.
+
+	// TODO: Loop through teach task, updating the database with it's state
+
 	taskName := "hello-world"
-	m.scheduler.AddCronJob(ctx, "* * * * *", types.Task{
+	m.scheduler.AddCronJob(ctx, "* * * * *", types.ScheduledTask{
 		Name: &taskName,
 	})
 }
@@ -61,7 +65,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 	logger := m.logger.With(slog.String("taskId", id.String()))
 
 	var wg sync.WaitGroup
-	taskCh := make(chan types.Task, 1)
+	taskCh := make(chan types.ScheduledTask, 1)
 	taskRunResultCh := make(chan error, 1)
 	defer close(taskCh)
 	defer close(taskRunResultCh)
@@ -70,7 +74,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 	go func() {
 		defer wg.Done()
 
-		task, err := types.ClaimTaskByID(ctx, &m.models, id)
+		task, err := types.ClaimScheduledTaskByID(ctx, &m.models, id)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
@@ -93,7 +97,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 
 		if taskRunErr != nil {
 			logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
-			task, err = types.SetTaskState(ctx, &m.models, id, data.ErrorTaskState)
+			task, err = types.SetScheduledTaskState(ctx, &m.models, id, data.ErrorTaskState)
 			if err != nil {
 				logger.Error(
 					"an error occurred while marking the task as failed",
@@ -103,7 +107,7 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 			return
 		}
 
-		task, err = types.SetTaskState(ctx, &m.models, id, data.CompleteTaskState)
+		task, err = types.SetScheduledTaskState(ctx, &m.models, id, data.CompleteTaskState)
 		if err != nil {
 			logger.Error(
 				"an error occurred while marking the task as complete",

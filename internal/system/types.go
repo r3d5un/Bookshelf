@@ -65,28 +65,34 @@ type Books interface {
 type UI interface{}
 
 type Orchestrator interface {
-	ReadTask(ctx context.Context, taskID uuid.UUID) (*orchestratorTypes.Task, error)
-	ReadAllTasks(
+	ReadScheduledTask(
+		ctx context.Context,
+		taskID uuid.UUID,
+	) (*orchestratorTypes.ScheduledTask, error)
+	ReadAllScheduledTasks(
 		ctx context.Context,
 		filters orchestratorData.Filters,
 	) (*orchestratorTypes.TaskCollection, error)
-	CreateTask(ctx context.Context, newTask orchestratorTypes.Task) (*orchestratorTypes.Task, error)
-	UpdateTask(
+	CreateScheduledTask(
 		ctx context.Context,
-		newTaskData orchestratorTypes.Task,
-	) (*orchestratorTypes.Task, error)
-	DeleteTask(ctx context.Context, id uuid.UUID) (*orchestratorTypes.Task, error)
-	ClaimTaskByID(
+		newTask orchestratorTypes.ScheduledTask,
+	) (*orchestratorTypes.ScheduledTask, error)
+	UpdateScheduledTask(
+		ctx context.Context,
+		newTaskData orchestratorTypes.ScheduledTask,
+	) (*orchestratorTypes.ScheduledTask, error)
+	DeleteScheduledTask(ctx context.Context, id uuid.UUID) (*orchestratorTypes.ScheduledTask, error)
+	ClaimScheduledTaskByID(
 		ctx context.Context,
 		taskID uuid.UUID,
-	) (*orchestratorTypes.Task, error)
-	SetTaskState(
+	) (*orchestratorTypes.ScheduledTask, error)
+	SetScheduledTaskState(
 		ctx context.Context,
 		taskID uuid.UUID,
 		state orchestratorData.TaskState,
-	) (*orchestratorTypes.Task, error)
-	DequeueTask(
+	) (*orchestratorTypes.ScheduledTask, error)
+	DequeueScheduledTask(
 		ctx context.Context,
 		taskID uuid.UUID,
-	) (*orchestratorTypes.Task, error)
+	) (*orchestratorTypes.ScheduledTask, error)
 }

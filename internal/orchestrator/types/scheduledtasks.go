@@ -8,7 +8,7 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 )
 
-type Task struct {
+type ScheduledTask struct {
 	ID        uuid.UUID  `json:"id"`
 	Name      *string    `json:"queue"`
 	State     *string    `json:"state"`
@@ -19,22 +19,26 @@ type Task struct {
 }
 
 type TaskCollection struct {
-	CurrentPage  int     `json:"current_page,omitempty"`
-	PageSize     int     `json:"page_size,omitempty"`
-	FirstPage    int     `json:"first_page,omitempty"`
-	LastPage     int     `json:"last_page,omitempty"`
-	TotalRecords int     `json:"total_records,omitempty"`
-	OrderBy      string  `json:"order_by,omitempty"`
-	Data         []*Task `json:"data"`
+	CurrentPage  int              `json:"current_page,omitempty"`
+	PageSize     int              `json:"page_size,omitempty"`
+	FirstPage    int              `json:"first_page,omitempty"`
+	LastPage     int              `json:"last_page,omitempty"`
+	TotalRecords int              `json:"total_records,omitempty"`
+	OrderBy      string           `json:"order_by,omitempty"`
+	Data         []*ScheduledTask `json:"data"`
 }
 
-func ReadTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task, error) {
+func ReadScheduledTask(
+	ctx context.Context,
+	models *data.Models,
+	taskID uuid.UUID,
+) (*ScheduledTask, error) {
 	tq, err := models.TaskQueues.Get(ctx, taskID)
 	if err != nil {
 		return nil, err
 	}
 
-	task := Task{
+	task := ScheduledTask{
 		ID:        tq.ID,
 		Name:      tq.Name,
 		State:     tq.State,
@@ -47,7 +51,7 @@ func ReadTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task
 	return &task, nil
 }
 
-func ReadAllTasks(
+func ReadAllScheudledTasks(
 	ctx context.Context,
 	models *data.Models,
 	filters data.Filters,
@@ -57,9 +61,9 @@ func ReadAllTasks(
 		return nil, err
 	}
 
-	var tasks []*Task
+	var tasks []*ScheduledTask
 	for _, t := range tq {
-		task := Task{
+		task := ScheduledTask{
 			ID:        t.ID,
 			Name:      t.Name,
 			State:     t.State,
@@ -84,15 +88,15 @@ func ReadAllTasks(
 	return tc, nil
 }
 
-// CreateTask enqueues a new task to the task queue.
+// ScheduleTask enqueues a new task to the task queue.
 //
 // NOTE: The ID will be ignored when creating new tasks. The database generates an ID
 // at insertion.
-func CreateTask(
+func ScheduleTask(
 	ctx context.Context,
 	models *data.Models,
-	newTask Task,
-) (createdTask *Task, err error) {
+	newTask ScheduledTask,
+) (createdTask *ScheduledTask, err error) {
 	newTaskRow := data.TaskQueue{
 		Name:     newTask.Name,
 		State:    newTask.State,
@@ -105,7 +109,7 @@ func CreateTask(
 		return nil, err
 	}
 
-	createdTask = &Task{
+	createdTask = &ScheduledTask{
 		ID:        insertedTask.ID,
 		Name:      insertedTask.Name,
 		State:     insertedTask.State,
@@ -118,11 +122,11 @@ func CreateTask(
 	return createdTask, nil
 }
 
-func UpdateTask(
+func UpdateScheduledTask(
 	ctx context.Context,
 	models *data.Models,
-	newTaskData Task,
-) (updatedTask *Task, err error) {
+	newTaskData ScheduledTask,
+) (updatedTask *ScheduledTask, err error) {
 	newTaskRow := data.TaskQueue{
 		ID:        newTaskData.ID,
 		Name:      newTaskData.Name,
@@ -137,7 +141,7 @@ func UpdateTask(
 		return nil, err
 	}
 
-	updatedTask = &Task{
+	updatedTask = &ScheduledTask{
 		ID:        updatedTaskRow.ID,
 		Name:      updatedTaskRow.Name,
 		State:     updatedTaskRow.State,
@@ -150,17 +154,17 @@ func UpdateTask(
 	return updatedTask, nil
 }
 
-func DeleteTask(
+func DeleteScheduledTask(
 	ctx context.Context,
 	models *data.Models,
 	id uuid.UUID,
-) (deletedTask *Task, err error) {
+) (deletedTask *ScheduledTask, err error) {
 	deletedTaskRow, err := models.TaskQueues.Delete(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	task := Task{
+	task := ScheduledTask{
 		ID:        deletedTaskRow.ID,
 		Name:      deletedTaskRow.Name,
 		State:     deletedTaskRow.State,
@@ -173,13 +177,17 @@ func DeleteTask(
 	return &task, nil
 }
 
-// ClaimTaskByID selects and locks a task from the queue, marking it with the running state
+// ClaimScheduledTaskByID selects and locks a task from the queue, marking it with the running state
 // before returning the task from the queue to the caller. Note that the task is unlocked once
 // the task is set to a running state, and is therefore available to other callers to manipulate.
 //
 // If a task fails, it needs to be set to a failed state in the queue by the caller in a separate
 // function call.
-func ClaimTaskByID(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task, error) {
+func ClaimScheduledTaskByID(
+	ctx context.Context,
+	models *data.Models,
+	taskID uuid.UUID,
+) (*ScheduledTask, error) {
 	tx, err := models.BeginTx(ctx)
 	if err != nil {
 		return nil, err
@@ -204,7 +212,7 @@ func ClaimTaskByID(ctx context.Context, models *data.Models, taskID uuid.UUID) (
 		return nil, err
 	}
 
-	task := Task{
+	task := ScheduledTask{
 		ID:        taskRow.ID,
 		Name:      taskRow.Name,
 		State:     taskRow.State,
@@ -217,14 +225,14 @@ func ClaimTaskByID(ctx context.Context, models *data.Models, taskID uuid.UUID) (
 	return &task, nil
 }
 
-// SetTaskState selects and locks a task from the queue, setting it with the desired
+// SetScheduledTaskState selects and locks a task from the queue, setting it with the desired
 // state given by the caller.
-func SetTaskState(
+func SetScheduledTaskState(
 	ctx context.Context,
 	models *data.Models,
 	taskID uuid.UUID,
 	state data.TaskState,
-) (*Task, error) {
+) (*ScheduledTask, error) {
 	tx, err := models.BeginTx(ctx)
 	if err != nil {
 		return nil, err
@@ -239,7 +247,7 @@ func SetTaskState(
 	newState := string(state)
 	taskRow.State = &newState
 
-	task := Task{
+	task := ScheduledTask{
 		ID:        taskRow.ID,
 		Name:      taskRow.Name,
 		State:     taskRow.State,
@@ -252,9 +260,13 @@ func SetTaskState(
 	return &task, nil
 }
 
-// DequeueTask selects and locks a task from the queue, then deletes it. The task is returned
+// DequeueScheduledTask selects and locks a task from the queue, then deletes it. The task is returned
 // in as it was in it's last state in the task queue.
-func DequeueTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*Task, error) {
+func DequeueScheduledTask(
+	ctx context.Context,
+	models *data.Models,
+	taskID uuid.UUID,
+) (*ScheduledTask, error) {
 	tx, err := models.BeginTx(ctx)
 	if err != nil {
 		return nil, err
@@ -271,7 +283,7 @@ func DequeueTask(ctx context.Context, models *data.Models, taskID uuid.UUID) (*T
 		return nil, err
 	}
 
-	task := Task{
+	task := ScheduledTask{
 		ID:        taskRow.ID,
 		Name:      taskRow.Name,
 		State:     taskRow.State,

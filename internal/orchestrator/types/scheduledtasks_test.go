@@ -13,7 +13,7 @@ func TestTaskTypes(t *testing.T) {
 	queue := "test_queue"
 	state := string(data.WaitingTaskState)
 	timestamp := time.Now()
-	tq := types.Task{
+	tq := types.ScheduledTask{
 		Name:      &queue,
 		State:     &state,
 		CreatedAt: &timestamp,
@@ -22,7 +22,7 @@ func TestTaskTypes(t *testing.T) {
 	}
 
 	t.Run("CreateTask", func(t *testing.T) {
-		createdTask, err := types.CreateTask(context.Background(), models, tq)
+		createdTask, err := types.ScheduleTask(context.Background(), models, tq)
 		if err != nil {
 			t.Errorf("error occurred while creating task: %s\n", err)
 			return
@@ -32,7 +32,7 @@ func TestTaskTypes(t *testing.T) {
 	})
 
 	t.Run("ReadTask", func(t *testing.T) {
-		_, err := types.ReadTask(context.Background(), models, tq.ID)
+		_, err := types.ReadScheduledTask(context.Background(), models, tq.ID)
 		if err != nil {
 			t.Errorf("error occurred while reading task: %s\n", err)
 		}
@@ -44,7 +44,7 @@ func TestTaskTypes(t *testing.T) {
 			PageSize: 100,
 			OrderBy:  []string{"id"},
 		}
-		tc, err := types.ReadAllTasks(context.Background(), models, filters)
+		tc, err := types.ReadAllScheudledTasks(context.Background(), models, filters)
 		if err != nil {
 			t.Errorf("error occurred while reading tasks: %s\n", err)
 		}
@@ -62,7 +62,7 @@ func TestTaskTypes(t *testing.T) {
 		newTaskState := string(data.RunningTaskState)
 		tq.State = &newTaskState
 
-		updatedTask, err := types.UpdateTask(context.Background(), models, tq)
+		updatedTask, err := types.UpdateScheduledTask(context.Background(), models, tq)
 		if err != nil {
 			t.Errorf("error occurred while creating task: %s\n", err)
 			return
@@ -73,7 +73,7 @@ func TestTaskTypes(t *testing.T) {
 	})
 
 	t.Run("DeleteTask", func(t *testing.T) {
-		_, err := types.DeleteTask(context.Background(), models, tq.ID)
+		_, err := types.DeleteScheduledTask(context.Background(), models, tq.ID)
 		if err != nil {
 			t.Errorf("error occurred while creating task: %s\n", err)
 			return

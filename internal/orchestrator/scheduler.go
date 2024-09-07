@@ -26,7 +26,7 @@ func NewScheduler(models *data.Models) *CronScheduler {
 func (s *CronScheduler) AddCronJob(
 	ctx context.Context,
 	cronExpr string,
-	task types.Task,
+	task types.ScheduledTask,
 ) (err error) {
 	logger := logging.LoggerFromContext(ctx)
 
@@ -46,7 +46,7 @@ func (s *CronScheduler) AddCronJob(
 }
 
 // TODO: Cleanup the function signature
-func (s *CronScheduler) Enqueue(ctx context.Context, newTask types.Task) error {
+func (s *CronScheduler) Enqueue(ctx context.Context, newTask types.ScheduledTask) error {
 	logger := logging.LoggerFromContext(ctx).With("newTask", newTask)
 	newTaskRow := data.TaskQueue{
 		Name:     newTask.Name,

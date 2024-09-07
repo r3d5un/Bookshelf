@@ -8,41 +8,59 @@ import (
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/types"
 )
 
-func (m *Module) ReadTask(ctx context.Context, taskID uuid.UUID) (*types.Task, error) {
-	return types.ReadTask(ctx, &m.models, taskID)
+func (m *Module) ReadScheduledTask(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (*types.ScheduledTask, error) {
+	return types.ReadScheduledTask(ctx, &m.models, taskID)
 }
 
-func (m *Module) ReadAllTasks(
+func (m *Module) ReadAllScheduledTasks(
 	ctx context.Context,
 	filters data.Filters,
 ) (*types.TaskCollection, error) {
-	return types.ReadAllTasks(ctx, &m.models, filters)
+	return types.ReadAllScheudledTasks(ctx, &m.models, filters)
 }
 
-func (m *Module) CreateTask(ctx context.Context, newTask types.Task) (*types.Task, error) {
-	return types.CreateTask(ctx, &m.models, newTask)
+func (m *Module) CreateScheduledTask(
+	ctx context.Context,
+	newTask types.ScheduledTask,
+) (*types.ScheduledTask, error) {
+	return types.ScheduleTask(ctx, &m.models, newTask)
 }
 
-func (m *Module) UpdateTask(ctx context.Context, newTaskData types.Task) (*types.Task, error) {
-	return types.UpdateTask(ctx, &m.models, newTaskData)
+func (m *Module) UpdateScheduledTask(
+	ctx context.Context,
+	newTaskData types.ScheduledTask,
+) (*types.ScheduledTask, error) {
+	return types.UpdateScheduledTask(ctx, &m.models, newTaskData)
 }
 
-func (m *Module) DeleteTask(ctx context.Context, id uuid.UUID) (*types.Task, error) {
-	return types.DeleteTask(ctx, &m.models, id)
+func (m *Module) DeleteScheduledTask(
+	ctx context.Context,
+	id uuid.UUID,
+) (*types.ScheduledTask, error) {
+	return types.DeleteScheduledTask(ctx, &m.models, id)
 }
 
-func (m *Module) ClaimTaskByID(ctx context.Context, taskID uuid.UUID) (*types.Task, error) {
-	return types.ClaimTaskByID(ctx, &m.models, taskID)
+func (m *Module) ClaimScheduledTaskByID(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (*types.ScheduledTask, error) {
+	return types.ClaimScheduledTaskByID(ctx, &m.models, taskID)
 }
 
-func (m *Module) SetTaskState(
+func (m *Module) SetScheduledTaskState(
 	ctx context.Context,
 	taskID uuid.UUID,
 	state data.TaskState,
-) (*types.Task, error) {
-	return types.SetTaskState(ctx, &m.models, taskID, state)
+) (*types.ScheduledTask, error) {
+	return types.SetScheduledTaskState(ctx, &m.models, taskID, state)
 }
 
-func (m *Module) DequeueTask(ctx context.Context, taskID uuid.UUID) (*types.Task, error) {
-	return types.DequeueTask(ctx, &m.models, taskID)
+func (m *Module) DequeueScheduledTask(
+	ctx context.Context,
+	taskID uuid.UUID,
+) (*types.ScheduledTask, error) {
+	return types.DequeueScheduledTask(ctx, &m.models, taskID)
 }
