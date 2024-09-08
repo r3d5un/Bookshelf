@@ -508,13 +508,13 @@ func (m *TaskQueueModel) UpdateTx(
 	logger := logging.LoggerFromContext(ctx)
 
 	query := `
-UPDATE orchestrator.task
-SET name = COALESCE($2, name),
-	state = COALESCE($2, state),
-	created_at = COALESCE($3, created_at),
-	run_at = COALESCE($4, run_at),
-	task_data = COALESCE($5::JSONB, task_data),
-WHERE id = $1
+UPDATE orchestrator.task_queue
+SET name = COALESCE($2::text, name),
+	state = COALESCE($3::task_state, state),
+	created_at = COALESCE($4::timestamp, created_at),
+	run_at = COALESCE($5::timestamp, run_at),
+	task_data = COALESCE($6::JSONB, task_data)
+WHERE id = $1::uuid
 RETURNING
     id,
     name,
@@ -539,13 +539,23 @@ RETURNING
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = tx.QueryRow(qCtx, query, task.ID).Scan(
+	err = tx.QueryRow(
+		qCtx,
+		query,
+		taskQueue.ID,
+		taskQueue.Name,
+		taskQueue.State,
+		taskQueue.CreatedAt,
+		taskQueue.RunAt,
+		taskQueue.TaskData,
+	).Scan(
 		&task.ID,
 		&task.Name,
 		&task.State,
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
+		&task.TaskData,
 	)
 	if err != nil {
 		switch {
