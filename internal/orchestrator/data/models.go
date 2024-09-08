@@ -31,6 +31,7 @@ func NewModels(pool *pgxpool.Pool, timeout *time.Duration) Models {
 		TaskQueues:        TaskQueueModel{Pool: pool, Timeout: timeout},
 		TaskNotifications: TaskNotificationModel{Pool: pool, Timeout: timeout},
 		SchedulerLock:     SchedulerLockModel{Pool: pool, Timeout: timeout},
+		pool:              pool,
 	}
 }
 func (m *Models) BeginTx(ctx context.Context) (tx pgx.Tx, err error) {
