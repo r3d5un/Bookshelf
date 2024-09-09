@@ -75,7 +75,11 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 	m.scheduler = orchestrator.NewScheduler(&m.models)
 
 	m.logger.Info("adding tasks")
-	m.addTasks(ctx)
+	err = m.addTasks(ctx)
+	if err != nil {
+		m.logger.Error("unable to add tasks", "error", err)
+		return
+	}
 
 	m.wg.Add(1)
 	go func() { // Goroutine for checking the scheduler lock
