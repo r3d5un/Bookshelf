@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,104 +70,74 @@ func (m *Module) taskRunner(ctx context.Context) {
 	}
 }
 
-// runTaskByID consumes the a task from the task queue that corresponds to the given ID,
-// runs the task, then dequeues the task.
+// runTaskByID runs the given task by it's ID.
 //
-// The queue is marked for updates, and a transaction active througout the task run, and
-// will not be invisible for any other worker instance attempting to consume the same task.
+// The task is locked, then set from a waiting state to a running state, until the task completes
+// or fails.
 func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
-	logger := m.logger.With(slog.String("taskId", id.String()))
+	logger := logging.LoggerFromContext(ctx).With(slog.String("taskId", id.String()))
 
-	var wg sync.WaitGroup
-	taskCh := make(chan types.ScheduledTask, 1)
-	taskRunResultCh := make(chan error, 1)
-	defer close(taskCh)
-	defer close(taskRunResultCh)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		task, err := types.ClaimScheduledTaskByID(ctx, &m.models, id)
-		if err != nil {
-			switch {
-			case errors.Is(err, data.ErrRecordNotFound):
-				logger.Info(
-					"not able to find task; assuming taking by other worker",
-					"error", err,
-				)
-			default:
-				logger.Info("error occurred while consuming ID", "error", err)
-			}
-			return
-		}
-
-		logger.Info("task sent to runner")
-		taskCh <- *task
-
-		logger.Info("waiting for runner return signal")
-		taskRunErr := <-taskRunResultCh
-		logger.Info("result received")
-
-		if taskRunErr != nil {
-			logger.Error("task unsuccssful, setting task state to error", slog.Any("error", err))
-			task, err = types.SetScheduledTaskState(ctx, &m.models, id, data.ErrorTaskState)
-			if err != nil {
-				logger.Error(
-					"an error occurred while marking the task as failed",
-					"error", err,
-				)
-			}
-			return
-		}
-
-		task, err = types.SetScheduledTaskState(ctx, &m.models, id, data.CompleteTaskState)
-		if err != nil {
-			logger.Error(
-				"an error occurred while marking the task as complete",
+	logger.Info("claiming task from queue")
+	scheduledTask, err := types.ClaimScheduledTaskByID(ctx, &m.models, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			logger.Info(
+				"not able to find task; assuming taking by other worker",
 				"error", err,
 			)
+		default:
+			logger.Info("error occurred while consuming ID", "error", err)
 		}
 		return
-	}()
+	}
+	logger.Info("scheduled task claimed", "scheduledTask", scheduledTask)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	skippedState := string(data.SkippedTaskState)
+	errorState := string(data.ErrorTaskState)
+	completeState := string(data.CompleteTaskState)
 
-		select {
-		case <-m.done:
-			m.logger.Info("done signal received, stopping task runner")
-			return
-		case scheduledTask, ok := <-taskCh:
-			if !ok {
-				m.logger.Info("unable run task, negative taskCh signal", "ok", ok)
-				taskRunResultCh <- errors.New("unable to run task; negative taskCh signal")
-				return
-			}
-
-			// Check if the task is enabled. If not, this run is skipped
-			task, err := types.ReadTask(ctx, &m.models, *scheduledTask.Name)
-			if !*task.Enabled {
-				m.logger.Info(
-					"task not enabled; skipping run",
-					"task", task,
-					"scheduledRun", scheduledTask,
-				)
-				state := string(data.SkippedTaskState)
-				scheduledTask.State = &state
-				_, err := types.UpdateScheduledTask(ctx, &m.models, scheduledTask)
-				taskRunResultCh <- err
-				return
-			}
-
-			err = m.taskCollection.Run(ctx, *scheduledTask.Name)
-			m.logger.Info("an error occurred while running the task", "error", err)
-			taskRunResultCh <- err
+	logger.Info("checking if task is enabled in the overview")
+	task, err := types.ReadTask(ctx, &m.models, *scheduledTask.Name)
+	if err != nil {
+		logger.Error("unable to read task from overview", "error", err)
+		scheduledTask.State = &errorState
+		_, err := types.UpdateScheduledTask(ctx, &m.models, *scheduledTask)
+		if err != nil {
+			logger.Info("unable to set the scheduled task state", "error", err)
 		}
-	}()
+		return
+	}
+	if !*task.Enabled {
+		logger.Info("task not enabled; skipping run")
+		scheduledTask.State = &skippedState
+		_, err := types.UpdateScheduledTask(ctx, &m.models, *scheduledTask)
+		if err != nil {
+			logger.Info("unable to set the scheduled task state", "error", err)
+		}
+		return
+	}
+	logger.Info("task enabled", "task", task)
 
-	wg.Wait()
+	logger.Info("running scheduled task", "scheduledTask", scheduledTask, "task", task)
+	err = m.taskCollection.Run(ctx, *scheduledTask.Name)
+	if err != nil {
+		m.logger.Info("an error occurred while running the task", "error", err)
+		scheduledTask.State = &errorState
+		_, err := types.UpdateScheduledTask(ctx, &m.models, *scheduledTask)
+		if err != nil {
+			logger.Info("unable to set the scheduled task state", "error", err)
+		}
+		return
+	}
+	scheduledTask.State = &completeState
+	scheduledTask, err = types.UpdateScheduledTask(ctx, &m.models, *scheduledTask)
+	if err != nil {
+		logger.Info("unable to set the scheduled task state", "error", err)
+		return
+	}
+
+	logger.Info("scheduled task completed", "scheduledTask", scheduledTask, "task", task)
 }
 
 // checkSchedulerLock attempts to acquire the scheduler lock in a continuous loop.
