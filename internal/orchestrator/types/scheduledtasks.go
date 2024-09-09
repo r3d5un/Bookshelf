@@ -2,9 +2,11 @@ package types
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/r3d5un/Bookshelf/internal/logging"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
 )
 
@@ -188,22 +190,36 @@ func ClaimScheduledTaskByID(
 	models *data.Models,
 	taskID uuid.UUID,
 ) (*ScheduledTask, error) {
+	logger := logging.LoggerFromContext(ctx).With(slog.String("taskId", taskID.String()))
+
+	logger.Info("testing models")
+	_, err := models.TaskQueues.Get(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("starting transaction")
 	tx, err := models.BeginTx(ctx)
 	if err != nil {
+		logger.Info("unable to start transaction", "error", err)
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
 
+	logger.Info("claiming task")
 	taskRow, err := models.TaskQueues.ClaimTx(ctx, tx, taskID)
 	if err != nil {
+		logger.Info("unable to claim transaction")
 		return nil, err
 	}
 
+	logger.Info("setting task to a running state")
 	state := string(data.RunningTaskState)
 	taskRow.State = &state
 
 	taskRow, err = models.TaskQueues.UpdateTx(ctx, tx, *taskRow)
 	if err != nil {
+		logger.Info("unable to set the task to a running state", "error", err)
 		return nil, err
 	}
 
@@ -211,6 +227,7 @@ func ClaimScheduledTaskByID(
 	if err != nil {
 		return nil, err
 	}
+	logger.Info("task set to running")
 
 	task := ScheduledTask{
 		ID:        taskRow.ID,
