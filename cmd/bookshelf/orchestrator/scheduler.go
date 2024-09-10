@@ -198,3 +198,49 @@ func (m *Module) manageScheduler(ctx context.Context) {
 		}
 	}
 }
+
+func (m *Module) taskReminder(ctx context.Context) {
+	waitingStateFilter := string(data.WaitingTaskState)
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		select {
+		case <-m.done:
+			m.logger.Info("received done signal; stopping scheduler")
+			return
+		default:
+			timestamp := time.Now()
+			logger := logging.LoggerFromContext(ctx).
+				With(slog.Group(
+					"reminderLoop",
+					slog.String("id", uuid.New().String()),
+					slog.Time("timestamp", timestamp),
+				))
+
+			logger.Info("querying for tasks needing reminders")
+			staleTasks, err := types.ReadAllScheudledTasks(ctx, &m.models, data.Filters{
+				Page:     1,
+				PageSize: 500,
+				State:    &waitingStateFilter,
+				RunAtTo:  &timestamp,
+			})
+			if err != nil {
+				logger.Error("unable to read stale tasks", "error", err)
+			}
+
+			for _, scheduledTask := range staleTasks.Data {
+				logger.Info(
+					"sending reminder notification for scheduled task",
+					"scheduledTask", scheduledTask,
+				)
+				err := m.models.TaskNotifications.Notify(
+					ctx,
+					data.TaskNotification{ID: scheduledTask.ID, Queue: *scheduledTask.Name},
+				)
+				logger.Error("unable to send reminder notification", "error", err)
+			}
+		}
+	}
+}

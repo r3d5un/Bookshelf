@@ -92,7 +92,11 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 		m.manageScheduler(ctx)
 	}()
 
-	// TODO: Handle due/stale tasks in queue without notifications
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		m.taskReminder(ctx)
+	}()
 
 	m.logger.Info("startup complete")
 
