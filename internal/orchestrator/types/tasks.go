@@ -11,10 +11,11 @@ import (
 )
 
 type Task struct {
-	Name      string     `json:"name"`
-	CronExpr  *string    `json:"cronExpr,omitempty"`
-	Enabled   *bool      `json:"enabled,omitempty"`
-	UpdatedAt *time.Time `json:"timestamp,omitempty"`
+	Name      string                      `json:"name"`
+	CronExpr  *string                     `json:"cronExpr,omitempty"`
+	Enabled   *bool                       `json:"enabled,omitempty"`
+	UpdatedAt *time.Time                  `json:"timestamp,omitempty"`
+	Job       func(context.Context) error `json:"-"`
 }
 
 type TaskCollection struct {
@@ -30,12 +31,19 @@ type TaskCollection struct {
 // NewTask created a new task object. Not to be confused with CreateTask.
 //
 // NewTask does not persist data.
-func NewTask(name string, cronExpr string, enabled bool, updatedAt time.Time) Task {
+func NewTask(
+	name string,
+	cronExpr string,
+	enabled bool,
+	updatedAt time.Time,
+	job func(context.Context) error,
+) Task {
 	return Task{
 		Name:      name,
 		CronExpr:  &cronExpr,
 		Enabled:   &enabled,
 		UpdatedAt: &updatedAt,
+		Job:       job,
 	}
 }
 

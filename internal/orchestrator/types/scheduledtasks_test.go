@@ -13,7 +13,7 @@ func TestScheduledTaskTypes(t *testing.T) {
 	insertedTask, err := types.CreateTask(
 		context.Background(),
 		models,
-		types.NewTask("test_queue", "* * * * *", false, time.Now()),
+		types.NewTask("test_queue", "* * * * *", false, time.Now(), nil),
 	)
 	if err != nil {
 		t.Errorf("an error occurred while creating parent task for overview: %s\n", err)

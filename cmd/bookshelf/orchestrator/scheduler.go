@@ -20,7 +20,7 @@ func (m *Module) addTasks(ctx context.Context) error {
 
 	logger.Info("adding tasks")
 	tasks := []types.Task{
-		types.NewTask("Hello, World!", "* * * * *", false, time.Now()),
+		types.NewTask("Hello, World!", "* * * * *", false, time.Now(), m.helloWorld),
 	}
 
 	logger.Info("syncing task with database")
@@ -32,6 +32,10 @@ func (m *Module) addTasks(ctx context.Context) error {
 	logger.Info("tasks synced")
 
 	for _, task := range tasks {
+		m.logger.Info("adding task to runner", "task", task)
+		m.taskCollection.Add(task.Name, task.Job)
+
+		m.logger.Info("adding task to scheduler", "task", task)
 		m.scheduler.AddCronJob(ctx, *task.CronExpr, types.ScheduledTask{
 			Name: &task.Name,
 		})

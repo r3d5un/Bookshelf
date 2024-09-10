@@ -65,8 +65,6 @@ func (m *Module) Startup(ctx context.Context, mono system.Monolith) (err error) 
 
 	m.logger.Info("creating task collection")
 	m.taskCollection = orchestrator.Collection{}
-	// TODO: Make a more elegant way to initialize tasks
-	m.taskCollection.Add("Hello, World!", m.helloWorld)
 
 	m.logger.Info("creating task runner")
 	m.wg.Add(1)

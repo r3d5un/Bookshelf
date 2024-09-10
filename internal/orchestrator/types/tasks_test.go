@@ -12,10 +12,10 @@ import (
 
 func TestTaskTypes(t *testing.T) {
 	tasks := []types.Task{
-		types.NewTask("task1", "* * * * *", false, time.Now()),
-		types.NewTask("task2", "* * * * *", false, time.Now()),
-		types.NewTask("task3", "* * * * *", false, time.Now()),
-		types.NewTask("task4", "* * * * *", false, time.Now()),
+		types.NewTask("task1", "* * * * *", false, time.Now(), nil),
+		types.NewTask("task2", "* * * * *", false, time.Now(), nil),
+		types.NewTask("task3", "* * * * *", false, time.Now(), nil),
+		types.NewTask("task4", "* * * * *", false, time.Now(), nil),
 	}
 
 	filters := data.Filters{
@@ -29,7 +29,7 @@ func TestTaskTypes(t *testing.T) {
 		createdTask, err := types.CreateTask(
 			context.Background(),
 			models,
-			types.NewTask("task0", "* * * * *", false, time.Now()),
+			types.NewTask("task0", "* * * * *", false, time.Now(), nil),
 		)
 		if err != nil {
 			t.Errorf("an error occurred while creating a new task: %s\n", err)
