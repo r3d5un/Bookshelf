@@ -21,6 +21,9 @@ func (m *Module) addTasks(ctx context.Context) error {
 	logger.Info("adding tasks")
 	tasks := []types.Task{
 		types.NewTask("Hello, World!", "* * * * *", false, time.Now(), m.helloWorld),
+		types.NewTask(
+			RemoveOldScheduledTask, "* * * * *", false, time.Now(), m.removeOldScheduledTasks,
+		),
 	}
 
 	logger.Info("syncing task with database")
