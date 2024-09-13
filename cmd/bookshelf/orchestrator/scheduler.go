@@ -126,6 +126,9 @@ func (m *Module) runTaskByID(ctx context.Context, id uuid.UUID) {
 	}
 	logger.Info("task enabled", "task", task)
 
+	logger.Info("embedding task ID in context")
+	ctx = context.WithValue(ctx, "taskQueueID", id)
+
 	logger.Info("running scheduled task", "scheduledTask", scheduledTask, "task", task)
 	err = m.taskCollection.Run(ctx, *scheduledTask.Name)
 	if err != nil {
