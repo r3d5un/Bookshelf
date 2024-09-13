@@ -15,8 +15,9 @@ import (
 )
 
 type TaskLog struct {
-	ID  uuid.UUID      `json:"name"`
-	Log sql.NullString `json:"log"`
+	ID     uuid.UUID      `json:"id"`
+	TaskID uuid.UUID      `json:"taskId"`
+	Log    sql.NullString `json:"log"`
 }
 
 type TaskLogModel struct {
@@ -27,9 +28,10 @@ type TaskLogModel struct {
 func (m *TaskLogModel) Get(ctx context.Context, id uuid.UUID) (*TaskLog, error) {
 	query := `
 SELECT id,
+       task_id,
        log
 FROM orchestrator.task_logs
-WHERE name = $1;
+WHERE id = $1;
 `
 
 	ctx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -45,6 +47,7 @@ WHERE name = $1;
 	logger.Info("performing query")
 	err := m.Pool.QueryRow(ctx, query, id).Scan(
 		&taskLog.ID,
+		&taskLog.TaskID,
 		&taskLog.Log,
 	)
 	if err != nil {
