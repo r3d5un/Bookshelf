@@ -109,3 +109,56 @@ WHERE id = $1;
 	logger.Info("returning task")
 	return taskLog, nil
 }
+
+func (m *TaskLogModel) GetByTaskID(ctx context.Context, taskQueueID uuid.UUID) ([]*TaskLog, error) {
+	query := `
+SELECT id,
+       task_id,
+       log
+FROM orchestrator.task_logs
+WHERE task_id = $1
+ORDER BY ((log ->> 'time')::timestamp);
+`
+
+	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
+	defer cancel()
+
+	logger := logging.LoggerFromContext(ctx).With(
+		slog.Group(
+			"query",
+			slog.String("statement", database.MinifySQL(query)),
+			"taskId", taskQueueID,
+		),
+	)
+
+	tasks := []*TaskLog{}
+
+	logger.Info("performing query")
+	rows, err := m.Pool.Query(
+		qCtx,
+		query,
+		taskQueueID,
+	)
+	defer rows.Close()
+
+	for rows.Next() {
+		var task TaskLog
+
+		err := rows.Scan(
+			&task.ID,
+			&task.TaskID,
+			&task.Log,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, &task)
+	}
+	if err = rows.Err(); err != nil {
+		logger.Error("an error occurred while parsing query results", "error", err)
+		return nil, err
+	}
+
+	logger.Info("returning records")
+	return tasks, nil
+}

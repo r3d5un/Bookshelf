@@ -65,4 +65,16 @@ func TestTaskLogModel(t *testing.T) {
 			return
 		}
 	})
+
+	t.Run("GetByTaskID", func(t *testing.T) {
+		logs, err := models.TaskLogs.GetByTaskID(context.Background(), insertedTaskQueue.ID)
+		if err != nil {
+			t.Errorf("unablet o get task logs: %s\n", err)
+			return
+		}
+		if len(logs) < 1 {
+			t.Error("no logs returned")
+			return
+		}
+	})
 }
