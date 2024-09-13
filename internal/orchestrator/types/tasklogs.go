@@ -94,3 +94,28 @@ func CreateTaskLog(ctx context.Context, models *data.Models, log TaskLog) (*Task
 
 	return &createdLog, nil
 }
+
+func ReadLogsByTaskQueueID(
+	ctx context.Context,
+	models *data.Models,
+	taskID uuid.UUID,
+) ([]*TaskLog, error) {
+	logRows, err := models.TaskLogs.GetByTaskID(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+
+	logs := make([]*TaskLog, len(logRows))
+
+	for _, logRow := range logRows {
+		log := TaskLog{
+			ID:     logRow.ID,
+			TaskID: logRow.TaskID,
+			Log:    logRow.Log,
+		}
+
+		logs = append(logs, &log)
+	}
+
+	return logs, nil
+}
