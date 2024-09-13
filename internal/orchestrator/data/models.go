@@ -22,6 +22,7 @@ type Models struct {
 	TaskQueues        TaskQueueModel
 	TaskNotifications TaskNotificationModel
 	SchedulerLock     SchedulerLockModel
+	TaskLogs          TaskLogModel
 	pool              *pgxpool.Pool
 }
 
@@ -31,6 +32,7 @@ func NewModels(pool *pgxpool.Pool, timeout *time.Duration) Models {
 		TaskQueues:        TaskQueueModel{Pool: pool, Timeout: timeout},
 		TaskNotifications: TaskNotificationModel{Pool: pool, Timeout: timeout},
 		SchedulerLock:     SchedulerLockModel{Pool: pool, Timeout: timeout},
+		TaskLogs:          TaskLogModel{Pool: pool, Timeout: timeout},
 		pool:              pool,
 	}
 }
