@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/r3d5un/Bookshelf/internal/orchestrator/data"
@@ -20,6 +21,7 @@ type TaskLogWriter struct {
 	Done      chan struct{}
 	logBuffer chan TaskLog
 	models    *data.Models
+	wg        *sync.WaitGroup
 }
 
 func NewTaskLogWriter(
@@ -28,11 +30,13 @@ func NewTaskLogWriter(
 	taskID uuid.UUID,
 	logBufferSize int,
 ) TaskLogWriter {
+	var wg sync.WaitGroup
 	return TaskLogWriter{
 		taskID:    taskID,
 		logBuffer: make(chan TaskLog, logBufferSize),
-		Done:      make(chan struct{}),
+		Done:      make(chan struct{}, 1),
 		models:    models,
+		wg:        &wg,
 	}
 }
 
@@ -43,7 +47,9 @@ func (tlw *TaskLogWriter) Write(p []byte) (n int, err error) {
 		Log:    p,
 	}
 
+	tlw.wg.Add(1)
 	go func() {
+		defer tlw.wg.Done()
 		tlw.logBuffer <- log
 	}()
 
@@ -70,6 +76,7 @@ func (tlw *TaskLogWriter) LogSink(ctx context.Context) {
 }
 
 func (tlw *TaskLogWriter) Stop() {
+	tlw.wg.Wait()
 	close(tlw.logBuffer)
 	close(tlw.Done)
 }
