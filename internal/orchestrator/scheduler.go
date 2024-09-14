@@ -49,10 +49,9 @@ func (s *CronScheduler) AddCronJob(
 func (s *CronScheduler) Enqueue(ctx context.Context, newTask types.ScheduledTask) error {
 	logger := logging.LoggerFromContext(ctx).With("newTask", newTask)
 	newTaskRow := data.TaskQueue{
-		Name:     newTask.Name,
-		State:    newTask.State,
-		RunAt:    newTask.RunAt,
-		TaskData: newTask.TaskData,
+		Name:  newTask.Name,
+		State: newTask.State,
+		RunAt: newTask.RunAt,
 	}
 
 	enqueuedTask, err := s.models.TaskQueues.Insert(ctx, newTaskRow)

@@ -31,7 +31,6 @@ type TaskQueue struct {
 	CreatedAt *time.Time `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt"`
 	RunAt     *time.Time `json:"runAt"`
-	TaskData  *string    `json:"task_data,omitempty"`
 }
 
 type TaskQueueModel struct {
@@ -48,8 +47,7 @@ SELECT id,
        state,
        created_at,
        updated_at,
-       run_at,
-       task_data
+       run_at
 FROM orchestrator.task_queue
 WHERE id = $1;
 `
@@ -75,7 +73,6 @@ WHERE id = $1;
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
-		&task.TaskData,
 	)
 	if err != nil {
 		switch {
@@ -105,8 +102,7 @@ SELECT COUNT(*) OVER() AS total,
        state,
        created_at,
        updated_at,
-       run_at,
-       task_data
+       run_at
 FROM orchestrator.task_queue
 WHERE ($1::uuid IS NULL OR id = $1::uuid)
   AND ($2::text IS NULL OR name = $2::text)
@@ -164,7 +160,6 @@ OFFSET $10 FETCH NEXT $11 ROWS ONLY;
 			&task.CreatedAt,
 			&task.UpdatedAt,
 			&task.RunAt,
-			&task.TaskData,
 		)
 		if err != nil {
 			return nil, nil, err
@@ -193,20 +188,17 @@ func (m *TaskQueueModel) Insert(
 	query := `
 INSERT INTO orchestrator.task_queue (name,
                                state,
-                               run_at,
-                               task_data)
+                               run_at)
 VALUES ($1::TEXT,
         COALESCE($2::task_state, 'waiting'),
-        COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP),
-        COALESCE($4::JSONB, NULL))
+        COALESCE($3::TIMESTAMP, CURRENT_TIMESTAMP))
 RETURNING
     id,
     name,
     state,
     created_at,
     updated_at,
-    run_at,
-    task_data;
+    run_at;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -223,7 +215,7 @@ RETURNING
 	task = &TaskQueue{}
 
 	logger.Info("performing query")
-	err = m.Pool.QueryRow(qCtx, query, newTask.Name, newTask.State, newTask.RunAt, newTask.TaskData).
+	err = m.Pool.QueryRow(qCtx, query, newTask.Name, newTask.State, newTask.RunAt).
 		Scan(
 			&task.ID,
 			&task.Name,
@@ -231,7 +223,6 @@ RETURNING
 			&task.CreatedAt,
 			&task.UpdatedAt,
 			&task.RunAt,
-			&task.TaskData,
 		)
 	if err != nil {
 		switch {
@@ -259,8 +250,7 @@ UPDATE orchestrator.task_queue
 SET name = COALESCE($2::text, name),
 	state = COALESCE($3::task_state, state),
 	created_at = COALESCE($4::timestamp, created_at),
-	run_at = COALESCE($5::timestamp, run_at),
-	task_data = COALESCE($6::JSONB, task_data)
+	run_at = COALESCE($5::timestamp, run_at)
 WHERE id = $1::uuid
 RETURNING
     id,
@@ -268,8 +258,7 @@ RETURNING
     state,
     created_at,
     updated_at,
-    run_at,
-    task_data;
+    run_at;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -294,7 +283,6 @@ RETURNING
 		newTaskData.State,
 		newTaskData.CreatedAt,
 		newTaskData.RunAt,
-		newTaskData.TaskData,
 	).Scan(
 		&updatedTask.ID,
 		&updatedTask.Name,
@@ -302,7 +290,6 @@ RETURNING
 		&updatedTask.CreatedAt,
 		&updatedTask.UpdatedAt,
 		&updatedTask.RunAt,
-		&updatedTask.TaskData,
 	)
 	if err != nil {
 		switch {
@@ -331,8 +318,7 @@ RETURNING
     state,
     created_at,
     updated_at,
-    run_at,
-    task_data;
+    run_at;
 
 `
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -356,7 +342,6 @@ RETURNING
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
-		&task.TaskData,
 	)
 	if err != nil {
 		switch {
@@ -388,8 +373,7 @@ SELECT id,
        state,
        created_at,
        updated_at,
-       run_at,
-       task_data
+       run_at
 FROM orchestrator.task_queue
 WHERE id = $1::uuid
 	AND run_at <= NOW()
@@ -420,7 +404,6 @@ LIMIT 1;
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
-		&task.TaskData,
 	)
 	if err != nil {
 		switch {
@@ -458,8 +441,7 @@ RETURNING
     state,
     created_at,
     updated_at,
-    run_at,
-    task_data;
+	run_at;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -483,7 +465,6 @@ RETURNING
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
-		&task.TaskData,
 	)
 	if err != nil {
 		switch {
@@ -512,8 +493,7 @@ UPDATE orchestrator.task_queue
 SET name = COALESCE($2::text, name),
 	state = COALESCE($3::task_state, state),
 	created_at = COALESCE($4::timestamp, created_at),
-	run_at = COALESCE($5::timestamp, run_at),
-	task_data = COALESCE($6::JSONB, task_data)
+	run_at = COALESCE($5::timestamp, run_at)
 WHERE id = $1::uuid
 RETURNING
     id,
@@ -521,8 +501,7 @@ RETURNING
     state,
     created_at,
     updated_at,
-    run_at,
-	task_data;
+	run_at;
 `
 
 	qCtx, cancel := context.WithTimeout(ctx, *m.Timeout)
@@ -547,7 +526,6 @@ RETURNING
 		taskQueue.State,
 		taskQueue.CreatedAt,
 		taskQueue.RunAt,
-		taskQueue.TaskData,
 	).Scan(
 		&task.ID,
 		&task.Name,
@@ -555,7 +533,6 @@ RETURNING
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.RunAt,
-		&task.TaskData,
 	)
 	if err != nil {
 		switch {

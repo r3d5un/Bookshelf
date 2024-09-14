@@ -47,7 +47,6 @@ func ReadScheduledTask(
 		CreatedAt: tq.CreatedAt,
 		UpdatedAt: tq.UpdatedAt,
 		RunAt:     tq.RunAt,
-		TaskData:  tq.TaskData,
 	}
 
 	return &task, nil
@@ -72,7 +71,6 @@ func ReadAllScheudledTasks(
 			CreatedAt: t.CreatedAt,
 			UpdatedAt: t.UpdatedAt,
 			RunAt:     t.RunAt,
-			TaskData:  t.TaskData,
 		}
 
 		tasks = append(tasks, &task)
@@ -100,10 +98,9 @@ func ScheduleTask(
 	newTask ScheduledTask,
 ) (createdTask *ScheduledTask, err error) {
 	newTaskRow := data.TaskQueue{
-		Name:     newTask.Name,
-		State:    newTask.State,
-		RunAt:    newTask.RunAt,
-		TaskData: newTask.TaskData,
+		Name:  newTask.Name,
+		State: newTask.State,
+		RunAt: newTask.RunAt,
 	}
 
 	insertedTask, err := models.TaskQueues.Insert(ctx, newTaskRow)
@@ -118,7 +115,6 @@ func ScheduleTask(
 		CreatedAt: insertedTask.CreatedAt,
 		UpdatedAt: insertedTask.UpdatedAt,
 		RunAt:     insertedTask.RunAt,
-		TaskData:  insertedTask.TaskData,
 	}
 
 	return createdTask, nil
@@ -136,7 +132,6 @@ func UpdateScheduledTask(
 		CreatedAt: newTaskData.CreatedAt,
 		UpdatedAt: newTaskData.UpdatedAt,
 		RunAt:     newTaskData.RunAt,
-		TaskData:  newTaskData.TaskData,
 	}
 	updatedTaskRow, err := models.TaskQueues.Update(ctx, newTaskRow)
 	if err != nil {
@@ -150,7 +145,6 @@ func UpdateScheduledTask(
 		CreatedAt: updatedTaskRow.CreatedAt,
 		UpdatedAt: updatedTaskRow.UpdatedAt,
 		RunAt:     updatedTaskRow.RunAt,
-		TaskData:  updatedTaskRow.TaskData,
 	}
 
 	return updatedTask, nil
@@ -173,7 +167,6 @@ func DeleteScheduledTask(
 		CreatedAt: deletedTaskRow.CreatedAt,
 		UpdatedAt: deletedTaskRow.UpdatedAt,
 		RunAt:     deletedTaskRow.RunAt,
-		TaskData:  deletedTaskRow.TaskData,
 	}
 
 	return &task, nil
@@ -236,7 +229,6 @@ func ClaimScheduledTaskByID(
 		CreatedAt: taskRow.CreatedAt,
 		UpdatedAt: taskRow.UpdatedAt,
 		RunAt:     taskRow.RunAt,
-		TaskData:  taskRow.TaskData,
 	}
 
 	return &task, nil
@@ -271,7 +263,6 @@ func SetScheduledTaskState(
 		CreatedAt: taskRow.CreatedAt,
 		UpdatedAt: taskRow.UpdatedAt,
 		RunAt:     taskRow.RunAt,
-		TaskData:  taskRow.TaskData,
 	}
 
 	return &task, nil
@@ -307,7 +298,6 @@ func DequeueScheduledTask(
 		CreatedAt: taskRow.CreatedAt,
 		UpdatedAt: taskRow.UpdatedAt,
 		RunAt:     taskRow.RunAt,
-		TaskData:  taskRow.TaskData,
 	}
 
 	return &task, nil
