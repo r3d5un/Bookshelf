@@ -20,7 +20,7 @@ type TaskLog struct {
 
 type TaskLogWriter struct {
 	taskID    uuid.UUID
-	Done      chan struct{}
+	done      chan struct{}
 	logBuffer chan TaskLog
 	models    *data.Models
 	wg        *sync.WaitGroup
@@ -37,7 +37,7 @@ func NewTaskLogWriter(
 	logWriter := TaskLogWriter{
 		taskID:    taskID,
 		logBuffer: make(chan TaskLog, logBufferSize),
-		Done:      make(chan struct{}, 1),
+		done:      make(chan struct{}, 1),
 		models:    models,
 		wg:        &wg,
 	}
@@ -68,7 +68,7 @@ func (tlw *TaskLogWriter) Write(p []byte) (n int, err error) {
 func (tlw *TaskLogWriter) LogSink(ctx context.Context) {
 	for {
 		select {
-		case <-tlw.Done:
+		case <-tlw.done:
 			return
 		case log, ok := <-tlw.logBuffer:
 			if !ok {
@@ -87,7 +87,7 @@ func (tlw *TaskLogWriter) LogSink(ctx context.Context) {
 func (tlw *TaskLogWriter) Stop() {
 	tlw.wg.Wait()
 	close(tlw.logBuffer)
-	close(tlw.Done)
+	close(tlw.done)
 }
 
 func CreateTaskLog(ctx context.Context, models *data.Models, log TaskLog) (*TaskLog, error) {
