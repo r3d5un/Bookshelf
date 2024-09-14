@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
@@ -42,7 +41,9 @@ func NewTaskLogWriter(
 		wg:        &wg,
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		logWriter.LogSink(ctx)
 	}()
 
@@ -56,11 +57,7 @@ func (tlw *TaskLogWriter) Write(p []byte) (n int, err error) {
 		Log:    string(p),
 	}
 
-	tlw.wg.Add(1)
-	go func() {
-		defer tlw.wg.Done()
-		tlw.logBuffer <- log
-	}()
+	tlw.logBuffer <- log
 
 	return len(p), nil
 }
@@ -72,20 +69,25 @@ func (tlw *TaskLogWriter) LogSink(ctx context.Context) {
 			return
 		case log, ok := <-tlw.logBuffer:
 			if !ok {
-				slog.Error("unable to read logs from log buffer")
+				slog.Error("log buffer channel closed")
 				return
 			}
-			_, err := CreateTaskLog(ctx, tlw.models, log)
-			if err != nil {
-				slog.Error("unable to create log records", "error", err)
-				return
-			}
+
+			tlw.wg.Add(1)
+			go func() {
+				defer tlw.wg.Done()
+				_, err := CreateTaskLog(ctx, tlw.models, log)
+				if err != nil {
+					slog.Error("unable to create log records", "error", err)
+				}
+			}()
 		}
 	}
 }
 
 func (tlw *TaskLogWriter) Stop() {
 	tlw.wg.Wait()
+
 	close(tlw.logBuffer)
 	close(tlw.done)
 }
