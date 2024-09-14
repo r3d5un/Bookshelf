@@ -3,7 +3,9 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
+	"os"
 	"sync"
 
 	"github.com/google/uuid"
@@ -31,13 +33,20 @@ func NewTaskLogWriter(
 	logBufferSize int,
 ) TaskLogWriter {
 	var wg sync.WaitGroup
-	return TaskLogWriter{
+
+	logWriter := TaskLogWriter{
 		taskID:    taskID,
 		logBuffer: make(chan TaskLog, logBufferSize),
 		Done:      make(chan struct{}, 1),
 		models:    models,
 		wg:        &wg,
 	}
+
+	go func() {
+		logWriter.LogSink(ctx)
+	}()
+
+	return logWriter
 }
 
 func (tlw *TaskLogWriter) Write(p []byte) (n int, err error) {
@@ -125,4 +134,25 @@ func ReadLogsByTaskQueueID(
 	}
 
 	return logs, nil
+}
+
+// NewTaskLogger creates a new logger that writes logs to stdout and the task log
+// database table. It also returns a stop function, which stop associated goroutines
+// that writes to the database in a non-blocking manner.
+func NewTaskLogger(
+	ctx context.Context,
+	models *data.Models,
+	taskName string,
+	taskQueueID uuid.UUID,
+) (logger *slog.Logger, stop func()) {
+	logWriter := NewTaskLogWriter(ctx, models, taskQueueID, 100)
+
+	handler := slog.NewJSONHandler(io.MultiWriter(&logWriter, os.Stdout), nil)
+	logger = slog.New(handler).With(slog.Group(
+		"task",
+		slog.String("taskName", taskName),
+		slog.String("taskId", taskQueueID.String())),
+	)
+
+	return logger, logWriter.Stop
 }
