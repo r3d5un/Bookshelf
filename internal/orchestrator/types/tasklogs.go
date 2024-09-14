@@ -13,9 +13,9 @@ import (
 )
 
 type TaskLog struct {
-	ID     uuid.UUID       `json:"id"`
-	TaskID uuid.UUID       `json:"taskId"`
-	Log    json.RawMessage `json:"log"`
+	ID     uuid.UUID `json:"id"`
+	TaskID uuid.UUID `json:"taskId"`
+	Log    string    `json:"log"`
 }
 
 type TaskLogWriter struct {
@@ -53,7 +53,7 @@ func (tlw *TaskLogWriter) Write(p []byte) (n int, err error) {
 	log := TaskLog{
 		ID:     uuid.New(),
 		TaskID: tlw.taskID,
-		Log:    p,
+		Log:    string(p),
 	}
 
 	tlw.wg.Add(1)

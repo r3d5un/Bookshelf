@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -15,9 +14,9 @@ import (
 )
 
 type TaskLog struct {
-	ID     uuid.UUID       `json:"id"`
-	TaskID uuid.UUID       `json:"taskId"`
-	Log    json.RawMessage `json:"log"`
+	ID     uuid.UUID `json:"id"`
+	TaskID uuid.UUID `json:"taskId"`
+	Log    string    `json:"log"`
 }
 
 type TaskLogModel struct {

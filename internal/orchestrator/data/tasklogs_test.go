@@ -41,7 +41,7 @@ func TestTaskLogModel(t *testing.T) {
 	taskLog := data.TaskLog{
 		ID:     uuid.New(),
 		TaskID: insertedTaskQueue.ID,
-		Log: []byte(
+		Log: string(
 			`{"time":"2024-09-13T21:40:09.926641812+02:00","level":"INFO","msg":"test log statement"}`,
 		),
 	}
