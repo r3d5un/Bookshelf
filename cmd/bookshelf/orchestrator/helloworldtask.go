@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	TaskName string = "Hello, World!"
+	HelloWorldName string = "Hello, World!"
 )
 
 func (m *Module) helloWorld(ctx context.Context) error {
@@ -18,7 +18,7 @@ func (m *Module) helloWorld(ctx context.Context) error {
 		return errors.New("unable to get task queue ID from context")
 	}
 
-	logger, stop := types.NewTaskLogger(ctx, &m.models, TaskName, taskQueueID)
+	logger, stop := types.NewTaskLogger(ctx, &m.models, HelloWorldName, taskQueueID)
 	defer stop()
 
 	logger.InfoContext(ctx, "Hello, World!")
